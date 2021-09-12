@@ -1,6 +1,6 @@
 {
-  "name": "reactive",
-  "version": "0.1.0",
+  "name": "@aldinh777/reactive",
+  "version": "0.1.0-unstable",
   "description": "Reactive programming, manually",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
