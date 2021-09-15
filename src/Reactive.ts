@@ -71,13 +71,13 @@ export class Reactive<T> {
         return this.__getValue();
     }
     set value(value: T) {
+        this.__oldValue = this.__getValue ? this.__getValue : () => undefined!;
         if (!this.__allowDuplicate && this.__getValue && this.__oldValue() === value) {
             return;
         }
         this.rule = () => value;
     }
     set rule(rule: () => T) {
-        this.__oldValue = this.__getValue ? this.__getValue : () => undefined!;
         this.__getValue = rule;
         this.__callUpdateFunctions();
     }
