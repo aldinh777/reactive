@@ -9,7 +9,7 @@ export type ReactiveUpdater<T> = (ev: ReactiveEvent<T>) => void;
 export type ReactiveValue<T> = T|(() => T);
 export type Unsubscriber = () => void;
 
-export default class Reactive<T> {
+export class Reactive<T> {
     protected __subscriptionList: Reactive<T>[] = [];
     protected __subscriberList: Reactive<T>[] = [];
     protected __onUpdateFunctions: ReactiveUpdater<T>[] = [];
@@ -19,7 +19,11 @@ export default class Reactive<T> {
     protected __oldValue!: () => T;
 
     constructor(initial?: ReactiveValue<T>) {
-        this.value = initial!;
+        if (typeof initial === 'function') {
+            this.rule = initial as () => T;
+        } else {
+            this.value = initial as T;
+        }
     }
     protected __addSubscriber(...subs: Reactive<any>[]) :void {
         this.__subscriberList.push(...subs);
@@ -66,16 +70,15 @@ export default class Reactive<T> {
     get value() :T {
         return this.__getValue();
     }
-    set value(getValue: ReactiveValue<T>) {
-        this.__oldValue = this.__getValue ? this.__getValue : () => undefined!;
-        if (!this.__allowDuplicate && this.__getValue && this.__oldValue() === getValue) {
+    set value(value: T) {
+        if (!this.__allowDuplicate && this.__getValue && this.__oldValue() === value) {
             return;
         }
-        if (typeof getValue !== 'function') {
-            this.__getValue = () => getValue;
-        } else {
-            this.__getValue = getValue as () => T;
-        }
+        this.rule = () => value;
+    }
+    set rule(rule: () => T) {
+        this.__oldValue = this.__getValue ? this.__getValue : () => undefined!;
+        this.__getValue = rule;
         this.__callUpdateFunctions();
     }
     onChange(callback: ReactiveUpdater<T>, immediateCall: boolean = false) :Unsubscriber {
@@ -99,7 +102,7 @@ export default class Reactive<T> {
             }
         };
     }
-    bindValue(obj: any, param: string, decorator?: (value: T) => any) :Unsubscriber {
+    bindValue(obj: any, param: string, decorator?: (value: ReactiveValue<T>) => any) :Unsubscriber {
         const callback = () => obj[param] = decorator ? decorator(this.value) : this.value;
         callback();
         this.__bindingFunctions.push(callback);
