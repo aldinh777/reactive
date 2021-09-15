@@ -78,6 +78,7 @@ export class Reactive<T> {
         this.rule = () => value;
     }
     set rule(rule: () => T) {
+        this.__oldValue = this.__getValue ? this.__getValue : () => undefined!;
         this.__getValue = rule;
         this.__callUpdateFunctions();
     }
