@@ -2,7 +2,7 @@ import { Duck } from './src/Duck';
 import { Reactive, ReactiveEvent, ReactiveUpdater, ReactiveValue, Unsubscriber } from './src/Reactive';
 
 export { Reactive, ReactiveEvent, ReactiveUpdater, ReactiveValue, Unsubscriber } from './src/Reactive';
-export { Duck, DuckType, Maybe, nest, quack } from './src/Duck';
+export { Duck, DuckType, Maybe, quack } from './src/Duck';
 export { DinoFunction, dino } from './src/dino';
 
 export function onChange<T>(callback: ReactiveUpdater<T>, immediateCall: boolean, ...reactives: Reactive<T>[]) {

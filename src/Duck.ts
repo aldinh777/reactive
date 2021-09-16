@@ -7,10 +7,6 @@ export function quack(...args: any[]) {
     console.log(...quacks);
 }
 
-export function nest<T>(initial?: T) :Duck<Duck<T>> {
-    return new Duck(new Duck(initial));
-}
-
 export class Duck<T> {
     protected __links: Duck<T>[] = []
     protected __map: Map<any, Duck<T>> = new Map()
@@ -21,6 +17,11 @@ export class Duck<T> {
     }
     get array() :Maybe<T>[] {
         return this.__links.map(d => d.value);
+    }
+    get map() :Map<any, T> {
+        const map = new Map();
+        this.__map.forEach((duck, key) => map.set(key, duck.value));
+        return map;
     }
     get keys() :any[] {
         return Array.from(this.__map.keys());
@@ -81,29 +82,48 @@ export class Duck<T> {
     quack(...quacks: any[]) {
         quack(...quacks);
     }
-    duckAt(index: number) :Maybe<Duck<T>> {
-        return this.__links[index];
+    duckAt(...indexes: number[]) :Maybe<Duck<T>> {
+        const index = indexes.shift();
+        if (index !== undefined) {
+            if (indexes.length <= 0) {
+                return this.__links[index];
+            }
+            if (!this.__links[index]) {
+                return undefined;
+            }
+            return this.__links[index].duckAt(...indexes);
+        }
     }
-    getDuck(key: any) :Maybe<Duck<T>> {
-        return this.__map.get(key);
+    getDuck(...keys: any[]) :Maybe<Duck<T>> {
+        const key = keys.shift();
+        if (key !== undefined) {
+            if (keys.length <= 0) {
+                return this.__map.get(key);
+            }
+            const duck = this.__map.get(key);
+            if (duck) {
+                return duck.getDuck(...keys);
+            }
+        }
     }
     static parseDuck<T>(duck: DuckType<T>) :Duck<T> {
         return duck instanceof Duck ? duck : new Duck(duck);
     }
-    static fromArray<T>(array: T[], initial?: T) {
-        const duck = new Duck<T>(initial);
-        duck.push(...array);
-        return duck;
-    }
-    static fromMap<T>(map: Map<any, T>, initial?: T) {
-        const duck = new Duck<T>(initial);
-        map.forEach((val, key) => duck.set(key, val));
-        return duck;
-    }
-    static fromObject(obj: any, initial?: any) {
-        const duck = new Duck(initial);
-        for (const key in obj) {
-            duck.set(key, obj[key]);
+    static from(obj: any) :Duck<any> {
+        if (obj instanceof Duck) {
+            return obj;
+        }
+        const duck = new Duck();
+        if (obj instanceof Array) {
+            duck.push(...obj.map(Duck.from));
+        } else if (obj instanceof Map) {
+            obj.forEach((val, key) => duck.set(key, Duck.from(val)));
+        } else if (typeof obj === 'object') {
+            for (const key in obj) {
+                duck.set(key, Duck.from(obj[key]));
+            }
+        } else {
+            duck.value = obj;
         }
         return duck;
     }
