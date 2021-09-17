@@ -37,8 +37,7 @@ export function spino(fun: (...args: any[]) => any) :SpinoFunction {
         if (map.has(lastarg)) {
             return map.get(lastarg);
         }
-        const _ = await Promise.resolve();
-        const result = fun(...args, lastarg);
+        const result = await Promise.resolve([...args, lastarg]).then(fun);
         map.set(lastarg, result);
         return result;
     }

@@ -2,11 +2,14 @@ export type DuckType<T> = T|Duck<T>;
 
 export type Maybe<T> = undefined|T;
 
-export function quack(...args: any[]) :Promise<any[]> {
+export function quack(...args: any[]) :any {
     const quacks = args.length ? args : ['quack'];
-    const results = Promise.all(quacks.map(q => q instanceof Promise ? q : Promise.resolve(q)));
-    results.then(quacks => console.log(...quacks));
-    return results;
+    if (quacks.find(q => q instanceof Promise)) {
+        const results = Promise.all(quacks.map(q => q instanceof Promise ? q.catch(err => err) : Promise.resolve(q)));
+        results.then(quacks => console.log(...quacks));
+        return results;    
+    }
+    console.log(...quacks);
 }
 
 export class Duck<T> {
