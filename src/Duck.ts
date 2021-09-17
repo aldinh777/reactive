@@ -20,13 +20,26 @@ export class Duck<T> {
     constructor(value?: T) {
         this.value = value;
     }
-    get array() :Maybe<T>[] {
-        return this.__links.map(d => d.value);
+    get array() :any[] {
+        return this.__links.map(d => d.value instanceof Duck || d.length > 0 ? d.array : d.value);
     }
-    get map() :Map<any, T> {
+    get map() :Map<any, any> {
         const map = new Map();
-        this.__map.forEach((duck, key) => map.set(key, duck.value));
+        this.__map.forEach((d, key) => map.set(key, d.value instanceof Duck || d.size > 0 ? d.map : d.value));
         return map;
+    }
+    get object() :any {
+        if (!(this.value instanceof Duck)) {
+            return this.value;
+        }
+        if (this.size > 0) {
+            const obj :any = {};
+            this.__map.forEach((d, key) => obj[key] = d.object);
+            return obj;
+        } else if (this.length > 0) {
+            return this.__links.map(d => d.object);
+        }
+        return this.value;
     }
     get keys() :any[] {
         return Array.from(this.__map.keys());
@@ -118,15 +131,18 @@ export class Duck<T> {
         if (obj instanceof Duck) {
             return obj;
         }
-        const duck = new Duck();
+        const duck :Duck<any> = new Duck();
         if (obj instanceof Array) {
             duck.push(...obj.map(Duck.from));
+            duck.value = duck;
         } else if (obj instanceof Map) {
             obj.forEach((val, key) => duck.set(key, Duck.from(val)));
+            duck.value = duck;
         } else if (typeof obj === 'object') {
             for (const key in obj) {
                 duck.set(key, Duck.from(obj[key]));
             }
+            duck.value = obj === null ? null : duck;
         } else {
             duck.value = obj;
         }
