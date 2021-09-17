@@ -21,15 +21,15 @@ export function when <T>(condition: (val: T, ev: ReactiveEvent<T>) => boolean, c
 export function update<T>(re: Reactive<T>, callback: (val: T, ...args: any[]) => T, ...args: any[]) {
     re.value = callback(re.value as T, ...args);
 }
-export function increase(re: Reactive<number>, add: number|Reactive<number> = 1, condition: () => boolean =  () => false) :void {
+export async function increase(re: Reactive<number>, add: number|Reactive<number> = 1, condition: () => boolean|Promise<boolean> = () => false) :Promise<void> {
     do {
         update(re, val => val + (add instanceof Reactive ? add.value as number : add));
-    } while (condition());
+    } while (await condition());
 }
-export function decrease(re: Reactive<number>, sub: number|Reactive<number> = 1, condition: () => boolean =  () => false) :void {
+export async function decrease(re: Reactive<number>, sub: number|Reactive<number> = 1, condition: () => boolean|Promise<boolean> =  () => false) :Promise<void> {
     do {
         update(re, val => val - (sub instanceof Reactive ? sub.value as number : sub));
-    } while (condition());
+    } while (await condition());
 }
 
 export function reactive<T>(initial?: ReactiveValue<T>) :Reactive<T> {
