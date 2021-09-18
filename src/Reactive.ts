@@ -5,7 +5,7 @@ export interface ReactiveEvent<T> {
     preventNext: (times?: number) => void;
     cancel: () => void;
 }
-export type ReactiveUpdater<T> = (ev: ReactiveEvent<T>) => void;
+export type ReactiveUpdater<T> = (current: T, ev: ReactiveEvent<T>) => void;
 export type ReactiveValue<T> = T|(() => T);
 export type Unsubscriber = () => void;
 
@@ -56,10 +56,10 @@ export class Reactive<T> {
             else if (skipTimes === -1) {
                 break;
             }
-            updateFunction(reactionEvent);
+            updateFunction(this.value, reactionEvent);
         }
         for (const bindingFunction of this.__bindingFunctions) {
-            bindingFunction(reactionEvent);            
+            bindingFunction(this.value, reactionEvent);            
         }
         if (reactionFlag) {
             for (const subscriber of this.__subscriberList) {
@@ -94,7 +94,7 @@ export class Reactive<T> {
             }
         };
         if (immediateCall) {
-            callback(reactionEvent);
+            callback(this.value, reactionEvent);
         }
         return () => {
             var index = this.__onUpdateFunctions.findIndex(function (c) { return c == callback; });
@@ -104,11 +104,11 @@ export class Reactive<T> {
         };
     }
     bindValue(obj: any, param: string, decorator?: (value: ReactiveValue<T>) => any) :Unsubscriber {
-        const callback = () => obj[param] = decorator ? decorator(this.value) : this.value;
-        callback();
+        const callback = (value: T) => obj[param] = decorator ? decorator(value) : value;
+        callback(this.value);
         this.__bindingFunctions.push(callback);
         return () => {
-            var index = this.__bindingFunctions.findIndex(function (c) { return c == callback; });
+            var index = this.__bindingFunctions.findIndex(c => c === callback);
             if (index !== -1) {
                 this.__bindingFunctions.splice(index, 1);
             }
