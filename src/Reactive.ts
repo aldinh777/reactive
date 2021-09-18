@@ -6,7 +6,7 @@ export interface ReactiveEvent<T> {
     cancel: () => void;
 }
 export type ReactiveUpdater<T> = (current: T, ev: ReactiveEvent<T>) => void;
-export type ReactiveValue<T> = T|(() => T);
+export type ReactiveValue<T> = T | (() => T);
 export type Unsubscriber = () => void;
 
 export class Reactive<T> {
@@ -25,13 +25,13 @@ export class Reactive<T> {
             this.value = initial as T;
         }
     }
-    protected __addSubscriber(...subs: Reactive<any>[]) :void {
+    protected __addSubscriber(...subs: Reactive<any>[]): void {
         this.__subscriberList.push(...subs);
     };
-    protected __removeSubscriber(sub: Reactive<any>) :void {
+    protected __removeSubscriber(sub: Reactive<any>): void {
         this.__subscriberList = this.__subscriberList.filter(subscriber => subscriber !== sub);
     };
-    protected __callUpdateFunctions() :void {
+    protected __callUpdateFunctions(): void {
         let reactionFlag = true;
         let skipAll = false;
         let skipTimes = 0;
@@ -59,15 +59,15 @@ export class Reactive<T> {
             updateFunction(this.value, reactionEvent);
         }
         for (const bindingFunction of this.__bindingFunctions) {
-            bindingFunction(this.value, reactionEvent);            
+            bindingFunction(this.value, reactionEvent);
         }
         if (reactionFlag) {
             for (const subscriber of this.__subscriberList) {
-                subscriber.__callUpdateFunctions();                
+                subscriber.__callUpdateFunctions();
             }
         }
     }
-    get value() :T {
+    get value(): T {
         return this.__getValue();
     }
     set value(value: T) {
@@ -82,13 +82,13 @@ export class Reactive<T> {
         this.__getValue = rule;
         this.__callUpdateFunctions();
     }
-    onChange(callback: ReactiveUpdater<T>, immediateCall: boolean = false) :Unsubscriber {
+    onChange(callback: ReactiveUpdater<T>, immediateCall: boolean = false): Unsubscriber {
         this.__onUpdateFunctions.push(callback);
         var reactionEvent = {
             oldValue: this.__oldValue(),
             currentReactive: this,
-            preventReaction: () => {},
-            preventNext: () => {},
+            preventReaction: () => { },
+            preventNext: () => { },
             cancel: () => {
                 this.__getValue = this.__oldValue;
             }
@@ -103,7 +103,7 @@ export class Reactive<T> {
             }
         };
     }
-    bindValue(obj: any, param: string, decorator?: (value: ReactiveValue<T>) => any) :Unsubscriber {
+    bindValue(obj: any, param: string, decorator?: (value: ReactiveValue<T>) => any): Unsubscriber {
         const callback = (value: T) => obj[param] = decorator ? decorator(value) : value;
         callback(this.value);
         this.__bindingFunctions.push(callback);
@@ -115,7 +115,7 @@ export class Reactive<T> {
             return callback;
         };
     }
-    bind(...subs: Reactive<any>[]) :Reactive<T> {
+    bind(...subs: Reactive<any>[]): Reactive<T> {
         for (const sub of this.__subscriptionList) {
             sub.__removeSubscriber(this);
         }
@@ -125,7 +125,7 @@ export class Reactive<T> {
         }
         return this;
     }
-    allowDuplicate(allow: boolean = true) :Reactive<T> {
+    allowDuplicate(allow: boolean = true): Reactive<T> {
         this.__allowDuplicate = allow;
         return this;
     }
