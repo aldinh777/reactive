@@ -1,9 +1,9 @@
-export type DinoFunction = (...args: any[]) => any;
-export type SpinoFunction = (...args: any[]) => Promise<any>;
+export type DinoFunction<T> = (...args: any[]) => T;
+export type SpinoFunction<T> = (...args: any[]) => Promise<T>;
 
-export function dino(fun: (...args: any[]) => any) :DinoFunction {
+export function dino<T>(fun: (...args: any[]) => T) :DinoFunction<T> {
     const results = new Map();
-    return function(...args: any[]) {
+    return function(...args: any[]) :T {
         let lastarg = args.pop();
         let map = results;
         for (const arg of args) {
@@ -22,9 +22,9 @@ export function dino(fun: (...args: any[]) => any) :DinoFunction {
     }
 }
 
-export function spino(fun: (...args: any[]) => any) :SpinoFunction {
+export function spino<T>(fun: (...args: any[]) => Promise<T>) :SpinoFunction<T> {
     const results = new Map();
-    return async function(...args: any[]) {
+    return async function(...args: any[]) :Promise<T> {
         let lastarg = args.pop();
         let map = results;
         for (const arg of args) {

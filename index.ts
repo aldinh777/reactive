@@ -15,7 +15,7 @@ export function onChange<T>(callback: ReactiveUpdater<T>, immediateCall: boolean
         }
     };
 }
-export function when <T>(condition: (val: T, ev: ReactiveEvent<T>) => boolean, callback: ReactiveUpdater<T>, ...reactives: Reactive<T>[]) :Unsubscriber {
+export function when<T>(condition: (val: T, ev: ReactiveEvent<T>) => boolean, callback: ReactiveUpdater<T>, ...reactives: Reactive<T>[]) :Unsubscriber {
     return onChange(ev => condition(ev.currentReactive.value as T, ev) && callback(ev), true, ...reactives);
 }
 export function update<T>(re: Reactive<T>, callback: (val: T, ...args: any[]) => T, ...args: any[]) {
