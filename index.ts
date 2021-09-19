@@ -50,6 +50,31 @@ export function update<T>(
     re.value = callback(re.value as T, ...args);
 }
 
+export function increase(
+    re: Reactive<number>,
+    add: number | Reactive<number> = 1,
+    condition: () => boolean | Promise<boolean> = () => false
+): void {
+    do {
+        update(
+            re,
+            (val) => val + (add instanceof Reactive ? (add.value as number) : add)
+        );
+    } while (condition());
+}
+export function decrease(
+    re: Reactive<number>,
+    sub: number | Reactive<number> = 1,
+    condition: () => boolean | Promise<boolean> = () => false
+): void {
+    do {
+        update(
+            re,
+            (val) => val - (sub instanceof Reactive ? (sub.value as number) : sub)
+        );
+    } while (condition());
+}
+
 export async function asyncWhen<T>(
     condition: (val: T, ev: ReactiveEvent<T>) => Promise<boolean>,
     callback: (currentValue: T, ev: ReactiveEvent<T>) => void,
@@ -65,7 +90,7 @@ export async function asyncWhen<T>(
         ...reactives
     );
 }
-export async function increase(
+export async function asyncIncrease(
     re: Reactive<number>,
     add: number | Reactive<number> = 1,
     condition: () => boolean | Promise<boolean> = () => false
@@ -77,7 +102,7 @@ export async function increase(
         );
     } while (await condition());
 }
-export async function decrease(
+export async function asyncDecrease(
     re: Reactive<number>,
     sub: number | Reactive<number> = 1,
     condition: () => boolean | Promise<boolean> = () => false
