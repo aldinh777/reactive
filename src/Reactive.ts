@@ -1,5 +1,5 @@
 export interface ReactiveEvent<T> {
-    oldValue: T;
+    oldValue?: T;
     currentReactive: Reactive<T>;
     preventReaction: () => void;
     preventNext: (times?: number) => void;
@@ -16,7 +16,11 @@ export class Reactive<T> {
     protected __bindingFunctions: ReactiveUpdater<T>[] = [];
     protected __allowDuplicate: boolean = false;
     protected __getValue!: () => T;
-    protected __oldValue!: () => T;
+    protected __oldValue?: T;
+
+    protected static __reactiveStack: Reactive<any>[] = [];
+    protected static __observerStack: ReactiveEvent<any>[] = [];
+    protected static __activeGetVal: Reactive<any>|null = null;
 
     constructor(initial?: ReactiveValue<T>) {
         if (typeof initial === 'function') {
@@ -25,25 +29,32 @@ export class Reactive<T> {
             this.value = initial as T;
         }
     }
-    protected __addSubscriber(...subs: Reactive<any>[]): void {
-        this.__subscriberList.push(...subs);
-    };
-    protected __removeSubscriber(sub: Reactive<any>): void {
-        this.__subscriberList = this.__subscriberList.filter(subscriber => subscriber !== sub);
-    };
+    protected __addSubscription(sub: Reactive<any>): void {
+        this.__subscriptionList.push(sub);
+        sub.__subscriberList.push(this);
+    }
+    protected __removeSubsriber(sub: Reactive<any>): void {
+        const index = this.__subscriberList.indexOf(sub);
+        if (index !== -1) {
+            this.__subscriberList.splice(index, 1);
+        }
+    }
+    protected __clearSubscription(): void {
+        for (const sub of this.__subscriptionList) {
+            sub.__removeSubsriber(this);
+        }
+        this.__subscriptionList = [];
+    }
     protected __callUpdateFunctions(): void {
         let reactionFlag = true;
         let skipAll = false;
         let skipTimes = 0;
         const reactionEvent = {
-            oldValue: this.__oldValue(),
+            oldValue: this.__oldValue,
             currentReactive: this,
             preventReaction: () => reactionFlag = false,
             preventNext: (times: number = -1) => skipTimes = times,
-            cancel: () => {
-                this.__getValue = this.__oldValue;
-                skipAll = true;
-            }
+            cancel: () => skipAll = true,
         };
         for (const updateFunction of this.__onUpdateFunctions) {
             if (skipAll) {
@@ -68,36 +79,46 @@ export class Reactive<T> {
         }
     }
     get value(): T {
-        return this.__getValue();
+        if (!Reactive.__activeGetVal) {
+            Reactive.__activeGetVal = this;
+            if (Reactive.__reactiveStack.length > 0) {
+                const sub = Reactive.__reactiveStack[Reactive.__reactiveStack.length - 1];
+                if (!this.__subscriberList.includes(sub)) {
+                    sub.__addSubscription(this);
+                }
+            }
+        }
+        const value = this.__getValue();
+        if (Reactive.__activeGetVal === this) {
+            Reactive.__activeGetVal = null;
+        }
+        return value;
     }
     set value(value: T) {
-        this.__oldValue = this.__getValue ? this.__getValue : () => undefined!;
-        if (!this.__allowDuplicate && this.__getValue && this.__oldValue() === value) {
-            return;
-        }
         this.rule = () => value;
     }
     set rule(rule: () => T) {
-        this.__oldValue = this.__getValue ? this.__getValue : () => undefined!;
+        this.__clearSubscription();
+        Reactive.__reactiveStack.push(this);
+        const newValue = rule();
+        Reactive.__reactiveStack.pop();
         this.__getValue = rule;
-        this.__callUpdateFunctions();
+        // this.__callUpdateFunctions();
     }
     onChange(callback: ReactiveUpdater<T>, immediateCall: boolean = false): Unsubscriber {
         this.__onUpdateFunctions.push(callback);
-        var reactionEvent = {
-            oldValue: this.__oldValue(),
+        const reactionEvent = {
+            oldValue: this.__oldValue,
             currentReactive: this,
             preventReaction: () => { },
             preventNext: () => { },
-            cancel: () => {
-                this.__getValue = this.__oldValue;
-            }
+            cancel: () => { },
         };
         if (immediateCall) {
             callback(this.value, reactionEvent);
         }
         return () => {
-            var index = this.__onUpdateFunctions.findIndex(function (c) { return c == callback; });
+            const index = this.__onUpdateFunctions.findIndex(function (c) { return c == callback; });
             if (index !== -1) {
                 this.__onUpdateFunctions.splice(index, 1);
             }
@@ -108,22 +129,12 @@ export class Reactive<T> {
         callback(this.value);
         this.__bindingFunctions.push(callback);
         return () => {
-            var index = this.__bindingFunctions.findIndex(c => c === callback);
+            const index = this.__bindingFunctions.findIndex(c => c === callback);
             if (index !== -1) {
                 this.__bindingFunctions.splice(index, 1);
             }
             return callback;
         };
-    }
-    bind(...subs: Reactive<any>[]): Reactive<T> {
-        for (const sub of this.__subscriptionList) {
-            sub.__removeSubscriber(this);
-        }
-        this.__subscriptionList = subs;
-        for (const sub of subs) {
-            sub.__addSubscriber(this);
-        }
-        return this;
     }
     allowDuplicate(allow: boolean = true): Reactive<T> {
         this.__allowDuplicate = allow;
