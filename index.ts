@@ -5,7 +5,7 @@ export {
     ReactiveEvent,
     ReactiveUpdater,
     ReactiveValue,
-    Unsubscriber,
+    Unsubscriber
 } from "./src/Reactive";
 export {
     reactive,
@@ -14,12 +14,9 @@ export {
     when,
     update,
     increase,
-    decrease,
-    asyncWhen,
-    asyncIncrease,
-    asyncDecrease,
+    decrease
 } from "./src/reactiveHelper";
 export { Duck, DuckType, Maybe, quack } from "./src/Duck";
-export { DinoFunction, SpinoFunction, dino, spino } from "./src/dino";
+export { DinoFunction, dino } from "./src/dino";
 
 export default reactive;
