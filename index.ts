@@ -31,16 +31,34 @@ export function onChange<T>(
         }
     };
 }
-export function when<T>(
-    condition: (val: T, ev: ReactiveEvent<T>) => boolean,
+export function observe<T>(
     callback: ReactiveUpdater<T>,
     ...reactives: Reactive<T>[]
 ): Unsubscriber {
-    return onChange(
-        (value, ev) => condition(value, ev) && callback(value, ev),
-        true,
-        ...reactives
-    );
+    if (reactives.length > 0) {
+        return onChange(callback, true, ...reactives);
+    } else {
+        return Reactive.observe(callback);
+    }
+}
+export function when<T>(
+    condition: (val?: T, ev?: ReactiveEvent<T>) => boolean,
+    callback: ReactiveUpdater<T>,
+    ...reactives: Reactive<T>[]
+): Unsubscriber {
+    if (reactives.length > 0) {
+        return observe(
+            (value, ev) => condition(value, ev) && callback(value, ev),
+            ...reactives
+        );
+    } else {
+        const updateFunction: ReactiveUpdater<T> = (value, ev) => {
+            if (condition()) {
+                callback(value, ev);
+            }
+        };
+        return Reactive.observeIf(condition, updateFunction);
+    }
 }
 export function update<T>(
     re: Reactive<T>,
@@ -76,8 +94,8 @@ export function decrease(
 }
 
 export async function asyncWhen<T>(
-    condition: (val: T, ev: ReactiveEvent<T>) => Promise<boolean>,
-    callback: (currentValue: T, ev: ReactiveEvent<T>) => void,
+    condition: (val?: T, ev?: ReactiveEvent<T>) => Promise<boolean>,
+    callback: ReactiveUpdater<T>,
     ...reactives: Reactive<T>[]
 ): Promise<Unsubscriber> {
     return onChange(
@@ -93,7 +111,7 @@ export async function asyncWhen<T>(
 export async function asyncIncrease(
     re: Reactive<number>,
     add: number | Reactive<number> = 1,
-    condition: () => boolean | Promise<boolean> = () => false
+    condition: () => Promise<boolean> = async () => false
 ): Promise<void> {
     do {
         update(
@@ -105,7 +123,7 @@ export async function asyncIncrease(
 export async function asyncDecrease(
     re: Reactive<number>,
     sub: number | Reactive<number> = 1,
-    condition: () => boolean | Promise<boolean> = () => false
+    condition: () => Promise<boolean> = async () => false
 ): Promise<void> {
     do {
         update(
