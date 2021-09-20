@@ -1,7 +1,7 @@
 {
   "name": "@aldinh777/reactive",
   "version": "0.5.0-unstable",
-  "description": "Reactive programming, manually",
+  "description": "an attempt to Reactive programming",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
