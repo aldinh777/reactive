@@ -1,11 +1,11 @@
 export interface ReactiveEvent<T> {
     oldValue?: T;
-    currentReactive: Reactive<T>;
+    currentReactive?: Reactive<T>;
     preventReaction: () => void;
     preventNext: (times?: number) => void;
     cancel: () => void;
 }
-export type ReactiveUpdater<T> = (value?: T, ev?: ReactiveEvent<T>) => void;
+export type ReactiveUpdater<T> = (value: T, ev: ReactiveEvent<T>) => void;
 export type ReactiveValue<T> = T | (() => T);
 export type Unsubscriber = () => void;
 
@@ -40,10 +40,7 @@ export class Reactive<T> {
         sub.__subscriberList.push(this);
     }
     protected __removeSubsriber(sub: Reactive<any>): void {
-        const index = this.__subscriberList.indexOf(sub);
-        if (index !== -1) {
-            this.__subscriberList.splice(index, 1);
-        }
+        Reactive.removeFromArray(sub, this.__subscriberList);
     }
     protected __clearSubscription(): void {
         for (const sub of this.__subscriptionList) {
@@ -80,35 +77,25 @@ export class Reactive<T> {
                 }
                 updateFunction(this.value, reactionEvent);
             }
-            for (const bindingFunction of this.__bindingFunctions) {
-                bindingFunction(this.value, reactionEvent);
-            }
+            this.__bindingFunctions.forEach(bind => bind(this.value, reactionEvent));
             if (reactionFlag) {
-                for (const subscriber of this.__subscriberList) {
-                    subscriber.__callUpdateFunctions();
-                }
+                this.__subscriberList.forEach(sub => sub.__callUpdateFunctions())
             }
         }
     }
     get value(): T {
         if (!Reactive.__activeGetObs) {
             Reactive.__activeGetObs = this;
-            if (Reactive.__observerStack.length > 0) {
-                const obs = Reactive.__observerStack[Reactive.__observerStack.length - 1];
-                const { updateFunction } = obs;
-                if (!this.__onUpdateFunctions.includes(updateFunction)) {
-                    obs.unsubscribers.push(this.onChange(updateFunction));
-                }
-            }
+            Reactive.getStackAndCompare(Reactive.__observerStack, this.__onUpdateFunctions, obs => obs.updateFunction, obs => {
+                const { unsubscribers, updateFunction } = obs;
+                unsubscribers.push(this.onChange(updateFunction));
+            })
         }
         if (!Reactive.__activeGetVal) {
             Reactive.__activeGetVal = this;
-            if (Reactive.__reactiveStack.length > 0) {
-                const sub = Reactive.__reactiveStack[Reactive.__reactiveStack.length - 1];
-                if (!this.__subscriberList.includes(sub)) {
-                    sub.__addSubscription(this);
-                }
-            }
+            Reactive.getStackAndCompare(Reactive.__reactiveStack, this.__subscriberList, sub => sub, sub => {
+                sub.__addSubscription(this);
+            });
         }
         const value = this.__getValue();
         if (Reactive.__activeGetVal === this) {
@@ -132,34 +119,16 @@ export class Reactive<T> {
     }
     onChange(callback: ReactiveUpdater<T>, immediateCall: boolean = false): Unsubscriber {
         this.__onUpdateFunctions.push(callback);
-        const reactionEvent = {
-            oldValue: this.__oldValue,
-            currentReactive: this,
-            preventReaction: () => { },
-            preventNext: () => { },
-            cancel: () => { },
-        };
         if (immediateCall) {
-            callback(this.value, reactionEvent);
+            callback(this.value, Reactive.createEmptyEvent(this));
         }
-        return () => {
-            const index = this.__onUpdateFunctions.findIndex(function (c) { return c == callback; });
-            if (index !== -1) {
-                this.__onUpdateFunctions.splice(index, 1);
-            }
-        };
+        return () => Reactive.removeFromArray(callback, this.__onUpdateFunctions);
     }
     bindValue(obj: any, param: string, decorator?: (value?: ReactiveValue<T>) => any): Unsubscriber {
         const callback = (value?: T) => obj[param] = decorator ? decorator(value) : value;
         callback(this.value);
         this.__bindingFunctions.push(callback);
-        return () => {
-            const index = this.__bindingFunctions.findIndex(c => c === callback);
-            if (index !== -1) {
-                this.__bindingFunctions.splice(index, 1);
-            }
-            return callback;
-        };
+        return () => Reactive.removeFromArray(callback, this.__bindingFunctions);
     }
     allowDuplicate(allow: boolean = true): Reactive<T> {
         this.__allowDuplicate = allow;
@@ -167,30 +136,42 @@ export class Reactive<T> {
     }
     static observe(updateFunction: ReactiveUpdater<any>): Unsubscriber {
         Reactive.__observerStack.push({ unsubscribers: [], updateFunction });
-        updateFunction();
+        updateFunction(undefined, Reactive.createEmptyEvent());
         const observer = Reactive.__observerStack.pop();
-        return () => {
-            if (observer) {
-                for (const unsub of observer.unsubscribers) {
-                    unsub();
-                }
-            }
-        };
+        return () => observer && observer.unsubscribers.forEach(unsub => unsub());
     }
-    static observeIf(condition: () => boolean, callback: ReactiveUpdater<any>): Unsubscriber {
-        const updateFunction: ReactiveUpdater<any> = (value, ev) => condition() && callback(value, ev);
+    static observeIf(condition: (value: any, ev: ReactiveEvent<any>) => boolean, callback: ReactiveUpdater<any>): Unsubscriber {
+        const updateFunction: ReactiveUpdater<any> = (value, ev) => condition(value, ev) && callback(value, ev);
         Reactive.__observerStack.push({ unsubscribers: [], updateFunction });
-        const yes = condition();
+        const yes = condition(undefined, Reactive.createEmptyEvent());
         const observer = Reactive.__observerStack.pop();
         if (yes) {
-            callback();
+            callback(undefined, Reactive.createEmptyEvent());
         }
-        return () => {
-            if (observer) {
-                for (const unsub of observer.unsubscribers) {
-                    unsub();
-                }
-            }
+        return () => observer && observer.unsubscribers.forEach(unsub => unsub());
+    }
+    private static createEmptyEvent(re?: Reactive<any>): ReactiveEvent<any> {
+        return {
+            oldValue: re ? re.__oldValue : undefined,
+            currentReactive: re,
+            preventReaction: () => { },
+            preventNext: () => { },
+            cancel: () => { },
         };
+    }
+    private static removeFromArray<T>(elem: T, array: T[]): void {
+        const index = array.indexOf(elem);
+        if (index !== -1) {
+            array.splice(index, 1);
+        }
+    }
+    private static getStackAndCompare<U, V>(stackArray: U[], targetList: V[], mapper: (value: U) => V, callback: (value: U) => void): void {
+        if (stackArray.length > 0) {
+            const result = stackArray[stackArray.length - 1];
+            const compare = mapper(result);
+            if (!targetList.includes(compare)) {
+                callback(result);
+            }
+        }
     }
 }
