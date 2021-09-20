@@ -10,6 +10,8 @@ export function dino<T>(fun: (...args: any[]) => T): DinoFunction<T> {
                 const nextmap = new Map();
                 map.set(arg, nextmap);
                 map = nextmap;
+            } else {
+                map = map.get(arg);
             }
         }
         if (map.has(lastarg)) {
