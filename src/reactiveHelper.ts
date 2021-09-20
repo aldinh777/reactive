@@ -38,7 +38,6 @@ export function update<T>(
 ) {
     re.value = callback(re.value as T, ...args.map(r => r instanceof Reactive ? r.value : r));
 }
-
 export function increase(
     re: Reactive<number>,
     add: number | Reactive<number> = 1,
@@ -65,7 +64,6 @@ export function decrease(
         update(re, (val, add) => val - add, sub);
     } while (condition());
 }
-
 export function reactive<T>(initial?: ReactiveValue<T>): Reactive<T> {
     return new Reactive(initial);
 }
