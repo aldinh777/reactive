@@ -36,8 +36,10 @@ export class Reactive<T> {
         }
     }
     protected __addSubscription(sub: Reactive<any>): void {
-        this.__subscriptionList.push(sub);
-        sub.__subscriberList.push(this);
+        if (sub !== this) {
+            this.__subscriptionList.push(sub);
+            sub.__subscriberList.push(this);
+        }
     }
     protected __removeSubsriber(sub: Reactive<any>): void {
         Reactive.removeFromArray(sub, this.__subscriberList);
@@ -49,55 +51,65 @@ export class Reactive<T> {
         this.__subscriptionList = [];
     }
     protected __callUpdateFunctions(initial?: T): void {
+        const totalSubscriberFuntions = Reactive.deepSubscriberCheck(this);
+        if (totalSubscriberFuntions === 0) {
+            this.__oldValue = initial;
+            return;
+        }
         const current = initial !== undefined ? initial : this.__getValue();
         const changed = current !== this.__oldValue;
         if (this.__allowDuplicate || changed) {
             const oldValue = this.__oldValue;
-            this.__oldValue = this.value;
-            let reactionFlag = true;
-            let skipAll = false;
-            let skipTimes = 0;
-            const reactionEvent = {
-                oldValue,
-                currentReactive: this,
-                preventReaction: () => reactionFlag = false,
-                preventNext: (times: number = -1) => skipTimes = times,
-                cancel: () => skipAll = true,
-            };
-            for (const updateFunction of this.__onUpdateFunctions) {
-                if (skipAll) {
-                    return;
+            this.__oldValue = current;
+            let reactionFlag = this.__subscriberList.length > 0;
+            const totalFunctions = this.__bindingFunctions.length + this.__onUpdateFunctions.length;
+            if (totalFunctions) {
+                let skipAll = false;
+                let skipTimes = 0;
+                const reactionEvent = {
+                    oldValue,
+                    currentReactive: this,
+                    preventReaction: () => reactionFlag = false,
+                    preventNext: (times: number = -1) => skipTimes = times,
+                    cancel: () => skipAll = true,
+                };
+                for (const updateFunction of this.__onUpdateFunctions) {
+                    if (skipAll) {
+                        return;
+                    }
+                    if (skipTimes > 0) {
+                        skipTimes--;
+                        continue;
+                    }
+                    else if (skipTimes === -1) {
+                        break;
+                    }
+                    updateFunction(current, reactionEvent);
                 }
-                if (skipTimes > 0) {
-                    skipTimes--;
-                    continue;
-                }
-                else if (skipTimes === -1) {
-                    break;
-                }
-                updateFunction(this.value, reactionEvent);
+                this.__bindingFunctions.forEach(bind => bind(current, reactionEvent));
             }
-            this.__bindingFunctions.forEach(bind => bind(this.value, reactionEvent));
             if (reactionFlag) {
                 this.__subscriberList.forEach(sub => sub.__callUpdateFunctions())
             }
         }
     }
     get value(): T {
-        if (!Reactive.__activeGetObs) {
-            Reactive.__activeGetObs = this;
-            Reactive.getStackAndCompare(Reactive.__observerStack, this.__onUpdateFunctions, obs => obs.updateFunction, obs => {
+        let initiationFlag = false;
+        Reactive.getStackAndCompare(Reactive.__reactiveStack, this.__subscriberList, sub => sub, sub => {
+            if (!Reactive.__activeGetVal) {
+                initiationFlag = true;
+                Reactive.__activeGetVal = this;
+            }
+            sub.__addSubscription(this);
+        });
+        Reactive.getStackAndCompare(Reactive.__observerStack, this.__onUpdateFunctions, obs => obs.updateFunction, obs => {
+            if (!Reactive.__activeGetObs) {
+                Reactive.__activeGetObs = this;
                 const { unsubscribers, updateFunction } = obs;
                 unsubscribers.push(this.onChange(updateFunction));
-            })
-        }
-        if (!Reactive.__activeGetVal) {
-            Reactive.__activeGetVal = this;
-            Reactive.getStackAndCompare(Reactive.__reactiveStack, this.__subscriberList, sub => sub, sub => {
-                sub.__addSubscription(this);
-            });
-        }
-        const value = this.__getValue();
+            }
+        })
+        const value = initiationFlag ? this.__oldValue as T : this.__getValue();
         if (Reactive.__activeGetVal === this) {
             Reactive.__activeGetVal = null;
         }
@@ -173,5 +185,12 @@ export class Reactive<T> {
                 callback(result);
             }
         }
+    }
+    private static deepSubscriberCheck(sub: Reactive<any>): number {
+        return sub.__onUpdateFunctions.length
+            + sub.__bindingFunctions.length
+            + sub.__subscriberList
+                .map(Reactive.deepSubscriberCheck)
+                .reduce((a, b) => a + b, 0);
     }
 }
