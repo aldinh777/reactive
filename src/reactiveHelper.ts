@@ -25,7 +25,7 @@ export function when<T>(
     callback: ReactiveUpdater<T>,
     ...reactives: Reactive<T>[]
 ): Unsubscriber {
-    return reactives.length > 0 
+    return reactives.length > 0
         ? observe((value, ev) => condition(value, ev) && callback(value, ev), ...reactives)
         : Reactive.observeIf(condition, (value, ev) => condition() && callback(value, ev));
 }

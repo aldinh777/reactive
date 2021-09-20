@@ -1,8 +1,8 @@
-export type DinoFunction<T> = (...args: any[]) => T|Promise<T>;
+export type DinoFunction<T> = (...args: any[]) => T | Promise<T>;
 
 export function dino<T>(fun: (...args: any[]) => T): DinoFunction<T> {
     const results = new Map();
-    return function (...args: any[]): T|Promise<T> {
+    return function (...args: any[]): T | Promise<T> {
         let lastarg = args.pop();
         let map = results;
         for (const arg of args) {
