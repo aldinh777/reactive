@@ -45,36 +45,42 @@ export class Reactive<T> {
         }
         this.__subscriptionList = [];
     }
-    protected __callUpdateFunctions(): void {
-        let reactionFlag = true;
-        let skipAll = false;
-        let skipTimes = 0;
-        const reactionEvent = {
-            oldValue: this.__oldValue,
-            currentReactive: this,
-            preventReaction: () => reactionFlag = false,
-            preventNext: (times: number = -1) => skipTimes = times,
-            cancel: () => skipAll = true,
-        };
-        for (const updateFunction of this.__onUpdateFunctions) {
-            if (skipAll) {
-                return;
+    protected __callUpdateFunctions(initial?: T): void {
+        const current = initial !== undefined ? initial : this.__getValue();
+        const changed = current !== this.__oldValue;
+        if (changed) {
+            const oldValue = this.__oldValue;
+            this.__oldValue = this.value;
+            let reactionFlag = true;
+            let skipAll = false;
+            let skipTimes = 0;
+            const reactionEvent = {
+                oldValue,
+                currentReactive: this,
+                preventReaction: () => reactionFlag = false,
+                preventNext: (times: number = -1) => skipTimes = times,
+                cancel: () => skipAll = true,
+            };
+            for (const updateFunction of this.__onUpdateFunctions) {
+                if (skipAll) {
+                    return;
+                }
+                if (skipTimes > 0) {
+                    skipTimes--;
+                    continue;
+                }
+                else if (skipTimes === -1) {
+                    break;
+                }
+                updateFunction(this.value, reactionEvent);
             }
-            if (skipTimes > 0) {
-                skipTimes--;
-                continue;
+            for (const bindingFunction of this.__bindingFunctions) {
+                bindingFunction(this.value, reactionEvent);
             }
-            else if (skipTimes === -1) {
-                break;
-            }
-            updateFunction(this.value, reactionEvent);
-        }
-        for (const bindingFunction of this.__bindingFunctions) {
-            bindingFunction(this.value, reactionEvent);
-        }
-        if (reactionFlag) {
-            for (const subscriber of this.__subscriberList) {
-                subscriber.__callUpdateFunctions();
+            if (reactionFlag) {
+                for (const subscriber of this.__subscriberList) {
+                    subscriber.__callUpdateFunctions();
+                }
             }
         }
     }
@@ -100,10 +106,10 @@ export class Reactive<T> {
     set rule(rule: () => T) {
         this.__clearSubscription();
         Reactive.__reactiveStack.push(this);
-        const newValue = rule();
+        const initial = rule();
         Reactive.__reactiveStack.pop();
         this.__getValue = rule;
-        // this.__callUpdateFunctions();
+        this.__callUpdateFunctions(initial);
     }
     onChange(callback: ReactiveUpdater<T>, immediateCall: boolean = false): Unsubscriber {
         this.__onUpdateFunctions.push(callback);
