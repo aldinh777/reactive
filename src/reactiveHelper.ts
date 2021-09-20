@@ -6,7 +6,6 @@ import {
     Unsubscriber,
 } from "./Reactive";
 
-
 export function onChange<T>(
     callback: ReactiveUpdater<T>,
     immediateCall: boolean,
@@ -62,7 +61,7 @@ export function update<T>(
 export function increase(
     re: Reactive<number>,
     add: number | Reactive<number> = 1,
-    condition: () => boolean | Promise<boolean> = () => false
+    condition: () => boolean = () => false
 ): void {
     do {
         update(
@@ -74,7 +73,7 @@ export function increase(
 export function decrease(
     re: Reactive<number>,
     sub: number | Reactive<number> = 1,
-    condition: () => boolean | Promise<boolean> = () => false
+    condition: () => boolean = () => false
 ): void {
     do {
         update(
