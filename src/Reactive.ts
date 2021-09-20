@@ -177,14 +177,14 @@ export class Reactive<T> {
             }
         };
     }
-    static observeIf(condition: () => boolean, updateFunction: ReactiveUpdater<any>): Unsubscriber {
+    static observeIf(condition: () => boolean, callback: ReactiveUpdater<any>): Unsubscriber {
+        const updateFunction: ReactiveUpdater<any> = (value, ev) => condition() && callback(value, ev);
         Reactive.__observerStack.push({ unsubscribers: [], updateFunction });
         const yes = condition();
-        Reactive.__observerStack.pop();
-        if (yes) {
-            updateFunction();
-        }
         const observer = Reactive.__observerStack.pop();
+        if (yes) {
+            callback();
+        }
         return () => {
             if (observer) {
                 for (const unsub of observer.unsubscribers) {

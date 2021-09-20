@@ -18,7 +18,9 @@ export function observe<T>(
     callback: ReactiveUpdater<T>,
     ...reactives: Reactive<T>[]
 ): Unsubscriber {
-    return reactives.length > 0 ? onChange(callback, true, ...reactives) : Reactive.observe(callback);
+    return reactives.length > 0
+        ? onChange(callback, true, ...reactives)
+        : Reactive.observe(callback);
 }
 export function when<T>(
     condition: (val?: T, ev?: ReactiveEvent<T>) => boolean,
@@ -27,7 +29,7 @@ export function when<T>(
 ): Unsubscriber {
     return reactives.length > 0
         ? observe((value, ev) => condition(value, ev) && callback(value, ev), ...reactives)
-        : Reactive.observeIf(condition, (value, ev) => condition() && callback(value, ev));
+        : Reactive.observeIf(condition, callback);
 }
 export function update<T>(
     re: Reactive<T>,
