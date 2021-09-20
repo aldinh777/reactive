@@ -25,8 +25,8 @@ export class Reactive<T> {
 
     protected static __reactiveStack: Reactive<any>[] = [];
     protected static __observerStack: InternalObserver[] = [];
-    protected static __activeGetVal: Reactive<any>|null = null;
-    protected static __activeGetObs: Reactive<any>|null = null;
+    protected static __activeGetVal: Reactive<any> | null = null;
+    protected static __activeGetObs: Reactive<any> | null = null;
 
     constructor(initial?: ReactiveValue<T>) {
         if (typeof initial === 'function') {
@@ -54,7 +54,7 @@ export class Reactive<T> {
     protected __callUpdateFunctions(initial?: T): void {
         const current = initial !== undefined ? initial : this.__getValue();
         const changed = current !== this.__oldValue;
-        if (changed) {
+        if (this.__allowDuplicate || changed) {
             const oldValue = this.__oldValue;
             this.__oldValue = this.value;
             let reactionFlag = true;
@@ -165,7 +165,7 @@ export class Reactive<T> {
         this.__allowDuplicate = allow;
         return this;
     }
-    static observe(updateFunction: ReactiveUpdater<any>) :Unsubscriber {
+    static observe(updateFunction: ReactiveUpdater<any>): Unsubscriber {
         Reactive.__observerStack.push({ unsubscribers: [], updateFunction });
         updateFunction();
         const observer = Reactive.__observerStack.pop();
@@ -177,7 +177,7 @@ export class Reactive<T> {
             }
         };
     }
-    static observeIf(condition: () => boolean, updateFunction: ReactiveUpdater<any>) :Unsubscriber {
+    static observeIf(condition: () => boolean, updateFunction: ReactiveUpdater<any>): Unsubscriber {
         Reactive.__observerStack.push({ unsubscribers: [], updateFunction });
         const yes = condition();
         Reactive.__observerStack.pop();
