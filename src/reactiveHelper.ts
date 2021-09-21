@@ -39,9 +39,9 @@ export function update<T>(
     if (!condition) {
         re.value = callback(re.value);
     } else {
-        do {
+        while(condition(re.value)) {
             re.value = callback(re.value);
-        } while (condition(re.value));
+        }
     }
 }
 export function increase(
