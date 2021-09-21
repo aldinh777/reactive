@@ -78,9 +78,6 @@ export class Reactive<T> {
                     cancel: () => skipAll = true,
                 };
                 for (const updateFunction of this.__onUpdateFunctions) {
-                    if (skipAll) {
-                        return;
-                    }
                     if (skipTimes > 0) {
                         skipTimes--;
                         continue;
@@ -89,6 +86,9 @@ export class Reactive<T> {
                         break;
                     }
                     updateFunction(current, reactionEvent);
+                    if (skipAll) {
+                        return;
+                    }
                 }
                 this.__bindingFunctions.forEach(bind => bind(current, reactionEvent));
             }
