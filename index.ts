@@ -4,6 +4,7 @@ export {
     Reactive,
     ReactiveEvent,
     ReactiveUpdater,
+    ConditionUpdater,
     ReactiveValue,
     Unsubscriber
 } from "./src/Reactive";
