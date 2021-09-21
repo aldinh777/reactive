@@ -51,8 +51,9 @@ export class Reactive<T> {
         this.__subscriptionList = [];
     }
     protected __callUpdateFunctions(initial?: T): void {
-        const totalSubscriberFuntions = Reactive.deepSubscriberCheck(this);
-        if (totalSubscriberFuntions === 0) {
+        const totalSubscriber = this.__subscriberList.length;
+        const totalFunctions = this.__bindingFunctions.length + this.__onUpdateFunctions.length;
+        if (!(totalSubscriber + totalFunctions)) {
             this.__oldValue = initial;
             return;
         }
@@ -62,7 +63,6 @@ export class Reactive<T> {
             const oldValue = this.__oldValue;
             this.__oldValue = current;
             let reactionFlag = this.__subscriberList.length > 0;
-            const totalFunctions = this.__bindingFunctions.length + this.__onUpdateFunctions.length;
             if (totalFunctions) {
                 let skipAll = false;
                 let skipTimes = 0;
@@ -178,19 +178,12 @@ export class Reactive<T> {
         }
     }
     private static getStackAndCompare<U, V>(stackArray: U[], targetList: V[], mapper: (value: U) => V, callback: (value: U) => void): void {
-        if (stackArray.length > 0) {
+        if (stackArray.length) {
             const result = stackArray[stackArray.length - 1];
             const compare = mapper(result);
             if (!targetList.includes(compare)) {
                 callback(result);
             }
         }
-    }
-    private static deepSubscriberCheck(sub: Reactive<any>): number {
-        return sub.__onUpdateFunctions.length
-            + sub.__bindingFunctions.length
-            + sub.__subscriberList
-                .map(Reactive.deepSubscriberCheck)
-                .reduce((a, b) => a + b, 0);
     }
 }

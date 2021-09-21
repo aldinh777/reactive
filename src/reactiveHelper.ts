@@ -18,7 +18,7 @@ export function observe<T>(
     callback: ReactiveUpdater<T>,
     ...reactives: Reactive<T>[]
 ): Unsubscriber {
-    return reactives.length > 0
+    return reactives.length
         ? onChange(callback, true, ...reactives)
         : Reactive.observe(callback);
 }
@@ -27,7 +27,7 @@ export function when<T>(
     callback: ReactiveUpdater<T>,
     ...reactives: Reactive<T>[]
 ): Unsubscriber {
-    return reactives.length > 0
+    return reactives.length
         ? observe((value, ev) => condition(value, ev) && callback(value, ev), ...reactives)
         : Reactive.observeIf(condition, callback);
 }
@@ -39,30 +39,40 @@ export function update<T>(
     re.value = callback(re.value as T, ...args.map(r => r instanceof Reactive ? r.value : r));
 }
 export function increase(
-    re: Reactive<number>,
+    re: number | Reactive<number>,
     add: number | Reactive<number> = 1,
-    condition: number | (() => boolean) = () => false
+    condition?: number | ((value: number) => boolean)
 ): void {
-    if (typeof condition === 'number') {
-        const max = condition;
-        condition = () => re.value < max;
+    const iter = re instanceof Reactive ? re : reactive(re);
+    if (!condition) {
+        update(iter, (val, add) => val + add, add);
+    } else {
+        if (typeof condition === 'number') {
+            const max = condition;
+            condition = value => value < max;
+        }
+        do {
+            update(iter, (val, add) => val + add, add);
+        } while (condition(iter.value));
     }
-    do {
-        update(re, (val, add) => val + add, add);
-    } while (condition());
 }
 export function decrease(
-    re: Reactive<number>,
+    re: number | Reactive<number>,
     sub: number | Reactive<number> = 1,
-    condition: number | (() => boolean) = () => false
+    condition: number | ((value: number) => boolean) = () => false
 ): void {
-    if (typeof condition === 'number') {
-        const min = condition;
-        condition = () => re.value > min;
+    const iter = re instanceof Reactive ? re : reactive(re);
+    if (!condition) {
+        update(iter, (val, sub) => val - sub, sub);
+    } else {
+        if (typeof condition === 'number') {
+            const min = condition;
+            condition = value => value > min;
+        }
+        do {
+            update(iter, (val, add) => val - add, sub);
+        } while (condition(iter.value));
     }
-    do {
-        update(re, (val, add) => val - add, sub);
-    } while (condition());
 }
 export function reactive<T>(initial?: ReactiveValue<T>): Reactive<T> {
     return new Reactive(initial);
