@@ -22,12 +22,11 @@ export class Reactive<T> {
     protected __bindingFunctions: ReactiveUpdater<T>[] = [];
     protected __allowDuplicate: boolean = false;
     protected __getValue?: () => T;
-    protected __oldValue?: T;
+    protected __currentValue?: T;
 
     protected static __reactiveStack: Reactive<any>[] = [];
     protected static __observerStack: InternalObserver[] = [];
     protected static __activeGetVal: Reactive<any> | null = null;
-    protected static __activeGetObs: Reactive<any> | null = null;
     protected static __hasReactiveStack: boolean = false;
     protected static __hasObserverStack: boolean = false;
 
@@ -57,15 +56,15 @@ export class Reactive<T> {
         const totalSubscriber = this.__subscriberList.length;
         const totalFunctions = this.__bindingFunctions.length + this.__onUpdateFunctions.length;
         if (!(totalSubscriber + totalFunctions)) {
-            this.__oldValue = initial;
+            this.__currentValue = initial;
             return;
         }
         const current = initial !== undefined ? initial
-            : this.__getValue ? this.__getValue() : this.__oldValue as T;
-        const changed = current !== this.__oldValue;
+            : this.__getValue ? this.__getValue() : this.__currentValue as T;
+        const changed = current !== this.__currentValue;
         if (this.__allowDuplicate || changed) {
-            const oldValue = this.__oldValue;
-            this.__oldValue = current;
+            const oldValue = this.__currentValue;
+            this.__currentValue = current;
             let reactionFlag = totalSubscriber > 0;
             if (totalFunctions) {
                 let skipAll = false;
@@ -114,23 +113,15 @@ export class Reactive<T> {
             const obStack = Reactive.__observerStack;
             const updList = this.__onUpdateFunctions;
             Reactive.getStackAndCompare(obStack, updList, obs => obs.updateFunction, obs => {
-                if (!Reactive.__activeGetObs) {
-                    Reactive.__activeGetObs = this;
-                    const { unsubscribers, updateFunction } = obs;
-                    unsubscribers.push(this.onChange(updateFunction));
-                }
+                const { unsubscribers, updateFunction } = obs;
+                unsubscribers.push(this.onChange(updateFunction));
             })
         }
-        const value = initiationFlag ? this.__oldValue as T
-            : this.__getValue ? this.__getValue() : this.__oldValue as T;
+        const value = initiationFlag ? this.__currentValue as T
+            : this.__getValue ? this.__getValue() : this.__currentValue as T;
         if (Reactive.__hasReactiveStack) {
             if (Reactive.__activeGetVal === this) {
                 Reactive.__activeGetVal = null;
-            }
-        }
-        if (Reactive.__hasObserverStack) {
-            if (Reactive.__activeGetObs === this) {
-                Reactive.__activeGetObs = null;
             }
         }
         return value;
@@ -172,7 +163,7 @@ export class Reactive<T> {
         const observer: InternalObserver = { unsubscribers: [], updateFunction };
         const fetcher = () => updateFunction(undefined, Reactive.createEmptyEvent());
         Reactive.__hasObserverStack = true;
-        Reactive.pushStackAndPop(Reactive.__observerStack, observer, fetcher, _ => {
+        Reactive.pushStackAndPop(Reactive.__observerStack, observer, fetcher, () => {
             if (!Reactive.__observerStack.length) {
                 Reactive.__hasObserverStack = false;
             }
@@ -196,7 +187,7 @@ export class Reactive<T> {
     }
     private static createEmptyEvent(re?: Reactive<any>): ReactiveEvent<any> {
         return {
-            oldValue: re ? re.__oldValue : undefined,
+            oldValue: re ? re.__currentValue : undefined,
             currentReactive: re,
             preventReaction: () => { },
             preventNext: () => { },
