@@ -4,7 +4,7 @@ import {
     ReactiveUpdater,
     ReactiveValue,
     Unsubscriber,
-} from "./Reactive";
+} from "./reactive";
 
 export function onChange<T>(
     callback: ReactiveUpdater<T>,
