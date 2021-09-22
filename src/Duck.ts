@@ -46,8 +46,8 @@ export function duck<T>(initial?: T): Duck<T> {
         }
         return TheDuck;
     }
-    const isDuck = (d: any) => d.isDuck as boolean;
-    const parseDuck = (d: any) => isDuck(d) ? d : duck(d);
+    const canQuack = (d: any) => d.quack as boolean;
+    const parseDuck = (d: any) => canQuack(d) ? d : duck(d);
     // Array Override
     TheDuck.push = (...args: DuckType<T>[]): number => __links.push(...args.map(parseDuck));
     TheDuck.pop = (): Duck<T> | undefined => __links.pop();
@@ -78,7 +78,7 @@ export function duck<T>(initial?: T): Duck<T> {
         return map;
     }
     // Properties
-    TheDuck.isDuck = true;
+    TheDuck.quack = (...args: any[]): void => quack(...args);
     Object.defineProperty(TheDuck, 'value', {
         get: () => __value,
         set: (value) => __value = value,
