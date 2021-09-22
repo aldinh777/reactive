@@ -1,6 +1,25 @@
 export type DuckType<T> = T | Duck<T>;
+export interface Duck<T> {
+    (key: any, value: T): Duck<T>;
+    value: T;
+    isDuck: boolean;
+    toArray(): T[];
+    toMap(): Map<any, T>;
 
-export type Maybe<T> = undefined | T;
+    length: number;
+    push(...args: DuckType<T>[]): number;
+    pop(): Duck<T> | undefined;
+    shift(): number;
+    unshift(...args: DuckType<T>[]): Duck<T> | undefined;
+    splice(start: number, deleteCount?: number, ...args: DuckType<T>[]): Duck<T>[];
+
+    size: number;
+    set(key: any, value: T): Duck<T>;
+    get(key: any): T | undefined;
+    clear(): void;
+    delete(key: any): boolean;
+    has(key: any): boolean;
+};
 
 export function quack(...args: any[]): any {
     const quacks = args.length ? args : ['quack'];
@@ -12,140 +31,59 @@ export function quack(...args: any[]): any {
     console.log(...quacks);
 }
 
-export class Duck<T> {
-    protected __links: Duck<T>[] = []
-    protected __map: Map<any, Duck<T>> = new Map()
-    value?: T
-
-    constructor(value?: T) {
-        this.value = value;
+export function duck<T>(initial?: T): Duck<T> {
+    const __links: Duck<T>[] = [];
+    const __map: Map<any, Duck<T>> = new Map();
+    let __value: T = initial as T;
+    const TheDuck: any = (key: any, value: T): Duck<T> => {
+        if (key !== undefined && value !== undefined) {
+            const proto = __links[key];
+            proto.value = value;
+            return proto;
+        }
+        if (key !== undefined) {
+            return __links[key];
+        }
+        return TheDuck;
     }
-    get array(): any[] {
-        return this.__links.map(d => d.value instanceof Duck || d.length > 0 ? d.array : d.value);
-    }
-    get map(): Map<any, any> {
+    const isDuck = (d: any) => d.isDuck as boolean;
+    const parseDuck = (d: any) => isDuck(d) ? d : duck(d);
+    // Array Override
+    TheDuck.push = (...args: DuckType<T>[]): number => __links.push(...args.map(parseDuck));
+    TheDuck.pop = (): Duck<T> | undefined => __links.pop();
+    TheDuck.shift = (): Duck<T> | undefined => __links.shift();
+    TheDuck.unshift = (...args: T[]): number => __links.unshift(...args.map(parseDuck));
+    TheDuck.splice = (start: number, deleteCount: number = 0, ...args: DuckType<T>[]): Duck<T>[] => {
+        return __links.splice(start, deleteCount, ...args.map(parseDuck));
+    };
+    // Map Override
+    TheDuck.set = (key: any, value: T): Duck<T> => {
+        __map.set(key, parseDuck(value));
+        return TheDuck;
+    };
+    TheDuck.get = (key: any): T | undefined => {
+        const fetchDuck = __map.get(key)
+        return fetchDuck ? fetchDuck.value : undefined;
+    };
+    TheDuck.clear = (): void => __map.clear();
+    TheDuck.delete = (key: any): boolean => __map.delete(key);
+    TheDuck.has = (key: any): boolean => __map.has(key);
+    // Unducking
+    TheDuck.toArray = (): T[] => {
+        return __links.map(d => d.value)
+    };
+    TheDuck.toMap = (): Map<any, T> => {
         const map = new Map();
-        this.__map.forEach((d, key) => map.set(key, d.value instanceof Duck || d.size > 0 ? d.map : d.value));
+        __map.forEach((d, key) => map.set(key, d.value));
         return map;
     }
-    get object(): any {
-        if (!(this.value instanceof Duck)) {
-            return this.value;
-        }
-        if (this.size > 0) {
-            const obj: any = {};
-            this.__map.forEach((d, key) => obj[key] = d.object);
-            return obj;
-        } else if (this.length > 0) {
-            return this.__links.map(d => d.object);
-        }
-        return this.value;
-    }
-    get keys(): any[] {
-        return Array.from(this.__map.keys());
-    }
-    get values(): Maybe<T>[] {
-        return Array.from(this.__map.values()).map(d => d.value);
-    }
-    // Array Override
-    get length(): number {
-        return this.__links.length;
-    }
-    push(...ducks: DuckType<T>[]): number {
-        return this.__links.push(...ducks.map(Duck.parseDuck));
-    }
-    pop(): Maybe<T> {
-        const duck = this.__links.pop();
-        if (duck) {
-            return duck.value;
-        }
-    }
-    shift(): Maybe<T> {
-        const duck = this.__links.shift();
-        if (duck) {
-            return duck.value;
-        }
-    }
-    unshift(...ducks: DuckType<T>[]): number {
-        return this.__links.unshift(...ducks.map(Duck.parseDuck));
-    }
-    splice(start: number, deleteCount: number = 0, ...args: DuckType<T>[]): Maybe<T>[] {
-        return this.__links.splice(start, deleteCount, ...args.map(Duck.parseDuck)).map(d => d.value);
-    }
-    // Map Override
-    get size(): number {
-        return this.__map.size;
-    }
-    set(key: any, value: DuckType<T>): Duck<T> {
-        const duck = Duck.parseDuck(value);
-        this.__map.set(key, duck);
-        return duck;
-    }
-    get(key: any): Maybe<T> {
-        const duck = this.__map.get(key);
-        if (duck) {
-            return duck.value;
-        }
-    }
-    has(key: any): boolean {
-        return this.__map.has(key);
-    }
-    delete(key: any): boolean {
-        return this.__map.delete(key);
-    }
-    clear(): void {
-        this.__map.clear();
-    }
-    // Quack
-    quack(...quacks: any[]) {
-        quack(...quacks);
-    }
-    duckAt(...indexes: number[]): Maybe<Duck<T>> {
-        const index = indexes.shift();
-        if (index !== undefined) {
-            if (indexes.length <= 0) {
-                return this.__links[index];
-            }
-            if (!this.__links[index]) {
-                return undefined;
-            }
-            return this.__links[index].duckAt(...indexes);
-        }
-    }
-    getDuck(...keys: any[]): Maybe<Duck<T>> {
-        const key = keys.shift();
-        if (key !== undefined) {
-            if (keys.length <= 0) {
-                return this.__map.get(key);
-            }
-            const duck = this.__map.get(key);
-            if (duck) {
-                return duck.getDuck(...keys);
-            }
-        }
-    }
-    static parseDuck<T>(duck: DuckType<T>): Duck<T> {
-        return duck instanceof Duck ? duck : new Duck(duck);
-    }
-    static from(obj: any): Duck<any> {
-        if (obj instanceof Duck) {
-            return obj;
-        }
-        const duck: Duck<any> = new Duck();
-        if (obj instanceof Array) {
-            duck.push(...obj.map(Duck.from));
-            duck.value = duck;
-        } else if (obj instanceof Map) {
-            obj.forEach((val, key) => duck.set(key, Duck.from(val)));
-            duck.value = duck;
-        } else if (typeof obj === 'object') {
-            for (const key in obj) {
-                duck.set(key, Duck.from(obj[key]));
-            }
-            duck.value = obj === null ? null : duck;
-        } else {
-            duck.value = obj;
-        }
-        return duck;
-    }
+    // Properties
+    TheDuck.isDuck = true;
+    Object.defineProperty(TheDuck, 'value', {
+        get: () => __value,
+        set: (value) => __value = value,
+    });
+    Object.defineProperty(TheDuck, 'length', { get: () => __links.length });
+    Object.defineProperty(TheDuck, 'size', { get: () => __map.size });
+    return TheDuck;
 }

@@ -17,7 +17,7 @@ export {
     increase,
     decrease
 } from "./src/reactiveHelper";
-export { Duck, DuckType, Maybe, quack } from "./src/Duck";
+export { Duck, DuckType, duck, quack } from "./src/duck";
 export { DinoFunction, dino } from "./src/dino";
 
 export default reactive;
