@@ -11,7 +11,6 @@ export {
 export {
     reactive,
     onChange,
-    observe,
     when,
     update,
     increase,

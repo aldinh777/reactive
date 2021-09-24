@@ -14,22 +14,16 @@ export function onChange<T>(
     const unsubscribers = reactives.map(sub => sub.onChange(callback, immediateCall));
     return () => unsubscribers.forEach(unsub => unsub());
 }
-export function observe<T>(
-    callback: ReactiveUpdater<T>,
-    ...reactives: Reactive<T>[]
-): Unsubscriber {
-    return reactives.length
-        ? onChange(callback, true, ...reactives)
-        : Reactive.observe(callback);
-}
 export function when<T>(
     condition: (val?: T, ev?: ReactiveEvent<T>) => boolean,
     callback: ReactiveUpdater<T>,
     ...reactives: Reactive<T>[]
 ): Unsubscriber {
-    return reactives.length
-        ? observe((value, ev) => condition(value, ev) && callback(value, ev), ...reactives)
-        : Reactive.observeIf(condition, callback);
+    return onChange(
+        (value: T, ev: ReactiveEvent<T>) => condition(value, ev) && callback(value, ev),
+        true,
+        ...reactives
+    );
 }
 export function update<T>(
     re: Reactive<T>,
@@ -39,7 +33,7 @@ export function update<T>(
     if (!condition) {
         re.value = callback(re.value);
     } else {
-        while(condition(re.value)) {
+        while (condition(re.value)) {
             re.value = callback(re.value);
         }
     }
