@@ -4,8 +4,8 @@ export {
     Reactive,
     ReactiveEvent,
     ReactiveUpdater,
-    ConditionUpdater,
-    ReactiveValue,
+    ReactiveCondition,
+    Rule,
     Unsubscriber
 } from "./src/reactive";
 export {

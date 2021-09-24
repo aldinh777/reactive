@@ -6,10 +6,9 @@ export interface ReactiveEvent<T> {
     cancel(): void;
 }
 export type ReactiveUpdater<T> = (value: T, ev: ReactiveEvent<T>) => void;
-export type ConditionUpdater<T> = (value: T, ev: ReactiveEvent<T>) => boolean;
-export type ReactiveValue<T> = T | (() => T);
+export type ReactiveCondition<T> = (value: T, ev: ReactiveEvent<T>) => boolean;
+export type Rule<T> = (...params: any[]) => T;
 export type Unsubscriber = () => void;
-
 
 function removeFromArray<T>(elem: T, array: T[]): void {
     const index = array.indexOf(elem);
@@ -24,12 +23,12 @@ export class Reactive<T> {
     protected __onUpdateFunctions: ReactiveUpdater<T>[] = [];
     protected __bindingFunctions: ReactiveUpdater<T>[] = [];
     protected __allowDuplicate: boolean = false;
-    protected __getValue?: () => T;
+    protected __rule?: Rule<T>;
     protected __currentValue?: T;
 
-    constructor(initial?: ReactiveValue<T>) {
+    constructor(initial?: T | Rule<T>, ...subscriptions: Reactive<any>[]) {
         if (typeof initial === 'function') {
-            this.rule = initial as () => T;
+            this.setRule(initial as Rule<T>, ...subscriptions);
         } else {
             this.value = initial as T;
         }
@@ -49,15 +48,20 @@ export class Reactive<T> {
         }
         this.__subscriptionList = [];
     }
-    protected __callUpdateFunctions(initial?: T): void {
+    protected __getValueByRule(rule: Rule<T>): T {
+        const params = this.__subscriptionList.map(sub => sub.__currentValue);
+        return rule(...params);
+    }
+    protected __callUpdateFunctions(value?: T): void {
         const totalSubscriber = this.__subscriberList.length;
         const totalFunctions = this.__bindingFunctions.length + this.__onUpdateFunctions.length;
         if (!(totalSubscriber + totalFunctions)) {
-            this.__currentValue = initial;
+            if (value !== undefined) {
+                this.__currentValue = value;
+            }
             return;
         }
-        const current = initial !== undefined ? initial
-            : this.__getValue ? this.__getValue() : this.__currentValue as T;
+        const current = value !== undefined ? value : this.value;
         const changed = current !== this.__currentValue;
         if (this.__allowDuplicate || changed) {
             const oldValue = this.__currentValue;
@@ -94,20 +98,19 @@ export class Reactive<T> {
         }
     }
     get value(): T {
-        let initiationFlag = false;
-        const value = initiationFlag ? this.__currentValue as T
-            : this.__getValue ? this.__getValue() : this.__currentValue as T;
-        return value;
+        return this.__rule ? this.__getValueByRule(this.__rule) : this.__currentValue as T;
     }
     set value(value: T) {
         this.__clearSubscription();
-        this.__getValue = undefined;
+        this.__rule = undefined;
         this.__callUpdateFunctions(value);
     }
-    set rule(rule: () => T) {
+    setRule(rule: Rule<T>, ...subscriptions: Reactive<any>[]) {
         this.__clearSubscription();
-        this.__getValue = rule;
-        this.__callUpdateFunctions(rule());
+        subscriptions.forEach(sub => this.__addSubscription(sub));
+        this.__rule = rule;
+        const value = this.__getValueByRule(rule);
+        this.__callUpdateFunctions(value);
     }
     onChange(callback: ReactiveUpdater<T>, immediateCall: boolean = false): Unsubscriber {
         this.__onUpdateFunctions.push(callback);
@@ -116,14 +119,13 @@ export class Reactive<T> {
         }
         return () => removeFromArray(callback, this.__onUpdateFunctions);
     }
-    bind(...subscriptions: Reactive<any>[]): Reactive<T> {
-        this.__clearSubscription();
-        for (const subscription of subscriptions) {
-            this.__addSubscription(subscription);
-        }
-        return this;
+    when(condition: ReactiveCondition<T>, callback: ReactiveUpdater<T>): Unsubscriber {
+        return this.onChange(
+            (value: T, ev: ReactiveEvent<T>) => condition(value, ev) && callback(value, ev),
+            true    
+        );
     }
-    bindValue(obj: any, param: string, decorator?: (value?: ReactiveValue<T>) => any): Unsubscriber {
+    bindValue(obj: any, param: string, decorator?: (value?: T) => any): Unsubscriber {
         const callback = (value?: T) => obj[param] = decorator ? decorator(value) : value;
         callback(this.value);
         this.__bindingFunctions.push(callback);

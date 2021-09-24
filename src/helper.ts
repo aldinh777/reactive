@@ -1,8 +1,8 @@
 import {
     Reactive,
-    ReactiveEvent,
     ReactiveUpdater,
-    ReactiveValue,
+    ReactiveCondition,
+    Rule,
     Unsubscriber,
 } from "./reactive";
 
@@ -15,15 +15,12 @@ export function onChange<T>(
     return () => unsubscribers.forEach(unsub => unsub());
 }
 export function when<T>(
-    condition: (val?: T, ev?: ReactiveEvent<T>) => boolean,
+    condition: ReactiveCondition<T>,
     callback: ReactiveUpdater<T>,
     ...reactives: Reactive<T>[]
 ): Unsubscriber {
-    return onChange(
-        (value: T, ev: ReactiveEvent<T>) => condition(value, ev) && callback(value, ev),
-        true,
-        ...reactives
-    );
+    const unsubscribers = reactives.map(sub => sub.when(condition, callback));
+    return () => unsubscribers.forEach(unsub => unsub());
 }
 export function update<T>(
     re: Reactive<T>,
@@ -70,6 +67,6 @@ export function decrease(
         update(iter, value => value - subtractor.value, condition);
     }
 }
-export function reactive<T>(initial?: ReactiveValue<T>): Reactive<T> {
-    return new Reactive(initial);
+export function reactive<T>(initial?: T | Rule<T>, ...subscriptions: Reactive<any>[]): Reactive<T> {
+    return new Reactive(initial, ...subscriptions);
 }
