@@ -5,6 +5,7 @@ export interface Duck<T> {
     isDuck: boolean;
     toArray(): T[];
     toMap(): Map<any, T>;
+    toObject(): any;
 
     length: number;
     push(...args: DuckType<T>[]): number;
@@ -31,23 +32,24 @@ export function quack(...args: any[]): any {
     console.log(...quacks);
 }
 
+const canQuack = (d: any) => d.quack as boolean;
+const parseDuck = (d: any) => canQuack(d) ? d : duck(d);
+
 export function duck<T>(initial?: T): Duck<T> {
     const __links: Duck<T>[] = [];
     const __map: Map<any, Duck<T>> = new Map();
     let __value: T = initial as T;
-    const TheDuck: any = (key: any, value: T): Duck<T> => {
-        if (key !== undefined && value !== undefined) {
-            const proto = __links[key];
-            proto.value = value;
-            return proto;
-        }
+    const TheDuck: any = (key: any): Duck<T> => {
         if (key !== undefined) {
-            return __links[key];
+            const mapResult = __map.get(key);
+            if (mapResult) {
+                return mapResult;
+            }
+            const arrayResult = __links[key];
+            return arrayResult;
         }
         return TheDuck;
     }
-    const canQuack = (d: any) => d.quack as boolean;
-    const parseDuck = (d: any) => canQuack(d) ? d : duck(d);
     // Array Override
     TheDuck.push = (...args: DuckType<T>[]): number => __links.push(...args.map(parseDuck));
     TheDuck.pop = (): Duck<T> | undefined => __links.pop();
@@ -77,6 +79,17 @@ export function duck<T>(initial?: T): Duck<T> {
         __map.forEach((d, key) => map.set(key, d.value));
         return map;
     }
+    TheDuck.toObject = (): any => {
+        if (__map.size) {
+            const result: any = {};
+            __map.forEach((d, key) => result[key] = d.toObject());
+            return result;
+        } else if (__links.length) {
+            return __links.map(d => d.toObject());
+        } else {
+            return TheDuck.value;
+        }
+    }
     // Properties
     TheDuck.quack = (...args: any[]): void => quack(...args);
     Object.defineProperty(TheDuck, 'value', {
@@ -86,4 +99,23 @@ export function duck<T>(initial?: T): Duck<T> {
     Object.defineProperty(TheDuck, 'length', { get: () => __links.length });
     Object.defineProperty(TheDuck, 'size', { get: () => __map.size });
     return TheDuck;
+}
+
+export function duckFrom(item: any): Duck<any> {
+    if (canQuack(item)) {
+        return item;
+    }
+    const d = duck();
+    if (item instanceof Array) {
+        item.forEach(value => d.push(duckFrom(value)));
+    } else if (item instanceof Map) {
+        item.forEach((key, value) => d.set(key, duckFrom(value)));
+    } else if (typeof item === 'object') {
+        for (const key in item) {
+            d.set(key, duckFrom(item[key]));
+        }
+    } else {
+        d.value = item;
+    }
+    return d;
 }

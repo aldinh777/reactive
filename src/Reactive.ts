@@ -119,7 +119,7 @@ export class Reactive<T> {
     when(condition: ReactiveCondition<T>, callback: ReactiveUpdater<T>): Unsubscriber {
         return this.onChange(
             (value: T, ev: ReactiveEvent<T>) => condition(value, ev) && callback(value, ev),
-            true    
+            true
         );
     }
     bindValue(obj: any, param: string, decorator?: (value?: T) => any): Unsubscriber {
@@ -140,5 +140,5 @@ export class Reactive<T> {
             preventNext: () => { },
             cancel: () => { },
         };
-    }    
+    }
 }
