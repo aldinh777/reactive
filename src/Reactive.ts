@@ -34,10 +34,8 @@ export class Reactive<T> {
         }
     }
     protected __addSubscription(sub: Reactive<any>): void {
-        if (sub !== this) {
-            this.__subscriptionList.push(sub);
-            sub.__subscriberList.push(this);
-        }
+        this.__subscriptionList.push(sub);
+        sub.__subscriberList.push(this);
     }
     protected __removeSubsriber(sub: Reactive<any>): void {
         removeFromArray(sub, this.__subscriberList);
@@ -49,7 +47,7 @@ export class Reactive<T> {
         this.__subscriptionList = [];
     }
     protected __getValueByRule(rule: Rule<T>): T {
-        const params = this.__subscriptionList.map(sub => sub.__currentValue);
+        const params = this.__subscriptionList.map(sub => sub.value);
         return rule(...params);
     }
     protected __callUpdateFunctions(value?: T): void {
@@ -87,6 +85,7 @@ export class Reactive<T> {
                     }
                     updateFunction(current, reactionEvent);
                     if (skipAll) {
+                        this.__currentValue = oldValue;
                         return;
                     }
                 }
@@ -109,8 +108,6 @@ export class Reactive<T> {
         this.__clearSubscription();
         subscriptions.forEach(sub => this.__addSubscription(sub));
         this.__rule = rule;
-        const value = this.__getValueByRule(rule);
-        this.__callUpdateFunctions(value);
     }
     onChange(callback: ReactiveUpdater<T>, immediateCall: boolean = false): Unsubscriber {
         this.__onUpdateFunctions.push(callback);
