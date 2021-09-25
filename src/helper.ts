@@ -54,7 +54,7 @@ export function increase(
 export function decrease(
     re: number | Reactive<number>,
     sub: number | Reactive<number> = 1,
-    condition: number | ((value: number) => boolean)
+    condition?: number | ((value: number) => boolean)
 ): void {
     const iter = re instanceof Reactive ? re : reactive(re);
     const subtractor = sub instanceof Reactive ? sub : reactive(sub);
