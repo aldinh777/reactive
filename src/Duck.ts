@@ -4,7 +4,7 @@ export type DuckType<T> = T | Duck<T>;
 export interface Duck<T> {
     (key: any, value: T): Duck<T>;
     value: T;
-    isDuck: boolean;
+    quack(): void;
     toArray(): T[];
     toMap(): Map<any, T>;
     toObject(): any;

@@ -12,7 +12,7 @@ export type ReduckType<T> = T | Reactive<T> | Reduck<T>;
 export interface Reduck<T> {
     (key: any, value: T): Reduck<T>;
     value: T;
-    isDuck: boolean;
+    quack(): void;
     toArray(): T[];
     toMap(): Map<any, T>;
     toObject(): any;
