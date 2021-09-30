@@ -19,5 +19,6 @@ export {
 export { Duck, DuckType, duck, duckFrom } from "./src/Duck";
 export { Reduck, ReduckType, ReduckListener, reduck, reduckFrom } from "./src/Reduck";
 export { DinoFunction, dino } from "./src/dino";
+export { quack, canQuack } from "./src/util";
 
 export default reactive;
