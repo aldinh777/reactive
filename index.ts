@@ -7,7 +7,7 @@ export {
     ReactiveCondition,
     Rule,
     Unsubscriber
-} from "./src/reactive";
+} from "./src/Reactive";
 export {
     reactive,
     onChange,
@@ -16,7 +16,8 @@ export {
     increase,
     decrease
 } from "./src/helper";
-export { Duck, DuckType, duck, quack, duckFrom } from "./src/duck";
+export { Duck, DuckType, duck, duckFrom } from "./src/Duck";
+export { Reduck, ReduckType, ReduckListener, reduck, reduckFrom } from "./src/Reduck";
 export { DinoFunction, dino } from "./src/dino";
 
 export default reactive;
