@@ -1,3 +1,5 @@
+import { quack, canQuack } from "./util";
+
 export type DuckType<T> = T | Duck<T>;
 export interface Duck<T> {
     (key: any, value: T): Duck<T>;
@@ -22,18 +24,7 @@ export interface Duck<T> {
     has(key: any): boolean;
 };
 
-export function quack(...args: any[]): any {
-    const quacks = args.length ? args : ['quack'];
-    if (quacks.find(q => q instanceof Promise)) {
-        const results = Promise.all(quacks.map(q => q instanceof Promise ? q.catch(err => err) : Promise.resolve(q)));
-        results.then(quacks => console.log(...quacks));
-        return results;
-    }
-    console.log(...quacks);
-}
-
-const canQuack = (d: any) => d.quack as boolean;
-const parseDuck = (d: any) => canQuack(d) ? d : duck(d);
+const parseDuck = (d: any): Duck<any> => canQuack(d) ? d : duck(d);
 
 export function duck<T>(initial?: T): Duck<T> {
     const __links: Duck<T>[] = [];

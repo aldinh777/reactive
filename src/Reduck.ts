@@ -1,10 +1,10 @@
+import { removeFromArray, quack, canQuack } from './util';
 import {
     Reactive,
     ReactiveCondition,
     ReactiveUpdater,
     Rule,
     Unsubscriber,
-    removeFromArray
 } from "./reactive";
 
 export type ReduckListener = (key: any, ...items: Reduck<any>[]) => Unsubscriber;
@@ -17,7 +17,8 @@ export interface Reduck<T> {
     toMap(): Map<any, T>;
     toObject(): any;
 
-    triggerListener(operation: Operation, key: any, ...items: Reduck<any>[]): void;
+    triggerListeners(operation: Operation, key: any, ...items: Reduck<any>[]): void;
+    allowBubble(allow?: boolean): void;
     addParent(parent: Reduck<T>): void;
     removeParent(parent: Reduck<T>): void;
     onUpdate(callback: ReduckListener): Unsubscriber;
@@ -47,17 +48,6 @@ export interface Reduck<T> {
 
 type Operation = 'update' | 'insert' | 'delete';
 
-export function quack(...args: any[]): any {
-    const quacks = args.length ? args : ['quack'];
-    if (quacks.find(q => q instanceof Promise)) {
-        const results = Promise.all(quacks.map(q => q instanceof Promise ? q.catch(err => err) : Promise.resolve(q)));
-        results.then(quacks => console.log(...quacks));
-        return results;
-    }
-    console.log(...quacks);
-}
-
-const canQuack = (d: any): boolean => d.quack;
 const parseReduck = (d: any): Reduck<any> => canQuack(d) ? d : reduck(d);
 
 export function reduck<T>(initial?: T | Reactive<T>): Reduck<T> {
@@ -68,6 +58,7 @@ export function reduck<T>(initial?: T | Reactive<T>): Reduck<T> {
     const __updateListeners: ReduckListener[] = [];
     const __insertListeners: ReduckListener[] = [];
     const __deleteListeners: ReduckListener[] = [];
+    let __allowBubble: boolean = true;
     const ReactiveDuck: any = (key: any): Reduck<T> => {
         if (key !== undefined) {
             const mapResult = __map.get(key);
@@ -79,7 +70,8 @@ export function reduck<T>(initial?: T | Reactive<T>): Reduck<T> {
         }
         return ReactiveDuck;
     };
-    const triggerListener = (operation: Operation, key: any, ...items: Reduck<any>[]): void => {
+    // Reactive Duck Operation
+    ReactiveDuck.triggerListeners = (operation: Operation, key: any, ...items: Reduck<any>[]): void => {
         switch (operation) {
             case 'insert':
                 __insertListeners.forEach(listener => listener(key, ...items));
@@ -88,7 +80,13 @@ export function reduck<T>(initial?: T | Reactive<T>): Reduck<T> {
             case 'update':
                 const bubbles = items.concat(ReactiveDuck);
                 __updateListeners.forEach(listener => listener(key, ...bubbles));
-                __parents.forEach(item => item.triggerListener('update', key, ...bubbles));
+                if (__allowBubble) {
+                    __parents.forEach(item => {
+                        if (!items.includes(item)) {
+                            item.triggerListeners('update', key, ...bubbles)
+                        }
+                    });
+                }
                 break;
             case 'delete':
                 __deleteListeners.forEach(listener => listener(key, ...items));
@@ -96,8 +94,9 @@ export function reduck<T>(initial?: T | Reactive<T>): Reduck<T> {
                 break;
         }
     };
-    // Reactive Duck Operation
-    ReactiveDuck.triggerListener = triggerListener;
+    ReactiveDuck.allowBubble = (allow: boolean = true) => {
+        __allowBubble = allow;
+    };
     ReactiveDuck.addParent = (parent: Reduck<any>): void => {
         __parents.push(parent);
     };
@@ -135,36 +134,36 @@ export function reduck<T>(initial?: T | Reactive<T>): Reduck<T> {
     // Array Override
     ReactiveDuck.push = (...args: ReduckType<T>[]): number => {
         const newItems = args.map(parseReduck);
-        triggerListener('insert', __links.length, ...newItems);
+        ReactiveDuck.triggerListeners('insert', __links.length, ...newItems);
         return __links.push(...newItems);
     };
     ReactiveDuck.pop = (): Reduck<T> | undefined => {
         const deleted = __links.pop();
         if (deleted) {
-            triggerListener('delete', __links.length, deleted);
+            ReactiveDuck.triggerListeners('delete', __links.length, deleted);
         }
         return deleted;
     };
     ReactiveDuck.shift = (): Reduck<T> | undefined => {
         const deleted = __links.shift();
         if (deleted) {
-            triggerListener('delete', 0, deleted);
+            ReactiveDuck.triggerListeners('delete', 0, deleted);
         }
         return deleted;
     };
     ReactiveDuck.unshift = (...args: T[]): number => {
         const newItems = args.map(parseReduck);
-        triggerListener('insert', 0, ...newItems);
+        ReactiveDuck.triggerListeners('insert', 0, ...newItems);
         return __links.unshift(...newItems);
     }
     ReactiveDuck.splice = (start: number, deleteCount: number = 0, ...args: ReduckType<T>[]): Reduck<T>[] => {
         const newItems = args.map(parseReduck);
         const deleted = __links.splice(start, deleteCount, ...newItems);
         if (newItems.length) {
-            triggerListener('insert', start, ...newItems);
+            ReactiveDuck.triggerListeners('insert', start, ...newItems);
         }
         if (deleted.length) {
-            triggerListener('delete', start, ...deleted);
+            ReactiveDuck.triggerListeners('delete', start, ...deleted);
         }
         return deleted;
     };
@@ -174,7 +173,7 @@ export function reduck<T>(initial?: T | Reactive<T>): Reduck<T> {
             __map.get(key)!.value = value;
         } else {
             const inserted = parseReduck(value);
-            triggerListener('insert', key, inserted);
+            ReactiveDuck.triggerListeners('insert', key, inserted);
             __map.set(key, inserted);
         }
         return ReactiveDuck;
@@ -184,14 +183,14 @@ export function reduck<T>(initial?: T | Reactive<T>): Reduck<T> {
         return fetchDuck ? fetchDuck.value : undefined;
     };
     ReactiveDuck.clear = (): void => {
-        __map.forEach((value, key) => triggerListener('delete', key, value));
+        __map.forEach((value, key) => ReactiveDuck.triggerListeners('delete', key, value));
         __map.clear()
     };
     ReactiveDuck.delete = (key: any): boolean => {
         const item = __map.get(key);
         if (item) {
             item.removeParent(ReactiveDuck);
-            triggerListener('delete', key, item);
+            ReactiveDuck.triggerListeners('delete', key, item);
         }
         return __map.delete(key);
     };
@@ -222,7 +221,7 @@ export function reduck<T>(initial?: T | Reactive<T>): Reduck<T> {
         get: (): T => __reactive.value,
         set: (value: T) => {
             __reactive.value = value;
-            triggerListener('update', undefined);
+            ReactiveDuck.triggerListeners('update', undefined);
         },
     });
     Object.defineProperty(ReactiveDuck, 'length', { get: () => __links.length });

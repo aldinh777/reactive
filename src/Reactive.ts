@@ -1,3 +1,5 @@
+import { removeFromArray } from "./util";
+
 export interface ReactiveEvent<T> {
     oldValue?: T;
     currentReactive?: Reactive<T>;
@@ -9,13 +11,6 @@ export type ReactiveUpdater<T> = (value: T, ev: ReactiveEvent<T>) => void;
 export type ReactiveCondition<T> = (value: T, ev: ReactiveEvent<T>) => boolean;
 export type Rule<T> = (...params: any[]) => T;
 export type Unsubscriber = () => void;
-
-export function removeFromArray<T>(elem: T, array: T[]): void {
-    const index = array.indexOf(elem);
-    if (index !== -1) {
-        array.splice(index, 1);
-    }
-}
 
 export class Reactive<T> {
     protected __subscriptionList: Reactive<T>[] = [];
