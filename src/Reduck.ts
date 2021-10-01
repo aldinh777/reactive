@@ -5,7 +5,7 @@ import {
     ReactiveUpdater,
     Rule,
     Unsubscriber,
-} from "./reactive";
+} from "./Reactive";
 
 export type ReduckListener = (key: any, ...items: Reduck<any>[]) => Unsubscriber;
 export type ReduckType<T> = T | Reactive<T> | Reduck<T>;
