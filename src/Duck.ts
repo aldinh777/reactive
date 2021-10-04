@@ -2,7 +2,7 @@ import { quack, canQuack } from "./util";
 
 export type DuckType<T> = T | Duck<T>;
 export interface Duck<T> {
-    (key: any, value: T): Duck<T>;
+    (key: any): Duck<T>;
     value: T;
     quack(): void;
     toArray(): T[];

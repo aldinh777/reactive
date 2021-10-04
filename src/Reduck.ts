@@ -10,7 +10,7 @@ import {
 export type ReduckListener = (key: any, ...items: Reduck<any>[]) => Unsubscriber;
 export type ReduckType<T> = T | Reactive<T> | Reduck<T>;
 export interface Reduck<T> {
-    (key: any, value: T): Reduck<T>;
+    (key: any): Reduck<T>;
     value: T;
     quack(): void;
     toArray(): T[];
