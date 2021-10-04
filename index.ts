@@ -1,4 +1,4 @@
-import { reactive } from "./src/helper";
+import { reactive } from './src/helper';
 
 export {
     Reactive,
@@ -7,7 +7,7 @@ export {
     ReactiveCondition,
     Rule,
     Unsubscriber
-} from "./src/Reactive";
+} from './src/Reactive';
 export {
     reactive,
     onChange,
@@ -15,10 +15,10 @@ export {
     update,
     increase,
     decrease
-} from "./src/helper";
-export { Duck, DuckType, duck, duckFrom } from "./src/Duck";
-export { Reduck, ReduckType, ReduckListener, reduck, reduckFrom } from "./src/Reduck";
-export { DinoFunction, dino } from "./src/dino";
-export { quack, canQuack } from "./src/util";
+} from './src/helper';
+export { Duck, DuckType, duck, duckFrom } from './src/Duck';
+export { Reduck, ReduckType, ReduckListener, reduck, reduckFrom } from './src/Reduck';
+export { DinoFunction, dino } from './src/dino';
+export { quack, canQuack } from './src/util';
 
 export default reactive;

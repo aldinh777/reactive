@@ -1,10 +1,18 @@
-import { quack, canQuack } from "./util";
+import { quack, canQuack } from './util';
 
 export type DuckType<T> = T | Duck<T>;
+export interface Ducktor {
+    (query: any): Ducktor;
+    at(index: number): Duck<any>;
+    toDuck(): Duck<any>;
+    toArray(): Duck<any>[];
+};
 export interface Duck<T> {
     (key: any): Duck<T>;
     value: T;
     quack(): void;
+    forEach(callback: (duck: Duck<T>, key: any) => void): void;
+    query(query: any): Ducktor;
     toArray(): T[];
     toMap(): Map<any, T>;
     toObject(): any;
@@ -83,6 +91,19 @@ export function duck<T>(initial?: T): Duck<T> {
     }
     // Properties
     TheDuck.quack = (...args: any[]): void => quack(...args);
+    TheDuck.forEach = (callback: (duck: Duck<T>, key: any) => void) => {
+        __links.forEach((duck, index) => callback(duck, index));
+        __map.forEach((duck, key) => callback(duck, key));
+    };
+    TheDuck.query = (query: any): Ducktor => {
+        const result: Duck<any>[] = [];
+        if (query === '*') {
+            TheDuck.forEach((d: Duck<T>) => result.push(d));
+        } else {
+            result.push(TheDuck(query));
+        }
+        return ducktor(result);
+    };
     Object.defineProperty(TheDuck, 'value', {
         get: () => __value,
         set: (value) => __value = value,
@@ -90,6 +111,23 @@ export function duck<T>(initial?: T): Duck<T> {
     Object.defineProperty(TheDuck, 'length', { get: () => __links.length });
     Object.defineProperty(TheDuck, 'size', { get: () => __map.size });
     return TheDuck;
+}
+
+function ducktor(ducks: Duck<any>[]): Ducktor {
+    let __ducks = ducks;
+    const TheDucktor: any = (query: any): Ducktor => {
+        const result: Duck<any>[] = [];
+        if (query === '*') {
+            __ducks.forEach(d => d.forEach(nested => result.push(nested)));
+        } else {
+            __ducks.forEach(d => result.push(d(query)));
+        }
+        return ducktor(result);
+    };
+    TheDucktor.at = (index: number): Duck<any> => __ducks[index];
+    TheDucktor.toDuck = (): Duck<any> => duckFrom(__ducks);
+    TheDucktor.toArray = (): Duck<any>[] => __ducks;
+    return TheDucktor;
 }
 
 export function duckFrom(item: any): Duck<any> {

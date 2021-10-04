@@ -1,4 +1,4 @@
-import { removeFromArray } from "./util";
+import { removeFromArray } from './util';
 
 export interface ReactiveEvent<T> {
     oldValue?: T;

@@ -1,18 +1,28 @@
 import { removeFromArray, quack, canQuack } from './util';
+import { Duck, duckFrom } from './Duck';
 import {
     Reactive,
     ReactiveCondition,
     ReactiveUpdater,
     Rule,
     Unsubscriber,
-} from "./Reactive";
+} from './Reactive';
 
 export type ReduckListener = (key: any, ...items: Reduck<any>[]) => Unsubscriber;
 export type ReduckType<T> = T | Reactive<T> | Reduck<T>;
+export interface Reducktor {
+    (query: any): Reducktor;
+    at(index: number): Reduck<any>;
+    toDuck(): Duck<any>;
+    toReduck(): Reduck<any>;
+    toArray(): Reduck<any>[];
+};
 export interface Reduck<T> {
     (key: any): Reduck<T>;
     value: T;
     quack(): void;
+    forEach(callback: (duck: Reduck<T>, key: any) => void): void;
+    query(query: any): Reducktor;
     toArray(): T[];
     toMap(): Map<any, T>;
     toObject(): any;
@@ -70,7 +80,7 @@ export function reduck<T>(initial?: T | Reactive<T>): Reduck<T> {
         }
         return ReactiveDuck;
     };
-    // Reactive Duck Operation
+    // Reactive Reduck Operation
     ReactiveDuck.triggerListeners = (operation: Operation, key: any, ...items: Reduck<any>[]): void => {
         switch (operation) {
             case 'insert':
@@ -217,6 +227,19 @@ export function reduck<T>(initial?: T | Reactive<T>): Reduck<T> {
     };
     // Properties
     ReactiveDuck.quack = (...args: any[]): void => quack(...args);
+    ReactiveDuck.forEach = (callback: (duck: Reduck<T>, key: any) => void) => {
+        __links.forEach((duck, index) => callback(duck, index));
+        __map.forEach((duck, key) => callback(duck, key));
+    };
+    ReactiveDuck.query = (query: any): Reducktor => {
+        const result: Reduck<any>[] = [];
+        if (query === '*') {
+            ReactiveDuck.forEach((d: Reduck<T>) => result.push(d));
+        } else {
+            result.push(ReactiveDuck(query));
+        }
+        return reducktor(result);
+    };
     Object.defineProperty(ReactiveDuck, 'value', {
         get: (): T => __reactive.value,
         set: (value: T) => {
@@ -227,6 +250,24 @@ export function reduck<T>(initial?: T | Reactive<T>): Reduck<T> {
     Object.defineProperty(ReactiveDuck, 'length', { get: () => __links.length });
     Object.defineProperty(ReactiveDuck, 'size', { get: () => __map.size });
     return ReactiveDuck;
+}
+
+function reducktor(ducks: Reduck<any>[]): Reducktor {
+    let __ducks = ducks;
+    const ReactiveReducktor: any = (query: any): Reducktor => {
+        const result: Reduck<any>[] = [];
+        if (query === '*') {
+            __ducks.forEach(d => d.forEach(nested => result.push(nested)));
+        } else {
+            __ducks.forEach(d => result.push(d(query)));
+        }
+        return reducktor(result);
+    };
+    ReactiveReducktor.at = (index: number): Reduck<any> => __ducks[index];
+    ReactiveReducktor.toDuck = (): Duck<any> => duckFrom(__ducks);
+    ReactiveReducktor.toReduck = (): Reduck<any> => reduckFrom(__ducks);
+    ReactiveReducktor.toArray = (): Reduck<any>[] => __ducks;
+    return ReactiveReducktor;
 }
 
 export function reduckFrom(item: any): Reduck<any> {
