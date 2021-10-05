@@ -1,18 +1,11 @@
 import { quack, canQuack } from './util';
 
-export type DuckType<T> = T | Duck<T>;
-export interface Ducktor {
-    (query: any): Ducktor;
-    at(index: number): Duck<any>;
-    toDuck(): Duck<any>;
-    toArray(): Duck<any>[];
-};
 export interface Duck<T> {
     (key: any): Duck<T>;
     value: T;
     quack(): void;
     forEach(callback: (duck: Duck<T>, key: any) => void): void;
-    query(query: any): Ducktor;
+    query(query: DucktorQuery): Ducktor;
     toArray(): T[];
     toMap(): Map<any, T>;
     toObject(): any;
@@ -31,6 +24,15 @@ export interface Duck<T> {
     delete(key: any): boolean;
     has(key: any): boolean;
 };
+export interface Ducktor {
+    (query: DucktorQuery): Ducktor;
+    at(index: number): Duck<any>;
+    toDuck(): Duck<any>;
+    toObject(): any;
+};
+export type DuckType<T> = T | Duck<T>;
+export type DucktorFuncQuery = (key: any, parent: Duck<any>, index: number) => boolean;
+export type DucktorQuery = '*' | DucktorFuncQuery | string | number;
 
 const parseDuck = (d: any): Duck<any> => canQuack(d) ? d : duck(d);
 
@@ -95,10 +97,16 @@ export function duck<T>(initial?: T): Duck<T> {
         __links.forEach((duck, index) => callback(duck, index));
         __map.forEach((duck, key) => callback(duck, key));
     };
-    TheDuck.query = (query: any): Ducktor => {
+    TheDuck.query = (query: DucktorQuery): Ducktor => {
         const result: Duck<any>[] = [];
         if (query === '*') {
             TheDuck.forEach((d: Duck<T>) => result.push(d));
+        } else if (typeof query === 'function') {
+            TheDuck.forEach((d: Duck<T>, key: any) => {
+                if (query(key, TheDuck, 0)) {
+                    result.push(d);
+                }
+            });
         } else {
             result.push(TheDuck(query));
         }
@@ -115,10 +123,16 @@ export function duck<T>(initial?: T): Duck<T> {
 
 function ducktor(ducks: Duck<any>[]): Ducktor {
     let __ducks = ducks;
-    const TheDucktor: any = (query: any): Ducktor => {
+    const TheDucktor: any = (query: DucktorQuery): Ducktor => {
         const result: Duck<any>[] = [];
         if (query === '*') {
             __ducks.forEach(d => d.forEach(nested => result.push(nested)));
+        } else if (typeof query === 'function') {
+            __ducks.forEach((d, index) => d.forEach((nested, key) => {
+                if (query(key, d, index)) {
+                    result.push(nested)
+                }
+            }));
         } else {
             __ducks.forEach(d => result.push(d(query)));
         }
@@ -126,7 +140,7 @@ function ducktor(ducks: Duck<any>[]): Ducktor {
     };
     TheDucktor.at = (index: number): Duck<any> => __ducks[index];
     TheDucktor.toDuck = (): Duck<any> => duckFrom(__ducks);
-    TheDucktor.toArray = (): Duck<any>[] => __ducks;
+    TheDucktor.toObject = (): any[] => __ducks.map(d => d.toObject());
     return TheDucktor;
 }
 

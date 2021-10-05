@@ -1,5 +1,5 @@
 import { removeFromArray, quack, canQuack } from './util';
-import { Duck, duckFrom } from './Duck';
+import { Duck, duckFrom, DucktorQuery } from './Duck';
 import {
     Reactive,
     ReactiveCondition,
@@ -8,15 +8,6 @@ import {
     Unsubscriber,
 } from './Reactive';
 
-export type ReduckListener = (key: any, ...items: Reduck<any>[]) => Unsubscriber;
-export type ReduckType<T> = T | Reactive<T> | Reduck<T>;
-export interface Reducktor {
-    (query: any): Reducktor;
-    at(index: number): Reduck<any>;
-    toDuck(): Duck<any>;
-    toReduck(): Reduck<any>;
-    toArray(): Reduck<any>[];
-};
 export interface Reduck<T> {
     (key: any): Reduck<T>;
     value: T;
@@ -55,7 +46,14 @@ export interface Reduck<T> {
     delete(key: any): boolean;
     has(key: any): boolean;
 };
-
+export interface Reducktor {
+    (query: DucktorQuery): Reducktor;
+    at(index: number): Reduck<any>;
+    toDuck(): Duck<any>;
+    toObject(): any[];
+};
+export type ReduckListener = (key: any, ...items: Reduck<any>[]) => Unsubscriber;
+export type ReduckType<T> = T | Reactive<T> | Reduck<T>;
 type Operation = 'update' | 'insert' | 'delete';
 
 const parseReduck = (d: any): Reduck<any> => canQuack(d) ? d : reduck(d);
@@ -231,10 +229,16 @@ export function reduck<T>(initial?: T | Reactive<T>): Reduck<T> {
         __links.forEach((duck, index) => callback(duck, index));
         __map.forEach((duck, key) => callback(duck, key));
     };
-    ReactiveDuck.query = (query: any): Reducktor => {
+    ReactiveDuck.query = (query: DucktorQuery): Reducktor => {
         const result: Reduck<any>[] = [];
         if (query === '*') {
             ReactiveDuck.forEach((d: Reduck<T>) => result.push(d));
+        } else if (typeof query === 'function') {
+            ReactiveDuck.forEach((d: Reduck<T>, key: any) => {
+                if (query(key, ReactiveDuck, 0)) {
+                    result.push(d);
+                }
+            });
         } else {
             result.push(ReactiveDuck(query));
         }
@@ -258,6 +262,12 @@ function reducktor(ducks: Reduck<any>[]): Reducktor {
         const result: Reduck<any>[] = [];
         if (query === '*') {
             __ducks.forEach(d => d.forEach(nested => result.push(nested)));
+        } else if (typeof query === 'function') {
+            __ducks.forEach((d, index) => d.forEach((nested, key) => {
+                if (query(key, d, index)) {
+                    result.push(nested)
+                }
+            }));
         } else {
             __ducks.forEach(d => result.push(d(query)));
         }
@@ -265,8 +275,7 @@ function reducktor(ducks: Reduck<any>[]): Reducktor {
     };
     ReactiveReducktor.at = (index: number): Reduck<any> => __ducks[index];
     ReactiveReducktor.toDuck = (): Duck<any> => duckFrom(__ducks);
-    ReactiveReducktor.toReduck = (): Reduck<any> => reduckFrom(__ducks);
-    ReactiveReducktor.toArray = (): Reduck<any>[] => __ducks;
+    ReactiveReducktor.toObject = (): any[] => __ducks.map(d => d.toObject());
     return ReactiveReducktor;
 }
 
