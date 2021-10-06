@@ -52,7 +52,7 @@ export interface Reducktor {
     toDuck(): Duck<any>;
     toObject(): any[];
 };
-export type ReduckListener = (key: any, ...items: Reduck<any>[]) => Unsubscriber;
+export type ReduckListener = (key: any, ...items: Reduck<any>[]) => void;
 export type ReduckType<T> = T | Reactive<T> | Reduck<T>;
 type Operation = 'update' | 'insert' | 'delete';
 
