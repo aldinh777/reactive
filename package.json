@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc"
   },
-  "author": "Aldinh777",
+  "author": "aldinh777",
   "license": "MIT",
   "devDependencies": {
     "typescript": "^2.9.2"
