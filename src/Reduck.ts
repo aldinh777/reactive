@@ -1,5 +1,5 @@
-import { removeFromArray, quack, canQuack } from './util';
-import { Duck, duckFrom, DucktorQuery } from './Duck';
+import { removeFromArray, isReduck } from './util';
+import { DucktorQuery } from './Duck';
 import {
     Reactive,
     ReactiveCondition,
@@ -11,7 +11,7 @@ import {
 export interface Reduck<T> {
     (key: any): Reduck<T>;
     value: T;
-    quack(): void;
+    type: string;
     forEach(callback: (duck: Reduck<T>, key: any) => void): void;
     query(query: any): Reducktor;
     toArray(): T[];
@@ -45,29 +45,30 @@ export interface Reduck<T> {
     clear(): void;
     delete(key: any): boolean;
     has(key: any): boolean;
-};
+}
 export interface Reducktor {
     (query: DucktorQuery): Reducktor;
     at(index: number): Reduck<any>;
-    toDuck(): Duck<any>;
+    toReduck(): Reduck<any>;
     toObject(): any[];
-};
+}
 export type ReduckListener = (key: any, ...items: Reduck<any>[]) => void;
+export type ReduckUpdateListener = (...items: Reduck<any>[]) => void;
 export type ReduckType<T> = T | Reactive<T> | Reduck<T>;
 type Operation = 'update' | 'insert' | 'delete';
 
-const parseReduck = (d: any): Reduck<any> => canQuack(d) ? d : reduck(d);
+const parseReduck = (d: any): Reduck<any> => isReduck(d) ? d : reduck(d);
 
-export function reduck<T>(initial?: T | Reactive<T>): Reduck<T> {
+export function reduck<T>(initial?: T | Reactive<T>, listenChilds: boolean = true): Reduck<T> {
     const __links: Reduck<T>[] = [];
     const __map: Map<any, Reduck<T>> = new Map();
     const __reactive: Reactive<T> = initial instanceof Reactive ? initial : new Reactive(initial);
     const __parents: Reduck<T>[] = [];
-    const __updateListeners: ReduckListener[] = [];
+    const __updateListeners: ReduckUpdateListener[] = [];
     const __insertListeners: ReduckListener[] = [];
     const __deleteListeners: ReduckListener[] = [];
     let __allowBubble: boolean = true;
-    const ReactiveDuck: any = (key: any): Reduck<T> => {
+    const ReduckWrapper: any = (key: any): Reduck<T> => {
         if (key !== undefined) {
             const mapResult = __map.get(key);
             if (mapResult) {
@@ -76,18 +77,20 @@ export function reduck<T>(initial?: T | Reactive<T>): Reduck<T> {
             const arrayResult = __links[key];
             return arrayResult;
         }
-        return ReactiveDuck;
+        return ReduckWrapper;
     };
     // Reactive Reduck Operation
-    ReactiveDuck.triggerListeners = (operation: Operation, key: any, ...items: Reduck<any>[]): void => {
+    ReduckWrapper.triggerListeners = (operation: Operation, key: any, ...items: Reduck<any>[]): void => {
         switch (operation) {
             case 'insert':
                 __insertListeners.forEach(listener => listener(key, ...items));
-                items.forEach(item => item.addParent(ReactiveDuck));
+                if (listenChilds) {
+                    items.forEach(item => item.addParent(ReduckWrapper));
+                }
                 break;
             case 'update':
-                const bubbles = items.concat(ReactiveDuck);
-                __updateListeners.forEach(listener => listener(key, ...bubbles));
+                const bubbles = items.concat(ReduckWrapper);
+                __updateListeners.forEach(listener => listener(...bubbles));
                 if (__allowBubble) {
                     __parents.forEach(item => {
                         if (!items.includes(item)) {
@@ -98,121 +101,123 @@ export function reduck<T>(initial?: T | Reactive<T>): Reduck<T> {
                 break;
             case 'delete':
                 __deleteListeners.forEach(listener => listener(key, ...items));
-                items.forEach(item => item.removeParent(ReactiveDuck));
+                if (listenChilds) {
+                    items.forEach(item => item.removeParent(ReduckWrapper));
+                }
                 break;
         }
     };
-    ReactiveDuck.allowBubble = (allow: boolean = true) => {
+    ReduckWrapper.allowBubble = (allow: boolean = true) => {
         __allowBubble = allow;
     };
-    ReactiveDuck.addParent = (parent: Reduck<any>): void => {
+    ReduckWrapper.addParent = (parent: Reduck<any>): void => {
         __parents.push(parent);
     };
-    ReactiveDuck.removeParent = (parent: Reduck<any>): void => {
+    ReduckWrapper.removeParent = (parent: Reduck<any>): void => {
         removeFromArray(parent, __parents);
     };
-    ReactiveDuck.onUpdate = (callback: ReduckListener): Unsubscriber => {
+    ReduckWrapper.onUpdate = (callback: ReduckUpdateListener): Unsubscriber => {
         __updateListeners.push(callback);
         return () => removeFromArray(callback, __updateListeners);
     };
-    ReactiveDuck.onInsert = (callback: ReduckListener): Unsubscriber => {
+    ReduckWrapper.onInsert = (callback: ReduckListener): Unsubscriber => {
         __insertListeners.push(callback);
         return () => removeFromArray(callback, __insertListeners);
     };
-    ReactiveDuck.onDelete = (callback: ReduckListener): Unsubscriber => {
+    ReduckWrapper.onDelete = (callback: ReduckListener): Unsubscriber => {
         __deleteListeners.push(callback);
         return () => removeFromArray(callback, __deleteListeners);
     };
     // Reactive Override
-    ReactiveDuck.setRule = (rule: Rule<T>, ...subscriptions: Reactive<any>[]): void => {
+    ReduckWrapper.setRule = (rule: Rule<T>, ...subscriptions: Reactive<any>[]): void => {
         __reactive.setRule(rule, ...subscriptions);
     };
-    ReactiveDuck.allowDuplicate = (allow?: boolean): void => {
+    ReduckWrapper.allowDuplicate = (allow?: boolean): void => {
         __reactive.allowDuplicate(allow);
     };
-    ReactiveDuck.onChange = (callback: ReactiveUpdater<T>, immediateCall?: boolean): Unsubscriber => {
+    ReduckWrapper.onChange = (callback: ReactiveUpdater<T>, immediateCall?: boolean): Unsubscriber => {
         return __reactive.onChange(callback, immediateCall);
     };
-    ReactiveDuck.when = (condition: ReactiveCondition<T>, callback: ReactiveUpdater<T>): Unsubscriber => {
+    ReduckWrapper.when = (condition: ReactiveCondition<T>, callback: ReactiveUpdater<T>): Unsubscriber => {
         return __reactive.when(condition, callback);
     };
-    ReactiveDuck.bindValue = (obj: any, param: string, decorator?: (value?: T) => any): Unsubscriber => {
+    ReduckWrapper.bindValue = (obj: any, param: string, decorator?: (value?: T) => any): Unsubscriber => {
         return __reactive.bindValue(obj, param, decorator);
     };
     // Array Override
-    ReactiveDuck.push = (...args: ReduckType<T>[]): number => {
+    ReduckWrapper.push = (...args: ReduckType<T>[]): number => {
         const newItems = args.map(parseReduck);
-        ReactiveDuck.triggerListeners('insert', __links.length, ...newItems);
+        ReduckWrapper.triggerListeners('insert', __links.length, ...newItems);
         return __links.push(...newItems);
     };
-    ReactiveDuck.pop = (): Reduck<T> | undefined => {
+    ReduckWrapper.pop = (): Reduck<T> | undefined => {
         const deleted = __links.pop();
         if (deleted) {
-            ReactiveDuck.triggerListeners('delete', __links.length, deleted);
+            ReduckWrapper.triggerListeners('delete', __links.length, deleted);
         }
         return deleted;
     };
-    ReactiveDuck.shift = (): Reduck<T> | undefined => {
+    ReduckWrapper.shift = (): Reduck<T> | undefined => {
         const deleted = __links.shift();
         if (deleted) {
-            ReactiveDuck.triggerListeners('delete', 0, deleted);
+            ReduckWrapper.triggerListeners('delete', 0, deleted);
         }
         return deleted;
     };
-    ReactiveDuck.unshift = (...args: T[]): number => {
+    ReduckWrapper.unshift = (...args: T[]): number => {
         const newItems = args.map(parseReduck);
-        ReactiveDuck.triggerListeners('insert', 0, ...newItems);
+        ReduckWrapper.triggerListeners('insert', 0, ...newItems);
         return __links.unshift(...newItems);
     }
-    ReactiveDuck.splice = (start: number, deleteCount: number = 0, ...args: ReduckType<T>[]): Reduck<T>[] => {
+    ReduckWrapper.splice = (start: number, deleteCount: number = 0, ...args: ReduckType<T>[]): Reduck<T>[] => {
         const newItems = args.map(parseReduck);
         const deleted = __links.splice(start, deleteCount, ...newItems);
         if (newItems.length) {
-            ReactiveDuck.triggerListeners('insert', start, ...newItems);
+            ReduckWrapper.triggerListeners('insert', start, ...newItems);
         }
         if (deleted.length) {
-            ReactiveDuck.triggerListeners('delete', start, ...deleted);
+            ReduckWrapper.triggerListeners('delete', start, ...deleted);
         }
         return deleted;
     };
     // Map Override
-    ReactiveDuck.set = (key: any, value: T): Reduck<T> => {
+    ReduckWrapper.set = (key: any, value: T): Reduck<T> => {
         if (__map.has(key)) {
             __map.get(key)!.value = value;
         } else {
             const inserted = parseReduck(value);
-            ReactiveDuck.triggerListeners('insert', key, inserted);
+            ReduckWrapper.triggerListeners('insert', key, inserted);
             __map.set(key, inserted);
         }
-        return ReactiveDuck;
+        return ReduckWrapper;
     };
-    ReactiveDuck.get = (key: any): T | undefined => {
+    ReduckWrapper.get = (key: any): T | undefined => {
         const fetchDuck = __map.get(key);
         return fetchDuck ? fetchDuck.value : undefined;
     };
-    ReactiveDuck.clear = (): void => {
-        __map.forEach((value, key) => ReactiveDuck.triggerListeners('delete', key, value));
+    ReduckWrapper.clear = (): void => {
+        __map.forEach((value, key) => ReduckWrapper.triggerListeners('delete', key, value));
         __map.clear()
     };
-    ReactiveDuck.delete = (key: any): boolean => {
+    ReduckWrapper.delete = (key: any): boolean => {
         const item = __map.get(key);
         if (item) {
-            item.removeParent(ReactiveDuck);
-            ReactiveDuck.triggerListeners('delete', key, item);
+            item.removeParent(ReduckWrapper);
+            ReduckWrapper.triggerListeners('delete', key, item);
         }
         return __map.delete(key);
     };
-    ReactiveDuck.has = (key: any): boolean => __map.has(key);
+    ReduckWrapper.has = (key: any): boolean => __map.has(key);
     // Unducking
-    ReactiveDuck.toArray = (): T[] => {
+    ReduckWrapper.toArray = (): T[] => {
         return __links.map(d => d.value)
     };
-    ReactiveDuck.toMap = (): Map<any, T> => {
+    ReduckWrapper.toMap = (): Map<any, T> => {
         const map = new Map();
         __map.forEach((d, key) => map.set(key, d.value));
         return map;
     };
-    ReactiveDuck.toObject = (): any => {
+    ReduckWrapper.toObject = (): any => {
         if (__map.size) {
             const result: any = {};
             __map.forEach((d, key) => result[key] = d.toObject());
@@ -220,70 +225,72 @@ export function reduck<T>(initial?: T | Reactive<T>): Reduck<T> {
         } else if (__links.length) {
             return __links.map(d => d.toObject());
         } else {
-            return ReactiveDuck.value;
+            return ReduckWrapper.value;
         }
     };
     // Properties
-    ReactiveDuck.quack = (...args: any[]): void => quack(...args);
-    ReactiveDuck.forEach = (callback: (duck: Reduck<T>, key: any) => void) => {
+    ReduckWrapper.forEach = (callback: (duck: Reduck<T>, key: any) => void) => {
         __links.forEach((duck, index) => callback(duck, index));
         __map.forEach((duck, key) => callback(duck, key));
     };
-    ReactiveDuck.query = (query: DucktorQuery): Reducktor => {
+    ReduckWrapper.query = (query: DucktorQuery): Reducktor => {
         const result: Reduck<any>[] = [];
         if (query === '*') {
-            ReactiveDuck.forEach((d: Reduck<T>) => result.push(d));
+            ReduckWrapper.forEach((d: Reduck<T>) => result.push(d));
         } else if (typeof query === 'function') {
-            ReactiveDuck.forEach((d: Reduck<T>, key: any) => {
-                if (query(key, ReactiveDuck, 0)) {
+            ReduckWrapper.forEach((d: Reduck<T>, key: any) => {
+                if (query(key, ReduckWrapper, 0)) {
                     result.push(d);
                 }
             });
         } else {
-            result.push(ReactiveDuck(query));
+            result.push(ReduckWrapper(query));
         }
         return reducktor(result);
     };
-    Object.defineProperty(ReactiveDuck, 'value', {
+    Object.defineProperty(ReduckWrapper, 'value', {
         get: (): T => __reactive.value,
         set: (value: T) => {
             __reactive.value = value;
-            ReactiveDuck.triggerListeners('update', undefined);
+            ReduckWrapper.triggerListeners('update', undefined);
         },
     });
-    Object.defineProperty(ReactiveDuck, 'length', { get: () => __links.length });
-    Object.defineProperty(ReactiveDuck, 'size', { get: () => __map.size });
-    return ReactiveDuck;
+    Object.defineProperty(ReduckWrapper, 'length', { get: () => __links.length });
+    Object.defineProperty(ReduckWrapper, 'size', { get: () => __map.size });
+    Object.defineProperty(ReduckWrapper, 'type', { get: () => 'reduck' });
+    return ReduckWrapper;
 }
 
-function reducktor(ducks: Reduck<any>[]): Reducktor {
-    let __ducks = ducks;
-    const ReactiveReducktor: any = (query: any): Reducktor => {
+function reducktor(reducks: Reduck<any>[]): Reducktor {
+    let __reducks = reducks;
+    const ReducktorWrapper: any = (query: any): Reducktor => {
         const result: Reduck<any>[] = [];
         if (query === '*') {
-            __ducks.forEach(d => d.forEach(nested => result.push(nested)));
+            __reducks.forEach(d => d.forEach(nested => result.push(nested)));
         } else if (typeof query === 'function') {
-            __ducks.forEach((d, index) => d.forEach((nested, key) => {
+            __reducks.forEach((d, index) => d.forEach((nested, key) => {
                 if (query(key, d, index)) {
                     result.push(nested)
                 }
             }));
         } else {
-            __ducks.forEach(d => result.push(d(query)));
+            __reducks.forEach(d => result.push(d(query)));
         }
         return reducktor(result);
     };
-    ReactiveReducktor.at = (index: number): Reduck<any> => __ducks[index];
-    ReactiveReducktor.toDuck = (): Duck<any> => duckFrom(__ducks);
-    ReactiveReducktor.toObject = (): any[] => __ducks.map(d => d.toObject());
-    return ReactiveReducktor;
+    ReducktorWrapper.at = (index: number): Reduck<any> => __reducks[index];
+    ReducktorWrapper.toReduck = (): Reduck<any> => reduckFrom(__reducks, false);
+    ReducktorWrapper.toObject = (): any[] => __reducks.map(d => d.toObject());
+    return ReducktorWrapper;
 }
 
-export function reduckFrom(item: any): Reduck<any> {
-    if (canQuack(item)) {
+export function reduckFrom(item: any, listenChilds: boolean = true): Reduck<any> {
+    if (isReduck(item)) {
         return item;
+    } else if (item instanceof Reactive) {
+        return reduck(item);
     }
-    const d = reduck();
+    const d = reduck(undefined, listenChilds) as Reduck<any>;
     if (item instanceof Array) {
         item.forEach(value => d.push(reduckFrom(value)));
     } else if (item instanceof Map) {

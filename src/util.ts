@@ -15,6 +15,16 @@ export function quack(...args: any[]): any {
     console.log(...quacks);
 }
 
-export function canQuack(d: any): boolean {
-    return d.quack;
+export function isDuck(d: any): boolean {
+    if (typeof d === 'function') {
+        return d.type === 'duck';
+    }
+    return false;
+}
+
+export function isReduck(d: any): boolean {
+    if (typeof d === 'function') {
+        return d.type === 'reduck';
+    }
+    return false;    
 }
