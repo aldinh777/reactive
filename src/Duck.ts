@@ -3,6 +3,17 @@ import { isDuck } from './util';
 export type DuckType<T> = T | Duck<T>;
 export type DucktorFuncQuery = (key: any, parent: Duck<any>, index: number) => boolean;
 export type DucktorQuery = '*' | DucktorFuncQuery | string | number;
+export interface NodeDuck<T> {
+    value: T;
+    array: NodeDuck<T>[];
+    map: any;
+}
+export interface Ducktor {
+    (query: DucktorQuery): Ducktor;
+    at(index: number): Duck<any>;
+    toDuck(): Duck<any>;
+    toObject(): any;
+}
 export interface Duck<T> {
     (key: any): Duck<T>;
     value: T;
@@ -11,13 +22,14 @@ export interface Duck<T> {
     query(query: DucktorQuery): Ducktor;
     toArray(): T[];
     toMap(): Map<any, T>;
-    toObject(): any;
+    toObject(mapper?: WeakMap<Duck<T>, any>): any;
+    toNodeDuck(mapper?: WeakMap<Duck<T>, NodeDuck<T>>): NodeDuck<T>;
     // Array Operation
     length: number;
     push(...args: DuckType<T>[]): number;
     pop(): Duck<T> | undefined;
-    shift(): number;
-    unshift(...args: DuckType<T>[]): Duck<T> | undefined;
+    shift(): Duck<T> | undefined;
+    unshift(...args: DuckType<T>[]): number;
     splice(start: number, deleteCount?: number, ...args: DuckType<T>[]): Duck<T>[];
     // Map Operation
     size: number;
@@ -27,12 +39,6 @@ export interface Duck<T> {
     delete(key: any): boolean;
     has(key: any): boolean;
 }
-export interface Ducktor {
-    (query: DucktorQuery): Ducktor;
-    at(index: number): Duck<any>;
-    toDuck(): Duck<any>;
-    toObject(): any;
-}
 
 const parseDuck = (d: any): Duck<any> => isDuck(d) ? d : duck(d);
 
@@ -40,7 +46,7 @@ export function duck<T>(initial?: T): Duck<T> {
     const __links: Duck<T>[] = [];
     const __map: Map<any, Duck<T>> = new Map();
     let __value: T = initial as T;
-    const DuckWrapper: any = (key: any): Duck<T> => {
+    const duckClosure: any = (key: any): Duck<T> => {
         if (key !== undefined) {
             const mapResult = __map.get(key);
             if (mapResult) {
@@ -49,76 +55,108 @@ export function duck<T>(initial?: T): Duck<T> {
             const arrayResult = __links[key];
             return arrayResult;
         }
-        return DuckWrapper;
+        return duckWrapper;
     }
+    const duckWrapper: Duck<T> = duckClosure;
     // Array Override
-    DuckWrapper.push = (...args: DuckType<T>[]): number => __links.push(...args.map(parseDuck));
-    DuckWrapper.pop = (): Duck<T> | undefined => __links.pop();
-    DuckWrapper.shift = (): Duck<T> | undefined => __links.shift();
-    DuckWrapper.unshift = (...args: T[]): number => __links.unshift(...args.map(parseDuck));
-    DuckWrapper.splice = (start: number, deleteCount: number = 0, ...args: DuckType<T>[]): Duck<T>[] => {
+    duckWrapper.push = (...args: DuckType<T>[]): number => __links.push(...args.map(parseDuck));
+    duckWrapper.pop = (): Duck<T> | undefined => __links.pop();
+    duckWrapper.shift = (): Duck<T> | undefined => __links.shift();
+    duckWrapper.unshift = (...args: T[]): number => __links.unshift(...args.map(parseDuck));
+    duckWrapper.splice = (start: number, deleteCount: number = 0, ...args: DuckType<T>[]): Duck<T>[] => {
         return __links.splice(start, deleteCount, ...args.map(parseDuck));
     };
     // Map Override
-    DuckWrapper.set = (key: any, value: T): Duck<T> => {
+    duckWrapper.set = (key: any, value: T): Duck<T> => {
         __map.set(key, parseDuck(value));
-        return DuckWrapper;
+        return duckWrapper;
     };
-    DuckWrapper.get = (key: any): T | undefined => {
+    duckWrapper.get = (key: any): T | undefined => {
         const fetchDuck = __map.get(key)
         return fetchDuck ? fetchDuck.value : undefined;
     };
-    DuckWrapper.clear = (): void => __map.clear();
-    DuckWrapper.delete = (key: any): boolean => __map.delete(key);
-    DuckWrapper.has = (key: any): boolean => __map.has(key);
+    duckWrapper.clear = (): void => __map.clear();
+    duckWrapper.delete = (key: any): boolean => __map.delete(key);
+    duckWrapper.has = (key: any): boolean => __map.has(key);
     // Unducking
-    DuckWrapper.toArray = (): T[] => {
+    duckWrapper.toArray = (): T[] => {
         return __links.map(d => d.value)
     };
-    DuckWrapper.toMap = (): Map<any, T> => {
+    duckWrapper.toMap = (): Map<any, T> => {
         const map = new Map();
         __map.forEach((d, key) => map.set(key, d.value));
         return map;
     }
-    DuckWrapper.toObject = (): any => {
-        if (__map.size) {
-            const result: any = {};
-            __map.forEach((d, key) => result[key] = d.toObject());
-            return result;
-        } else if (__links.length) {
-            return __links.map(d => d.toObject());
+    duckWrapper.toObject = (mapper: WeakMap<Duck<T>, any> = new WeakMap()): any => {
+        let result: any;
+        const res = mapper.get(duckWrapper);
+        if (res) {
+            result = res;
         } else {
-            return DuckWrapper.value;
+            if (__map.size) {
+                result = {};
+                mapper.set(duckWrapper, result);
+                __map.forEach((d, key) => result[key] = d.toObject(mapper));
+            } else if (__links.length) {
+                result = [];
+                mapper.set(duckWrapper, result);
+                __links.forEach(d => result.push(d.toObject(mapper)));
+            } else {
+                result = duckWrapper.value;
+                mapper.set(duckWrapper, result);
+            }
         }
+        return result;
+    }
+    duckWrapper.toNodeDuck = (mapper: WeakMap<Duck<T>, NodeDuck<T>> = new WeakMap()): NodeDuck<T> => {
+        let node: NodeDuck<T>;
+        const res = mapper.get(duckWrapper);
+        if (res) {
+            node = res;
+        } else {
+            node = {
+                value: duckWrapper.value,
+                array: [],
+                map: {},    
+            }
+            mapper.set(duckWrapper, node);
+            __links.forEach(d => {
+                node.array.push(d.toNodeDuck(mapper));
+            });
+            __map.forEach((d, key) => {
+                node.map[key] = d.toNodeDuck(mapper);
+            });
+        }
+        return node;
     }
     // Properties
-    DuckWrapper.forEach = (callback: (duck: Duck<T>, key: any) => void) => {
+    duckWrapper.forEach = (callback: (duck: Duck<T>, key: any) => void) => {
         __links.forEach((duck, index) => callback(duck, index));
         __map.forEach((duck, key) => callback(duck, key));
     };
-    DuckWrapper.query = (query: DucktorQuery): Ducktor => {
+    duckWrapper.query = (query: DucktorQuery): Ducktor => {
         const result: Duck<any>[] = [];
         if (query === '*') {
-            DuckWrapper.forEach((d: Duck<T>) => result.push(d));
+            duckWrapper.forEach((d: Duck<T>) => result.push(d));
         } else if (typeof query === 'function') {
-            DuckWrapper.forEach((d: Duck<T>, key: any) => {
-                if (query(key, DuckWrapper, 0)) {
+            duckWrapper.forEach((d: Duck<T>, key: any) => {
+                if (query(key, duckWrapper, 0)) {
                     result.push(d);
                 }
             });
         } else {
-            result.push(DuckWrapper(query));
+            result.push(duckWrapper(query));
         }
         return ducktor(result);
     };
-    Object.defineProperty(DuckWrapper, 'value', {
+    Object.defineProperty(duckWrapper, 'value', {
         get: () => __value,
         set: (value) => __value = value,
     });
-    Object.defineProperty(DuckWrapper, 'type', { get: () => 'duck' });
-    Object.defineProperty(DuckWrapper, 'length', { get: () => __links.length });
-    Object.defineProperty(DuckWrapper, 'size', { get: () => __map.size });
-    return DuckWrapper;
+    Object.defineProperty(duckWrapper, 'type', { get: () => 'duck' });
+    Object.defineProperty(duckWrapper, 'length', { get: () => __links.length });
+    Object.defineProperty(duckWrapper, 'size', { get: () => __map.size });
+    return duckWrapper;
 }
 
 function ducktor(ducks: Duck<any>[]): Ducktor {

@@ -12,6 +12,24 @@ export type ReducktorQuery = '*' | ReducktorFuncQuery | string | number;
 export type ReduckListener = (ev: ReduckEvent) => void;
 export type ReduckType<T> = T | Reactive<T> | Reduck<T>;
 export type ReduckOperation = 'update' | 'insert' | 'delete';
+export interface NodeReduck<T> {
+    value: T;
+    array: NodeReduck<T>[];
+    map: any;
+}
+export interface Reducktor {
+    (query: ReducktorQuery): Reducktor;
+    at(index: number): Reduck<any>;
+    toReduck(): Reduck<any>;
+    toObject(): any[];
+}
+export interface ReduckEvent {
+    operation: ReduckOperation;
+    key: any;
+    items: Reduck<any>[];
+    cancel: () => void;
+    bubbles: Reduck<any>[];
+}
 export interface Reduck<T> {
     (key: any): Reduck<T>;
     value: T;
@@ -21,7 +39,8 @@ export interface Reduck<T> {
     query(query: any): Reducktor;
     toArray(): T[];
     toMap(): Map<any, T>;
-    toObject(): any;
+    toObject(mapper?: WeakMap<Reduck<T>, any>): any;
+    toNodeReduck(mapper?: WeakMap<Reduck<T>, NodeReduck<T>>): NodeReduck<T>;
     // Reduck Operation
     intelligentInsert(key: any, values: any[], silent?: boolean): void;
     intelligentDelete(key: any, deleted?: number, silent?: boolean): void;
@@ -53,19 +72,6 @@ export interface Reduck<T> {
     delete(key: any): boolean;
     has(key: any): boolean;
 }
-export interface Reducktor {
-    (query: ReducktorQuery): Reducktor;
-    at(index: number): Reduck<any>;
-    toReduck(): Reduck<any>;
-    toObject(): any[];
-}
-export interface ReduckEvent {
-    operation: ReduckOperation;
-    key: any;
-    items: Reduck<any>[];
-    cancel: () => void;
-    bubbles: Reduck<any>[];
-}
 
 const parseReduck = (d: any): Reduck<any> => isReduck(d) ? d : reduck(d);
 
@@ -78,7 +84,7 @@ export function reduck<T>(initial?: T | Reactive<T>, listenChilds: boolean = tru
     const __insertListeners: ReduckListener[] = [];
     const __deleteListeners: ReduckListener[] = [];
     let __allowBubble: boolean = true;
-    const reduckClosure = (key: any): Reduck<T> => {
+    const reduckClosure: any = (key: any): Reduck<T> => {
         if (key !== undefined) {
             const mapResult = __map.get(key);
             if (mapResult) {
@@ -89,7 +95,7 @@ export function reduck<T>(initial?: T | Reactive<T>, listenChilds: boolean = tru
         }
         return reduckWrapper;
     };
-    const reduckWrapper: Reduck<any> = reduckClosure as any;
+    const reduckWrapper: Reduck<any> = reduckClosure;
     // Reduck Operation
     reduckWrapper.intelligentInsert = (key: any, values: any[], silent: boolean = false) => {
         if (typeof key === 'number') {
@@ -291,17 +297,48 @@ export function reduck<T>(initial?: T | Reactive<T>, listenChilds: boolean = tru
         __map.forEach((d, key) => map.set(key, d.value));
         return map;
     };
-    reduckWrapper.toObject = (): any => {
-        if (__map.size) {
-            const result: any = {};
-            __map.forEach((d, key) => result[key] = d.toObject());
-            return result;
-        } else if (__links.length) {
-            return __links.map(d => d.toObject());
+    reduckWrapper.toObject = (mapper: WeakMap<Reduck<T>, any> = new WeakMap()): any => {
+        let result: any;
+        const res = mapper.get(reduckWrapper);
+        if (res) {
+            result = res;
         } else {
-            return reduckWrapper.value;
+            if (__map.size) {
+                result = {};
+                mapper.set(reduckWrapper, result);
+                __map.forEach((d, key) => result[key] = d.toObject(mapper));
+            } else if (__links.length) {
+                result = [];
+                mapper.set(reduckWrapper, result);
+                __links.forEach(d => result.push(d.toObject(mapper)));
+            } else {
+                result = reduckWrapper.value;
+                mapper.set(reduckWrapper, result);
+            }
         }
+        return result;
     };
+    reduckWrapper.toNodeReduck = (mapper: WeakMap<Reduck<T>, NodeReduck<T>> = new WeakMap()): NodeReduck<T> => {
+        let node: NodeReduck<T>;
+        const res = mapper.get(reduckWrapper);
+        if (res) {
+            node = res;
+        } else {
+            node = {
+                value: reduckWrapper.value,
+                array: [],
+                map: {},    
+            }
+            mapper.set(reduckWrapper, node);
+            __links.forEach(rd => {
+                node.array.push(rd.toNodeReduck(mapper));
+            });
+            __map.forEach((rd, key) => {
+                node.map[key] = rd.toNodeReduck(mapper);
+            });
+        }
+        return node;
+    }
     // Properties
     reduckWrapper.forEach = (callback: (duck: Reduck<T>, key: any) => void) => {
         __links.forEach((duck, index) => callback(duck, index));
@@ -338,7 +375,7 @@ export function reduck<T>(initial?: T | Reactive<T>, listenChilds: boolean = tru
 
 function reducktor(reducks: Reduck<any>[]): Reducktor {
     let __reducks = reducks;
-    const reducktorClosure = (query: ReducktorQuery): Reducktor => {
+    const reducktorClosure: any = (query: ReducktorQuery): Reducktor => {
         const result: Reduck<any>[] = [];
         if (query === '*') {
             __reducks.forEach(d => d.forEach(nested => result.push(nested)));
@@ -353,7 +390,7 @@ function reducktor(reducks: Reduck<any>[]): Reducktor {
         }
         return reducktor(result);
     };
-    const reducktorWrapper: Reducktor = reducktorClosure as any;
+    const reducktorWrapper: Reducktor = reducktorClosure;
     reducktorWrapper.at = (index: number): Reduck<any> => __reducks[index];
     reducktorWrapper.toReduck = (): Reduck<any> => reduckFrom(__reducks, false);
     reducktorWrapper.toObject = (): any[] => __reducks.map(d => d.toObject());
