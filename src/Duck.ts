@@ -1,5 +1,8 @@
 import { isDuck } from './util';
 
+export type DuckType<T> = T | Duck<T>;
+export type DucktorFuncQuery = (key: any, parent: Duck<any>, index: number) => boolean;
+export type DucktorQuery = '*' | DucktorFuncQuery | string | number;
 export interface Duck<T> {
     (key: any): Duck<T>;
     value: T;
@@ -9,14 +12,14 @@ export interface Duck<T> {
     toArray(): T[];
     toMap(): Map<any, T>;
     toObject(): any;
-
+    // Array Operation
     length: number;
     push(...args: DuckType<T>[]): number;
     pop(): Duck<T> | undefined;
     shift(): number;
     unshift(...args: DuckType<T>[]): Duck<T> | undefined;
     splice(start: number, deleteCount?: number, ...args: DuckType<T>[]): Duck<T>[];
-
+    // Map Operation
     size: number;
     set(key: any, value: T): Duck<T>;
     get(key: any): T | undefined;
@@ -30,9 +33,6 @@ export interface Ducktor {
     toDuck(): Duck<any>;
     toObject(): any;
 }
-export type DuckType<T> = T | Duck<T>;
-export type DucktorFuncQuery = (key: any, parent: Duck<any>, index: number) => boolean;
-export type DucktorQuery = '*' | DucktorFuncQuery | string | number;
 
 const parseDuck = (d: any): Duck<any> => isDuck(d) ? d : duck(d);
 
