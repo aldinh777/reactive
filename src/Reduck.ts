@@ -20,7 +20,7 @@ export interface NodeReduck<T> {
 export interface Reducktor {
     (query: ReducktorQuery): Reducktor;
     at(index: number): Reduck<any>;
-    toReduck(): Reduck<any>;
+    toDeafReduck(): Reduck<any>;
     toObject(): any[];
 }
 export interface ReduckEvent {
@@ -392,25 +392,25 @@ function reducktor(reducks: Reduck<any>[]): Reducktor {
     };
     const reducktorWrapper: Reducktor = reducktorClosure;
     reducktorWrapper.at = (index: number): Reduck<any> => __reducks[index];
-    reducktorWrapper.toReduck = (): Reduck<any> => reduckFrom(__reducks, false);
+    reducktorWrapper.toDeafReduck = (): Reduck<any> => reduckFrom(__reducks, undefined, false);
     reducktorWrapper.toObject = (): any[] => __reducks.map(d => d.toObject());
     return reducktorWrapper;
 }
 
-export function reduckFrom(item: any, listenChilds: boolean = true): Reduck<any> {
+export function reduckFrom(item: any, defaultValue?: any, listenChilds: boolean = true): Reduck<any> {
     if (isReduck(item)) {
         return item;
     } else if (item instanceof Reactive) {
         return reduck(item);
     }
-    const d = reduck(undefined, listenChilds) as Reduck<any>;
+    const d = reduck(defaultValue, listenChilds) as Reduck<any>;
     if (item instanceof Array) {
-        item.forEach(value => d.push(reduckFrom(value)));
+        item.forEach(value => d.push(reduckFrom(value, defaultValue)));
     } else if (item instanceof Map) {
-        item.forEach((key, value) => d.set(key, reduckFrom(value)));
+        item.forEach((key, value) => d.set(key, reduckFrom(value, defaultValue)));
     } else if (typeof item === 'object') {
         for (const key in item) {
-            d.set(key, reduckFrom(item[key]));
+            d.set(key, reduckFrom(item[key], defaultValue));
         }
     } else {
         d.value = item;

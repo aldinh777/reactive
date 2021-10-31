@@ -182,18 +182,19 @@ function ducktor(ducks: Duck<any>[]): Ducktor {
     return DucktorWrapper;
 }
 
-export function duckFrom(item: any): Duck<any> {
+export function duckFrom(item: any, defaultValue?: any): Duck<any> {
     if (isDuck(item)) {
         return item;
     }
-    const d = duck();
+    const d = duck(defaultValue);
     if (item instanceof Array) {
-        item.forEach(value => d.push(duckFrom(value)));
+        item.forEach(value => d.push(duckFrom(value, defaultValue)));
     } else if (item instanceof Map) {
-        item.forEach((key, value) => d.set(key, duckFrom(value)));
+        item.forEach((key, value) => d.set(key, duckFrom(value, defaultValue)));
     } else if (typeof item === 'object') {
         for (const key in item) {
-            d.set(key, duckFrom(item[key]));
+            const value = item[key];
+            d.set(key, duckFrom(value, defaultValue));
         }
     } else {
         d.value = item;
