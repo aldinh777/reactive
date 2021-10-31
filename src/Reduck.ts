@@ -361,15 +361,13 @@ export function reduck<T>(initial?: T | Reactive<T>, listenChilds: boolean = tru
     };
     Object.defineProperty(reduckWrapper, 'value', {
         get: (): T => __reactive.value,
-        set: (value: T) => {
-            __reactive.value = value;
-            reduckWrapper.triggerListeners('update', undefined);
-        },
+        set: (value: T) => __reactive.value = value,
     });
     Object.defineProperty(reduckWrapper, 'reactive', { get: () => __reactive });
     Object.defineProperty(reduckWrapper, 'length', { get: () => __links.length });
     Object.defineProperty(reduckWrapper, 'size', { get: () => __map.size });
     Object.defineProperty(reduckWrapper, 'type', { get: () => 'reduck' });
+    __reactive.onChange(_ => reduckWrapper.triggerListeners('update', undefined));
     return reduckWrapper;
 }
 
