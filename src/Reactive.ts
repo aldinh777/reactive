@@ -14,6 +14,7 @@ export class Reactive<T> {
     protected __subscriptionList: Reactive<T>[] = [];
     protected __subscriberList: Reactive<T>[] = [];
     protected __onUpdateFunctions: ReactiveUpdater<T>[] = [];
+    protected __onEqualsFunctions: Map<T, ReactiveUpdater<T>> = new Map();
     protected __bindingFunctions: ReactiveUpdater<T>[] = [];
     protected __allowDuplicate: boolean = false;
     protected __rule?: Rule<T>;
@@ -45,7 +46,9 @@ export class Reactive<T> {
     }
     protected __callUpdateFunctions(value?: T): void {
         const totalSubscriber = this.__subscriberList.length;
-        const totalFunctions = this.__bindingFunctions.length + this.__onUpdateFunctions.length;
+        const totalFunctions = this.__bindingFunctions.length
+            + this.__onUpdateFunctions.length
+            + this.__onEqualsFunctions.size;
         if (!(totalSubscriber + totalFunctions)) {
             if (value !== undefined) {
                 this.__currentValue = value;
@@ -63,12 +66,21 @@ export class Reactive<T> {
                 const reactionEvent = {
                     oldValue,
                     currentReactive: this,
-                    cancel: () => skip = true,
+                    cancel: () => {
+                        skip = true;
+                        this.__currentValue = oldValue;
+                    },
                 };
+                const equalFunction = this.__onEqualsFunctions.get(current);
+                if (equalFunction) {
+                    equalFunction(current, reactionEvent);
+                    if (skip) {
+                        return;
+                    }
+                }
                 for (const updateFunction of this.__onUpdateFunctions) {
                     updateFunction(current, reactionEvent);
                     if (skip) {
-                        this.__currentValue = oldValue;
                         return;
                     }
                 }
@@ -98,6 +110,13 @@ export class Reactive<T> {
             callback(this.value, Reactive.createEmptyEvent(this));
         }
         return () => removeFromArray(callback, this.__onUpdateFunctions);
+    }
+    onEquals(compare: T, callback: ReactiveUpdater<T>): Unsubscriber {
+        this.__onEqualsFunctions.set(compare, callback);
+        if (this.value === compare) {
+            callback(this.value, Reactive.createEmptyEvent(this));
+        }
+        return () => this.__onEqualsFunctions.delete(compare);
     }
     when(condition: ReactiveCondition<T>, callback: ReactiveUpdater<T>): Unsubscriber {
         return this.onChange(
