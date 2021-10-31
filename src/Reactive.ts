@@ -3,8 +3,6 @@ import { removeFromArray } from './util';
 export interface ReactiveEvent<T> {
     oldValue?: T;
     currentReactive?: Reactive<T>;
-    preventReaction(): void;
-    preventNext(times?: number): void;
     cancel(): void;
 }
 export type ReactiveUpdater<T> = (value: T, ev: ReactiveEvent<T>) => void;
@@ -61,25 +59,15 @@ export class Reactive<T> {
             this.__currentValue = current;
             let reactionFlag = totalSubscriber > 0;
             if (totalFunctions) {
-                let skipAll = false;
-                let skipTimes = 0;
+                let skip = false;
                 const reactionEvent = {
                     oldValue,
                     currentReactive: this,
-                    preventReaction: () => reactionFlag = false,
-                    preventNext: (times: number = -1) => skipTimes = times,
-                    cancel: () => skipAll = true,
+                    cancel: () => skip = true,
                 };
                 for (const updateFunction of this.__onUpdateFunctions) {
-                    if (skipTimes > 0) {
-                        skipTimes--;
-                        continue;
-                    }
-                    else if (skipTimes === -1) {
-                        break;
-                    }
                     updateFunction(current, reactionEvent);
-                    if (skipAll) {
+                    if (skip) {
                         this.__currentValue = oldValue;
                         return;
                     }
@@ -131,8 +119,6 @@ export class Reactive<T> {
         return {
             oldValue: re ? re.__currentValue : undefined,
             currentReactive: re,
-            preventReaction: () => { },
-            preventNext: () => { },
             cancel: () => { },
         };
     }
