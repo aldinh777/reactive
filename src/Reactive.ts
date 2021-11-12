@@ -11,14 +11,14 @@ export type Rule<T> = (...params: any[]) => T;
 export type Unsubscriber = () => void;
 
 export class Reactive<T> {
-    protected __subscriptionList: Reactive<T>[] = [];
-    protected __subscriberList: Reactive<T>[] = [];
-    protected __onUpdateFunctions: ReactiveUpdater<T>[] = [];
-    protected __onEqualsFunctions: Map<T, ReactiveUpdater<T>> = new Map();
-    protected __bindingFunctions: ReactiveUpdater<T>[] = [];
-    protected __allowDuplicate: boolean = false;
-    protected __rule?: Rule<T>;
-    protected __currentValue?: T;
+    private __subscriptionList: Reactive<any>[] = [];
+    private __subscriberSet: Set<Reactive<any>> = new Set();
+    private __onUpdateFunctions: ReactiveUpdater<T>[] = [];
+    private __onEqualsFunctions: Map<T, ReactiveUpdater<T>> = new Map();
+    private __bindingFunctions: Set<ReactiveUpdater<T>> = new Set();
+    private __allowDuplicate: boolean = false;
+    private __rule?: Rule<T>;
+    private __currentValue?: T;
 
     constructor(initial?: T | Rule<T>, ...subscriptions: Reactive<any>[]) {
         if (typeof initial === 'function') {
@@ -27,28 +27,18 @@ export class Reactive<T> {
             this.value = initial as T;
         }
     }
-    protected __addSubscription(sub: Reactive<any>): void {
+    private __addSubscription(sub: Reactive<any>): void {
         this.__subscriptionList.push(sub);
-        sub.__subscriberList.push(this);
+        sub.__subscriberSet.add(this);
     }
-    protected __removeSubsriber(sub: Reactive<any>): void {
-        removeFromArray(sub, this.__subscriberList);
+    private __clearSubscription(): void {
+        this.__subscriptionList.forEach(sub => sub.__subscriberSet.delete(this));
+        this.__subscriptionList.splice(0, this.__subscriptionList.length);
     }
-    protected __clearSubscription(): void {
-        for (const sub of this.__subscriptionList) {
-            sub.__removeSubsriber(this);
-        }
-        this.__subscriptionList = [];
-    }
-    protected __getValueByRule(rule: Rule<T>): T {
-        const params = this.__subscriptionList.map(sub => sub.value);
-        return rule(...params);
-    }
-    protected __callUpdateFunctions(value?: T): void {
-        const totalSubscriber = this.__subscriberList.length;
-        const totalFunctions = this.__bindingFunctions.length
-            + this.__onUpdateFunctions.length
-            + this.__onEqualsFunctions.size;
+    private __callUpdateFunctions(value?: T): void {
+        const totalSubscriber = this.__subscriberSet.size;
+        const totalFunctions = this.__bindingFunctions.size +
+            this.__onUpdateFunctions.length + this.__onEqualsFunctions.size;
         if (!(totalSubscriber + totalFunctions)) {
             if (value !== undefined) {
                 this.__currentValue = value;
@@ -60,7 +50,6 @@ export class Reactive<T> {
         if (this.__allowDuplicate || changed) {
             const oldValue = this.__currentValue;
             this.__currentValue = current;
-            let reactionFlag = totalSubscriber > 0;
             if (totalFunctions) {
                 let skip = false;
                 const reactionEvent = {
@@ -86,13 +75,13 @@ export class Reactive<T> {
                 }
                 this.__bindingFunctions.forEach(bind => bind(current, reactionEvent));
             }
-            if (reactionFlag) {
-                this.__subscriberList.forEach(sub => sub.__callUpdateFunctions())
+            if (totalSubscriber) {
+                this.__subscriberSet.forEach(sub => sub.__callUpdateFunctions())
             }
         }
     }
     get value(): T {
-        return this.__rule ? this.__getValueByRule(this.__rule) : this.__currentValue as T;
+        return this.__rule ? this.__rule(this.__subscriptionList.map(sub => sub.value)) : this.__currentValue as T;
     }
     set value(value: T) {
         this.__clearSubscription();
@@ -127,8 +116,8 @@ export class Reactive<T> {
     bindValue(obj: any, param: string, decorator?: (value?: T) => any): Unsubscriber {
         const callback = (value?: T) => obj[param] = decorator ? decorator(value) : value;
         callback(this.value);
-        this.__bindingFunctions.push(callback);
-        return () => removeFromArray(callback, this.__bindingFunctions);
+        this.__bindingFunctions.add(callback);
+        return () => this.__bindingFunctions.delete(callback);
     }
     allowDuplicate(allow: boolean = true): Reactive<T> {
         this.__allowDuplicate = allow;

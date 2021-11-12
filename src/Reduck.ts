@@ -35,7 +35,7 @@ export interface Reduck<T> {
     value: T;
     type: string;
     reactive: Reactive<T>;
-    forEach(callback: (duck: Reduck<T>, key: any) => void): void;
+    forEach(callback: (reduck: Reduck<T>, key: any) => void): void;
     query(query: ReducktorQuery): Reducktor;
     toArray(): T[];
     toMap(): Map<any, T>;
