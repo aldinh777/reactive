@@ -35,7 +35,7 @@ export class Reactive<T> {
         this.__subscriptionList.forEach(sub => sub.__subscriberSet.delete(this));
         this.__subscriptionList.splice(0, this.__subscriptionList.length);
     }
-    private __callUpdateFunctions(value?: T): void {
+    private __triggerUpdate(value?: T): void {
         const totalSubscriber = this.__subscriberSet.size;
         const totalFunctions = this.__bindingFunctions.size +
             this.__onUpdateFunctions.length + this.__onEqualsFunctions.size;
@@ -76,7 +76,7 @@ export class Reactive<T> {
                 this.__bindingFunctions.forEach(bind => bind(current, reactionEvent));
             }
             if (totalSubscriber) {
-                this.__subscriberSet.forEach(sub => sub.__callUpdateFunctions())
+                this.__subscriberSet.forEach(sub => sub.__triggerUpdate())
             }
         }
     }
@@ -86,7 +86,7 @@ export class Reactive<T> {
     set value(value: T) {
         this.__clearSubscription();
         this.__rule = undefined;
-        this.__callUpdateFunctions(value);
+        this.__triggerUpdate(value);
     }
     setRule(rule: Rule<T>, ...subscriptions: Reactive<any>[]) {
         this.__clearSubscription();
