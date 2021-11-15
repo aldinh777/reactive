@@ -1,0 +1,95 @@
+import { Reactive, Unsubscriber } from '../Reactive';
+import { removeFromArray } from '../util';
+
+export type Operation = 'update' | 'insert' | 'delete';
+export type ReactiveItem<T> = T | Reactive<T>;
+export type ReactiveItemCallback<T> = (value: T, index: number | string) => void;
+export type ReCollectionUpdater<T> = (ev: ReCollectionEvent<T>) => void;
+export interface ReCollectionEvent<T> {
+    operation: Operation;
+    index?: number | string;
+    item: Reactive<T>;
+    value: T;
+    cancel: () => void;
+}
+
+export function parseReactive<T>(item: ReactiveItem<T>): Reactive<T> {
+    if (item instanceof Reactive) {
+        return item;
+    }
+    return new Reactive(item);
+}
+
+export abstract class ReactiveCollection<T> {
+    private __unsubscribers: WeakMap<Reactive<T>, Unsubscriber> = new WeakMap();
+    private __insertListener: ReCollectionUpdater<T>[] = [];
+    private __deleteListener: ReCollectionUpdater<T>[] = [];
+    private __updateListener: ReCollectionUpdater<T>[] = [];
+    protected abstract __internalObjectify(mapper: WeakMap<ReactiveCollection<T>, any>): any;
+    abstract forEach(callback: ReactiveItemCallback<T>): void;
+    abstract at(index: number | string): Reactive<T> | undefined;
+    static objectify<T>(item: T, mapper: WeakMap<ReactiveCollection<T>, any>): any {
+        return item instanceof ReactiveCollection ? item.__internalObjectify(mapper) : item;
+    }
+    triggerUpdate(operation: Operation, item: Reactive<T>, index?: number | string): boolean {
+        let skip = false;
+        const reCollectionEvent: ReCollectionEvent<T> = {
+            operation,
+            index,
+            item,
+            value: item.value,
+            cancel: () => { skip = true },
+        };
+        switch (operation) {
+            case 'insert':
+                for (const ins of this.__insertListener) {
+                    ins(reCollectionEvent);
+                    if (skip) {
+                        return false;
+                    }
+                }
+                if (!this.__unsubscribers.has(item)) {
+                    const unsub = item.onChange(_ => this.triggerUpdate('update', item));
+                    this.__unsubscribers.set(item, unsub);
+                }
+                return true;
+            case 'delete':
+                for (const del of this.__deleteListener) {
+                    del(reCollectionEvent);
+                    if (skip) {
+                        return false;
+                    }
+                }
+                if (this.__unsubscribers.has(item)) {
+                    this.__unsubscribers.get(item)!();
+                    this.__unsubscribers.delete(item);
+                }
+                return true;
+            case 'update':
+                for (const upd of this.__updateListener) {
+                    upd(reCollectionEvent);
+                    if (skip) {
+                        return false;
+                    }
+                }
+                return true;
+            default:
+                return false;
+        }
+    }
+    onInsert(callback: ReCollectionUpdater<T>): Unsubscriber {
+        this.__insertListener.push(callback);
+        return () => removeFromArray(callback, this.__insertListener);
+    }
+    onDelete(callback: ReCollectionUpdater<T>): Unsubscriber {
+        this.__deleteListener.push(callback);
+        return () => removeFromArray(callback, this.__deleteListener);
+    }
+    onUpdate(callback: ReCollectionUpdater<T>): Unsubscriber {
+        this.__updateListener.push(callback);
+        return () => removeFromArray(callback, this.__updateListener);
+    }
+    toObject(): any {
+        return this.__internalObjectify(new WeakMap());
+    }
+}

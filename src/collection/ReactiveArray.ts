@@ -1,97 +1,45 @@
-import { removeFromArray } from '../util';
-import { Reactive, Unsubscriber } from '../Reactive';
+import { Reactive } from '../Reactive';
 import {
-    Operation,
     parseReactive,
+    ReactiveCollection,
     ReactiveItem,
-    ReactiveItemCallback,
-    ReCollection,
-    ReCollectionEvent,
-    ReCollectionUpdater
-} from './ReCollection';
+    ReactiveItemCallback
+} from './ReactiveCollection';
 
 export function reactifyArray<T>(items: ReactiveItem<T>[]) {
     return items.map(it => parseReactive(it));
 }
 
-export class ReactiveArray<T> implements ReCollection<T> {
-    private __items: Reactive<T>[];
-    private __insertListener: ReCollectionUpdater[] = [];
-    private __deleteListener: ReCollectionUpdater[] = [];
-    private __updateListener: ReCollectionUpdater[] = [];
+export class ReactiveArray<T> extends ReactiveCollection<T> {
+    private __items: Reactive<T>[] = [];
     constructor(...items: T[]) {
-        this.__items = reactifyArray(items);
+        super();
+        this.push(...items);
     }
     get length() {
         return this.__items.length;
     }
     // Reactive Collection
-    private __internalObjectify(mapper: WeakMap<ReactiveArray<T>, any>): any {
+    protected __internalObjectify(mapper: WeakMap<ReactiveCollection<T>, any>): any {
         if (mapper.has(this)) {
             return mapper.get(this);
         }
         const result: any[] = [];
         mapper.set(this, result);
         this.__items.forEach(r => {
-            const rv = r.value;
-            result.push(rv instanceof ReactiveArray ? rv.__internalObjectify(mapper) : rv);
+            const item = r.value;
+            result.push(ReactiveCollection.objectify(item, mapper));
         });
         return result;
     }
-    triggerUpdate(operation: Operation, item: Reactive<T>, index?: number): boolean {
-        let skip = false;
-        const reCollectionEvent: ReCollectionEvent = {
-            operation,
-            index,
-            item,
-            cancel: () => { skip = true },
-        };
-        switch (operation) {
-            case 'insert':
-                for (const ins of this.__insertListener) {
-                    ins(reCollectionEvent);
-                    if (skip) {
-                        return false;
-                    }
-                }
-                return true;
-            case 'delete':
-                for (const del of this.__deleteListener) {
-                    del(reCollectionEvent);
-                    if (skip) {
-                        return false;
-                    }
-                }
-                return true;
-            case 'update':
-                for (const upd of this.__updateListener) {
-                    upd(reCollectionEvent);
-                    if (skip) {
-                        return false;
-                    }
-                }
-                return true;
-            default:
-                return false;
-        }
+    forEach(callback: ReactiveItemCallback<T>): void {
+        this.__items.forEach((r, index) => callback(r.value, index));
     }
     at(index: any): Reactive<T> | undefined {
         return this.__items[index];
     }
     toObject(): any[] {
         return this.__internalObjectify(new WeakMap());
-    }
-    onInsert(callback: ReCollectionUpdater): Unsubscriber {
-        this.__insertListener.push(callback);
-        return () => removeFromArray(callback, this.__insertListener);
-    }
-    onDelete(callback: ReCollectionUpdater): Unsubscriber {
-        this.__deleteListener.push(callback);
-        return () => removeFromArray(callback, this.__deleteListener);
-    }
-    onUpdate(callback: ReCollectionUpdater): Unsubscriber {
-        this.__updateListener.push(callback);
-        return () => removeFromArray(callback, this.__updateListener);
     }
     // Array Implementation
     pop(): Reactive<T> | undefined {
@@ -163,8 +111,5 @@ export class ReactiveArray<T> implements ReCollection<T> {
             }
         });
         return this.__items.unshift(...filtered);
-    }
-    forEach(callback: ReactiveItemCallback<T>): void {
-        this.__items.forEach((r, index) => callback(r.value, index));
     }
 }
