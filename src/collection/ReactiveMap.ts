@@ -24,6 +24,9 @@ export class ReactiveMap<T> extends ReactiveCollection<T> {
         });
         return result;
     }
+    protected __includesReactive(item: Reactive<T>): boolean {
+        return Array.from(this.__map.values()).includes(item);
+    }
     forEach(callback: ReactiveItemCallback<T>): void {
         this.__map.forEach((r, index) => callback(r.value, index));
     }
@@ -32,18 +35,23 @@ export class ReactiveMap<T> extends ReactiveCollection<T> {
     }
     // Map Implementation
     clear(): void {
-        const deleted: string[] = [];
-        this.__map.forEach((r, key) => {
-            if (this.triggerUpdate('delete', r, key)) {
-                deleted.push(key);
+        const backup = this.__map;
+        this.__map = new Map();
+        backup.forEach((r, key) => {
+            if (!this.triggerUpdate('delete', r, key)) {
+                this.__map.set(key, r);
             }
         });
-        deleted.forEach(key => this.__map.delete(key));
     }
     delete(key: string): boolean {
         const item = this.__map.get(key);
-        if (item && this.triggerUpdate('delete', item, key)) {
-            return this.__map.delete(key);
+        if (item) {
+            this.__map.delete(key);
+            if (!this.triggerUpdate('delete', item, key)) {
+                this.__map.set(key, item);
+                return false;
+            }
+            return true;
         }
         return false;
     }

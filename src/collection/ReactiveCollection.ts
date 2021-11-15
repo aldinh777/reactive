@@ -9,7 +9,6 @@ export interface ReCollectionEvent<T> {
     operation: Operation;
     index?: number | string;
     item: Reactive<T>;
-    value: T;
     cancel: () => void;
 }
 
@@ -26,6 +25,7 @@ export abstract class ReactiveCollection<T> {
     private __deleteListener: ReCollectionUpdater<T>[] = [];
     private __updateListener: ReCollectionUpdater<T>[] = [];
     protected abstract __internalObjectify(mapper: WeakMap<ReactiveCollection<T>, any>): any;
+    protected abstract __includesReactive(item: Reactive<T>): boolean;
     abstract forEach(callback: ReactiveItemCallback<T>): void;
     abstract at(index: number | string): Reactive<T> | undefined;
     static objectify<T>(item: T, mapper: WeakMap<ReactiveCollection<T>, any>): any {
@@ -37,7 +37,6 @@ export abstract class ReactiveCollection<T> {
             operation,
             index,
             item,
-            value: item.value,
             cancel: () => { skip = true },
         };
         switch (operation) {
@@ -49,7 +48,11 @@ export abstract class ReactiveCollection<T> {
                     }
                 }
                 if (!this.__unsubscribers.has(item)) {
-                    const unsub = item.onChange(_ => this.triggerUpdate('update', item));
+                    const unsub = item.onChange((_, ev) => {
+                        if (!this.triggerUpdate('update', item)) {
+                            ev.cancel();
+                        }
+                    });
                     this.__unsubscribers.set(item, unsub);
                 }
                 return true;
@@ -61,8 +64,13 @@ export abstract class ReactiveCollection<T> {
                     }
                 }
                 if (this.__unsubscribers.has(item)) {
-                    this.__unsubscribers.get(item)!();
-                    this.__unsubscribers.delete(item);
+                    if (!this.__includesReactive(item)) {
+                        const unsub = this.__unsubscribers.get(item);
+                        if (unsub) {
+                            unsub();
+                            this.__unsubscribers.delete(item);
+                        }
+                    }
                 }
                 return true;
             case 'update':

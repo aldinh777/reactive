@@ -32,6 +32,9 @@ export class ReactiveArray<T> extends ReactiveCollection<T> {
         });
         return result;
     }
+    protected __includesReactive(item: Reactive<T>): boolean {
+        return this.__items.includes(item);
+    }
     forEach(callback: ReactiveItemCallback<T>): void {
         this.__items.forEach((r, index) => callback(r.value, index));
     }
@@ -53,15 +56,8 @@ export class ReactiveArray<T> extends ReactiveCollection<T> {
         }
     }
     push(...items: ReactiveItem<T>[]): number {
-        const filtered: Reactive<T>[] = [];
-        const reactified = reactifyArray(items);
-        reactified.forEach(r => {
-            const index = this.__items.length + filtered.length;
-            if (this.triggerUpdate('insert', r, index)) {
-                filtered.push(r);
-            }
-        });
-        return this.__items.push(...filtered);
+        this.splice(this.__items.length, 0, ...items);
+        return this.__items.length;
     }
     shift(): Reactive<T> | undefined {
         const shifted = this.__items.shift();
@@ -74,42 +70,36 @@ export class ReactiveArray<T> extends ReactiveCollection<T> {
         }
     }
     splice(start: number, deleteCount: number = 0, ...items: ReactiveItem<T>[]): Reactive<T>[] {
-        let deleteResult: Reactive<T>[] = [];
+        const deleteResult: Reactive<T>[] = [];
+        const unspliced: Reactive<T>[] = [];
         if (deleteCount) {
-            const unsplice: Reactive<T>[] = [];
             const spliced = this.__items.splice(start, deleteCount);
             spliced.forEach((r, curIndex) => {
                 const index = start + curIndex;
                 if (this.triggerUpdate('delete', r, index)) {
                     deleteResult.push(r);
                 } else {
-                    unsplice.push(r);
+                    const deleteIndex = start + unspliced.length;
+                    this.__items.splice(deleteIndex, 0, r);
+                    unspliced.push(r);
                 }
             });
-            this.__items.splice(start, 0, ...unsplice);
         }
         if (items.length) {
             const filtered: Reactive<T>[] = [];
             const reactified = reactifyArray(items);
             reactified.forEach(r => {
-                const index = start + filtered.length;
+                const index = start + filtered.length + unspliced.length;
                 if (this.triggerUpdate('insert', r, index)) {
+                    this.__items.splice(index, 0, r);
                     filtered.push(r);
                 }
             });
-            this.__items.splice(start, 0, ...filtered);
         }
         return deleteResult;
     }
-    unshift(...items: Reactive<T>[]): number {
-        const filtered: Reactive<T>[] = [];
-        const reactified = reactifyArray(items);
-        reactified.forEach(r => {
-            const index = filtered.length;
-            if (this.triggerUpdate('insert', r, index)) {
-                filtered.push(r);
-            }
-        });
-        return this.__items.unshift(...filtered);
+    unshift(...items: ReactiveItem<T>[]): number {
+        this.splice(0, 0, ...items);
+        return this.__items.length;
     }
 }
