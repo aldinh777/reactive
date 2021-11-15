@@ -1,11 +1,11 @@
-import { removeFromArray, isReduck } from './util';
+import { removeFromArray, isReduck } from '../util';
 import {
     Reactive,
     ReactiveCondition,
     ReactiveUpdater,
     Rule,
     Unsubscriber,
-} from './Reactive';
+} from '../Reactive';
 
 export type ReducktorFuncQuery = (key: any, parent: Reduck<any>, index: number) => boolean;
 export type ReducktorQuery = '*' | ReducktorFuncQuery | string | number;

@@ -1,9 +1,8 @@
-export { reactive as default } from './src/helper';
-
 export * from './src/Reactive';
-export * from './src/ReactiveArray';
-export * from './src/helper';
-export * from './src/Duck';
-export * from './src/Reduck';
 export * from './src/dino';
 export * from './src/util';
+export * from './src/collection/ReactiveArray';
+export * from './src/duck/Duck';
+export * from './src/duck/Reduck';
+
+export { reactive as default } from './src/util';

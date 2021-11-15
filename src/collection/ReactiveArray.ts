@@ -1,30 +1,15 @@
-import { removeFromArray } from './util';
-import { Reactive, Unsubscriber } from './Reactive';
+import { removeFromArray } from '../util';
+import { Reactive, Unsubscriber } from '../Reactive';
+import {
+    Operation,
+    parseReactive,
+    ReactiveItem,
+    ReactiveItemCallback,
+    ReCollection,
+    ReCollectionEvent,
+    ReCollectionUpdater
+} from './ReCollection';
 
-export type Operation = 'update' | 'insert' | 'delete';
-export type ReactiveItem<T> = T | Reactive<T>;
-export type ReactiveArrayCallback<T> = (value: T, index: number, rcArray: ReactiveArray<T>) => void;
-export type ReCollectionUpdater = (ev: ReCollectionEvent) => void;
-export interface ReCollectionEvent {
-    operation: Operation;
-    index?: number | string;
-    item: Reactive<any>;
-    cancel: () => void;
-}
-export interface ReCollection<T> {
-    at(index: any): Reactive<T> | undefined;
-    toObject(): any;
-    onInsert(callback: ReCollectionUpdater): Unsubscriber;
-    onDelete(callback: ReCollectionUpdater): Unsubscriber;
-    onUpdate(callback: ReCollectionUpdater): Unsubscriber;
-}
-
-export function parseReactive<T>(item: ReactiveItem<T>): Reactive<T> {
-    if (item instanceof Reactive) {
-        return item;
-    }
-    return new Reactive(item);
-}
 export function reactifyArray<T>(items: ReactiveItem<T>[]) {
     return items.map(it => parseReactive(it));
 }
@@ -34,7 +19,6 @@ export class ReactiveArray<T> implements ReCollection<T> {
     private __insertListener: ReCollectionUpdater[] = [];
     private __deleteListener: ReCollectionUpdater[] = [];
     private __updateListener: ReCollectionUpdater[] = [];
-
     constructor(...items: T[]) {
         this.__items = reactifyArray(items);
     }
@@ -54,7 +38,7 @@ export class ReactiveArray<T> implements ReCollection<T> {
         });
         return result;
     }
-    private __triggerUpdate(operation: Operation, item: Reactive<any>, index?: number): boolean {
+    triggerUpdate(operation: Operation, item: Reactive<T>, index?: number): boolean {
         let skip = false;
         const reCollectionEvent: ReCollectionEvent = {
             operation,
@@ -91,7 +75,7 @@ export class ReactiveArray<T> implements ReCollection<T> {
                 return false;
         }
     }
-    at(index: any): Reactive<T> | undefined{
+    at(index: any): Reactive<T> | undefined {
         return this.__items[index];
     }
     toObject(): any[] {
@@ -113,7 +97,7 @@ export class ReactiveArray<T> implements ReCollection<T> {
     pop(): Reactive<T> | undefined {
         const popped = this.__items.pop();
         if (popped) {
-            if (this.__triggerUpdate('delete', popped, this.__items.length)) {
+            if (this.triggerUpdate('delete', popped, this.__items.length)) {
                 return popped;
             } else {
                 this.__items.push(popped);
@@ -125,7 +109,7 @@ export class ReactiveArray<T> implements ReCollection<T> {
         const reactified = reactifyArray(items);
         reactified.forEach(r => {
             const index = this.__items.length + filtered.length;
-            if (this.__triggerUpdate('insert', r, index)) {
+            if (this.triggerUpdate('insert', r, index)) {
                 filtered.push(r);
             }
         });
@@ -134,7 +118,7 @@ export class ReactiveArray<T> implements ReCollection<T> {
     shift(): Reactive<T> | undefined {
         const shifted = this.__items.shift();
         if (shifted) {
-            if (this.__triggerUpdate('delete', shifted, 0)) {
+            if (this.triggerUpdate('delete', shifted, 0)) {
                 return shifted;
             } else {
                 this.__items.unshift(shifted);
@@ -148,7 +132,7 @@ export class ReactiveArray<T> implements ReCollection<T> {
             const spliced = this.__items.splice(start, deleteCount);
             spliced.forEach((r, curIndex) => {
                 const index = start + curIndex;
-                if (this.__triggerUpdate('delete', r, index)) {
+                if (this.triggerUpdate('delete', r, index)) {
                     deleteResult.push(r);
                 } else {
                     unsplice.push(r);
@@ -161,7 +145,7 @@ export class ReactiveArray<T> implements ReCollection<T> {
             const reactified = reactifyArray(items);
             reactified.forEach(r => {
                 const index = start + filtered.length;
-                if (this.__triggerUpdate('insert', r, index)) {
+                if (this.triggerUpdate('insert', r, index)) {
                     filtered.push(r);
                 }
             });
@@ -174,13 +158,13 @@ export class ReactiveArray<T> implements ReCollection<T> {
         const reactified = reactifyArray(items);
         reactified.forEach(r => {
             const index = filtered.length;
-            if (this.__triggerUpdate('insert', r, index)) {
+            if (this.triggerUpdate('insert', r, index)) {
                 filtered.push(r);
             }
         });
         return this.__items.unshift(...filtered);
     }
-    forEach(callbackfn: ReactiveArrayCallback<T>): void {
-        this.__items.forEach((r, index) => callbackfn(r.value, index, this));
+    forEach(callback: ReactiveItemCallback<T>): void {
+        this.__items.forEach((r, index) => callback(r.value, index));
     }
 }

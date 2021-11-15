@@ -1,4 +1,4 @@
-import { isDuck } from './util';
+import { isDuck } from '../util';
 
 export type DuckType<T> = T | Duck<T>;
 export type DucktorFuncQuery = (key: any, parent: Duck<any>, index: number) => boolean;
