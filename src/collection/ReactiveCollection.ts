@@ -100,4 +100,28 @@ export abstract class ReactiveCollection<T> {
     toObject(): any {
         return this.__internalObjectify(new WeakMap());
     }
+    toProxy(): this {
+        const proxy = new Proxy(this, {
+            get(target: any, p): any {
+                const item = target.at(p as string);
+                if (item) {
+                    const result = item.value;
+                    if (result instanceof ReactiveCollection) {
+                        return result.toProxy();
+                    }
+                    return result;
+                }
+                return target[p];
+            },
+            set(target, p, value): boolean {
+                const item = target.at(p as string);
+                if (item) {
+                    item.value = value;
+                    return true;
+                }
+                return false;
+            },
+        });
+        return proxy;
+    }
 }

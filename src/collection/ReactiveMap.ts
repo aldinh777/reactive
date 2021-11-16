@@ -30,7 +30,10 @@ export class ReactiveMap<T> extends ReactiveCollection<T> {
     forEach(callback: ReactiveItemCallback<T>): void {
         this.__map.forEach((r, index) => callback(r.value, index));
     }
-    at(index: string): Reactive<T> | undefined {
+    at(index: number | string): Reactive<T> | undefined {
+        if (typeof index === 'number') {
+            index = index.toString();
+        }
         return this.__map.get(index);
     }
     // Map Implementation
