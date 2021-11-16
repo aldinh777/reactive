@@ -13,30 +13,6 @@ export function removeFromArray<T>(elem: T, array: T[]): void {
     }
 }
 
-export function quack(...args: any[]): any {
-    const quacks = args.length ? args : ['quack'];
-    if (quacks.find(q => q instanceof Promise)) {
-        const results = Promise.all(quacks.map(q => q instanceof Promise ? q.catch(err => err) : Promise.resolve(q)));
-        results.then(quacks => console.log(...quacks));
-        return results;
-    }
-    console.log(...quacks);
-}
-
-export function isDuck(d: any): boolean {
-    if (typeof d === 'function') {
-        return d.type === 'duck';
-    }
-    return false;
-}
-
-export function isReduck(d: any): boolean {
-    if (typeof d === 'function') {
-        return d.type === 'reduck';
-    }
-    return false;    
-}
-
 export function onChange<T>(
     callback: ReactiveUpdater<T>,
     immediateCall: boolean,
