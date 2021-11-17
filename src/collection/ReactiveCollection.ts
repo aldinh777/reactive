@@ -136,7 +136,11 @@ export abstract class ReactiveCollection<T> {
                     }
                     return result;
                 }
-                return target[p];
+                const result = target[p];
+                if (typeof result === 'function') {
+                    return result.bind(target);
+                }
+                return result;
             },
             set(target, p, value): boolean {
                 const item = target.at(p as string);

@@ -14,15 +14,25 @@ export function reactive<T>(initial?: T | Rule<T>, ...subscriptions: Reactive<an
     return new Reactive(initial, ...subscriptions);
 }
 
-export function recollection(obj: any, rawdata: boolean = false): ReactiveCollection<any> {
+export function recollection(obj: any, rawdata: boolean = false, mapper?: WeakMap<any, any>): ReactiveCollection<any> {
+    if (!mapper) {
+        mapper = new WeakMap();
+    }
+    if (mapper.has(obj)) {
+        return mapper.get(obj);
+    }
     let result: ReactiveCollection<any>;
     if (obj instanceof Array) {
-        result = new ReactiveArray(...obj.map(o => recollection(o, true)));
+        const arr = new ReactiveArray();
+        mapper.set(obj, arr);
+        arr.push(...obj.map(o => recollection(o, true, mapper)));
+        result = arr;
     } else if (typeof obj === 'object') {
         const map = new ReactiveMap();
+        mapper.set(obj, map);
         for (const key in obj) {
             const value = obj[key];
-            map.set(key, recollection(value, true));
+            map.set(key, recollection(value, true, mapper));
         }
         result = map;
     } else {

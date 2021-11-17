@@ -46,9 +46,6 @@ export class ReactiveArray<T> extends ReactiveCollection<T> {
         }
         return this.__items[index];
     }
-    toObject(): any[] {
-        return this.__internalObjectify(new WeakMap());
-    }
     // Array Implementation
     pop(): Reactive<T> | undefined {
         const popped = this.__items.pop();
