@@ -36,7 +36,9 @@ export class ReactiveArray<T> extends ReactiveCollection<T> {
         return this.__items.includes(item);
     }
     forEach(callback: ReactiveItemCallback<T>): void {
-        this.__items.forEach((r, index) => callback(r.value, index));
+        if (this.__items) {
+            this.__items.forEach((r, index) => callback(r.value, index, r));
+        }
     }
     at(index: number | string): Reactive<T> | undefined {
         if (typeof index === 'string') {
