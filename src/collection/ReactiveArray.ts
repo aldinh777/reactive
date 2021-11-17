@@ -1,12 +1,13 @@
 import { Reactive } from '../Reactive';
 import {
+    Decorator,
     parseReactive,
     ReactiveCollection,
     ReactiveItem,
     ReactiveItemCallback
 } from './ReactiveCollection';
 
-export function reactifyArray<T>(items: ReactiveItem<T>[]) {
+export function reactifyArray<T>(items: ReactiveItem<T>[]): Reactive<T>[] {
     return items.map(it => parseReactive(it));
 }
 
@@ -20,16 +21,13 @@ export class ReactiveArray<T> extends ReactiveCollection<T> {
         return this.__items.length;
     }
     // Reactive Collection
-    protected __internalObjectify(mapper: WeakMap<ReactiveCollection<T>, any>): any {
+    protected __internalObjectify(mapper: WeakMap<ReactiveCollection<T>, any>, decor: Decorator<T>): any {
         if (mapper.has(this)) {
             return mapper.get(this);
         }
         const result: any[] = [];
         mapper.set(this, result);
-        this.__items.forEach(r => {
-            const item = r.value;
-            result.push(ReactiveCollection.objectify(item, mapper));
-        });
+        this.__items.forEach(r => result.push(ReactiveCollection.objectify(r, mapper, decor)));
         return result;
     }
     protected __includesReactive(item: Reactive<T>): boolean {

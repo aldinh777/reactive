@@ -2,6 +2,7 @@ import { Reactive, Unsubscriber } from '../Reactive';
 import { removeFromArray } from '../util';
 
 export type Operation = 'update' | 'insert' | 'delete';
+export type Decorator<T> = (item: T, r: Reactive<T>) => any;
 export type ReactiveItem<T> = T | Reactive<T>;
 export type ReactiveItemCallback<T> = (value: T, index: number | string, r: Reactive<T>) => void;
 export type ReCollectionUpdater<T> = (ev: ReCollectionEvent<T>) => void;
@@ -27,12 +28,17 @@ export abstract class ReactiveCollection<T> {
     private __insertListener: ReCollectionUpdater<T>[] = [];
     private __deleteListener: ReCollectionUpdater<T>[] = [];
     private __updateListener: ReCollectionUpdater<T>[] = [];
-    protected abstract __internalObjectify(mapper: WeakMap<ReactiveCollection<T>, any>): any;
+    protected abstract __internalObjectify(mapper: WeakMap<ReactiveCollection<T>, any>, decor?: Decorator<T>): any;
     protected abstract __includesReactive(item: Reactive<T>): boolean;
     abstract forEach(callback: ReactiveItemCallback<T>): void;
     abstract at(index: number | string): Reactive<T> | undefined;
-    static objectify<T>(item: T, mapper: WeakMap<ReactiveCollection<T>, any>): any {
-        return item instanceof ReactiveCollection ? item.__internalObjectify(mapper) : item;
+    static objectify<T>(r: Reactive<T>, mapper: WeakMap<ReactiveCollection<T>, any>, decor?: Decorator<T>): any {
+        const item = r.value;
+        const result = item instanceof ReactiveCollection ? item.__internalObjectify(mapper, decor) : item;
+        if (decor) {
+            return decor(result, r);
+        }
+        return result;
     }
     constructor() {
         this.inject(item => item.onChange((_, ev) => {
@@ -122,8 +128,8 @@ export abstract class ReactiveCollection<T> {
         this.__updateListener.push(callback);
         return () => removeFromArray(callback, this.__updateListener);
     }
-    toObject(): any {
-        return this.__internalObjectify(new WeakMap());
+    toObject(decor?: Decorator<T>): any {
+        return this.__internalObjectify(new WeakMap(), decor);
     }
     toProxy(): this {
         const proxy = new Proxy(this, {
