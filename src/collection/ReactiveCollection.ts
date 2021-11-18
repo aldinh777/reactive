@@ -2,8 +2,8 @@ import { Reactive, Unsubscriber } from '../Reactive';
 import { removeFromArray } from '../util';
 
 export type Operation = 'update' | 'insert' | 'delete';
-export type Decorator = (item: any) => any;
-export type ReDecorator<T> = (item: T, r: Reactive<T>) => any;
+export type ReactiveDecorator = (item: any, r: Reactive<any>) => any;
+export type RecollectionDecorator = (item: any, rc: ReactiveCollection<any>) => any;
 export type ReactiveItem<T> = T | Reactive<T>;
 export type ReactiveItemCallback<T> = (value: T, index: number | string, r: Reactive<T>) => void;
 export type ReCollectionUpdater<T> = (ev: ReCollectionEvent<T>) => void;
@@ -31,8 +31,8 @@ export abstract class ReactiveCollection<T> {
     private __updateListener: ReCollectionUpdater<T>[] = [];
     protected abstract __internalObjectify(
         mapper: WeakMap<ReactiveCollection<T>, any>,
-        decor?: ReDecorator<T>,
-        selfDecor?: Decorator
+        decor?: ReactiveDecorator,
+        selfDecor?: RecollectionDecorator
     ): any;
     protected abstract __includesReactive(item: Reactive<T>): boolean;
     abstract forEach(callback: ReactiveItemCallback<T>): void;
@@ -40,8 +40,8 @@ export abstract class ReactiveCollection<T> {
     static objectify<T>(
         r: Reactive<T>,
         mapper: WeakMap<ReactiveCollection<T>, any>,
-        decor?: ReDecorator<T>,
-        selfDecor?: Decorator
+        decor?: ReactiveDecorator,
+        selfDecor?: RecollectionDecorator
     ): any {
         const item = r.value;
         const result = item instanceof ReactiveCollection ? item.__internalObjectify(mapper, decor, selfDecor) : item;
@@ -138,7 +138,7 @@ export abstract class ReactiveCollection<T> {
         this.__updateListener.push(callback);
         return () => removeFromArray(callback, this.__updateListener);
     }
-    toObject(decor?: ReDecorator<T>, selfDecor?: Decorator): any {
+    toObject(decor?: ReactiveDecorator, selfDecor?: RecollectionDecorator): any {
         return this.__internalObjectify(new WeakMap(), decor, selfDecor);
     }
     toProxy(): this {
