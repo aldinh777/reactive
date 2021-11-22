@@ -2,8 +2,6 @@ import { Reactive, Unsubscriber } from '../Reactive';
 import { removeFromArray } from '../util';
 
 export type Operation = 'update' | 'insert' | 'delete';
-export type ReactiveDecorator = (item: any, r: Reactive<any>) => any;
-export type RecollectionDecorator = (item: any, rc: ReactiveCollection<any>) => any;
 export type ReactiveItem<T> = T | Reactive<T>;
 export type ReactiveItemCallback<T> = (value: T, index: number | string, r: Reactive<T>) => void;
 export type ReCollectionUpdater<T> = (ev: ReCollectionEvent<T>) => void;
@@ -25,30 +23,17 @@ export function parseReactive<T>(item: ReactiveItem<T>): Reactive<T> {
 export abstract class ReactiveCollection<T> {
     private __unsubscribers: WeakMap<Reactive<T>, Unsubscriber[]> = new WeakMap();
     private __injectors: Injector<T>[] = [];
-    private __triggerListener : ReCollectionUpdater<T>[] = [];
+    private __triggerListener: ReCollectionUpdater<T>[] = [];
     private __insertListener: ReCollectionUpdater<T>[] = [];
     private __deleteListener: ReCollectionUpdater<T>[] = [];
     private __updateListener: ReCollectionUpdater<T>[] = [];
-    protected abstract __internalObjectify(
-        mapper: WeakMap<ReactiveCollection<T>, any>,
-        decor?: ReactiveDecorator,
-        selfDecor?: RecollectionDecorator
-    ): any;
+    protected abstract __internalObjectify(mapper: WeakMap<ReactiveCollection<T>, any>): any;
     protected abstract __includesReactive(item: Reactive<T>): boolean;
     abstract forEach(callback: ReactiveItemCallback<T>): void;
     abstract at(index: number | string): Reactive<T> | undefined;
-    static objectify<T>(
-        r: Reactive<T>,
-        mapper: WeakMap<ReactiveCollection<T>, any>,
-        decor?: ReactiveDecorator,
-        selfDecor?: RecollectionDecorator
-    ): any {
+    static objectify<T>(r: Reactive<T>, mapper: WeakMap<ReactiveCollection<T>, any>): any {
         const item = r.value;
-        const result = item instanceof ReactiveCollection ? item.__internalObjectify(mapper, decor, selfDecor) : item;
-        if (decor) {
-            return decor(result, r);
-        }
-        return result;
+        return item instanceof ReactiveCollection ? item.__internalObjectify(mapper) : item;
     }
     constructor() {
         this.inject(item => item.onChange((_, ev) => {
@@ -66,18 +51,7 @@ export abstract class ReactiveCollection<T> {
             unsubscibers.push(injector(item));
         }
     }
-    private __continueExecution(updater: ReCollectionUpdater<T>[], ev: ReCollectionEvent<T>): boolean {
-        let skip = false;
-        ev.cancel = () => skip = true;
-        for (const upd of updater) {
-            upd(ev);
-            if (skip) {
-                return false;
-            }
-        }
-        return true;
-    }
-    private __cleanInjection(item: Reactive<T>) {
+    private __cleanInjecors(item: Reactive<T>) {
         if (this.__unsubscribers.has(item)) {
             if (!this.__includesReactive(item)) {
                 const unsubcribers = this.__unsubscribers.get(item);
@@ -88,29 +62,40 @@ export abstract class ReactiveCollection<T> {
             }
         }
     }
+    private __executeListener(listeners: ReCollectionUpdater<T>[], ev: ReCollectionEvent<T>): boolean {
+        let skip = false;
+        ev.cancel = () => skip = true;
+        for (const listen of listeners) {
+            listen(ev);
+            if (skip) {
+                return false;
+            }
+        }
+        return true;
+    }
     triggerUpdate(operation: Operation, item: Reactive<T>, index?: number | string): boolean {
         const reCollectionEvent: ReCollectionEvent<T> = {
             operation,
             index,
             item,
-            cancel: () => {},
+            cancel: () => { },
         };
-        if (this.__continueExecution(this.__triggerListener, reCollectionEvent)) {
+        if (this.__executeListener(this.__triggerListener, reCollectionEvent)) {
             switch (operation) {
                 case 'insert':
-                    if (this.__continueExecution(this.__insertListener, reCollectionEvent)) {
+                    if (this.__executeListener(this.__insertListener, reCollectionEvent)) {
                         this.__injectors.forEach(injector => this.__applyInjector(injector, item));
                         return true;
                     }
                     return false;
                 case 'delete':
-                    if (this.__continueExecution(this.__deleteListener, reCollectionEvent)) {
-                        this.__cleanInjection(item);
+                    if (this.__executeListener(this.__deleteListener, reCollectionEvent)) {
+                        this.__cleanInjecors(item);
                         return true;
                     }
                     return false;
                 case 'update':
-                    if (this.__continueExecution(this.__updateListener, reCollectionEvent)) {
+                    if (this.__executeListener(this.__updateListener, reCollectionEvent)) {
                         return true;
                     }
                     return false;
@@ -138,8 +123,8 @@ export abstract class ReactiveCollection<T> {
         this.__updateListener.push(callback);
         return () => removeFromArray(callback, this.__updateListener);
     }
-    toObject(decor?: ReactiveDecorator, selfDecor?: RecollectionDecorator): any {
-        return this.__internalObjectify(new WeakMap(), decor, selfDecor);
+    toObject(): any {
+        return this.__internalObjectify(new WeakMap());
     }
     toProxy(): this {
         const proxy = new Proxy(this, {

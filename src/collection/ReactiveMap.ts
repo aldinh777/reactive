@@ -1,11 +1,9 @@
 import { Reactive } from '../Reactive';
 import {
-    ReactiveDecorator,
     parseReactive,
     ReactiveCollection,
     ReactiveItem,
-    ReactiveItemCallback,
-    RecollectionDecorator
+    ReactiveItemCallback
 } from './ReactiveCollection';
 
 export class ReactiveMap<T> extends ReactiveCollection<T> {
@@ -14,20 +12,13 @@ export class ReactiveMap<T> extends ReactiveCollection<T> {
         return this.__map.size;
     }
     // Reactive Collection
-    protected __internalObjectify(
-        mapper: WeakMap<ReactiveCollection<T>, any>,
-        decor: ReactiveDecorator,
-        selfDecor: RecollectionDecorator
-    ): any {
+    protected __internalObjectify(mapper: WeakMap<ReactiveCollection<T>, any>): any {
         if (mapper.has(this)) {
             return mapper.get(this);
         }
         const result: any = {};
         mapper.set(this, result);
-        this.__map.forEach((r, key) => result[key] = ReactiveCollection.objectify(r, mapper, decor, selfDecor));
-        if (selfDecor) {
-            return selfDecor(result, this);
-        }
+        this.__map.forEach((r, key) => result[key] = ReactiveCollection.objectify(r, mapper));
         return result;
     }
     protected __includesReactive(item: Reactive<T>): boolean {
