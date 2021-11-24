@@ -41,7 +41,7 @@ export class ReactiveArray<T> extends ReactiveCollection<T> {
     }
     insert(index: number, item: ReactiveItem<T>): boolean {
         const r = parseReactive(item);
-        const fixedIndex = index < 0 ? 0 : index > this.length ? this.length : index; 
+        const fixedIndex = index < 0 ? 0 : index > this.length ? this.length : index;
         if (this.triggerUpdate('insert', r, fixedIndex)) {
             this.__items.splice(index, 0, r);
             return true;
@@ -88,7 +88,7 @@ export class ReactiveArray<T> extends ReactiveCollection<T> {
                     deleteResults.push(item);
                 } else {
                     targetIndex++;
-                }    
+                }
             } else {
                 break;
             }

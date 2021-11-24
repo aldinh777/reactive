@@ -1,14 +1,14 @@
 import { removeFromArray } from './util';
 
+export type ReactiveUpdater<T> = (value: T, ev: ReactiveEvent<T>) => void;
+export type ReactiveCondition<T> = (value: T, ev: ReactiveEvent<T>) => boolean;
+export type Rule<T> = (...params: any[]) => T;
+export type Unsubscriber = () => void;
 export interface ReactiveEvent<T> {
     oldValue?: T;
     currentReactive?: Reactive<T>;
     cancel(): void;
 }
-export type ReactiveUpdater<T> = (value: T, ev: ReactiveEvent<T>) => void;
-export type ReactiveCondition<T> = (value: T, ev: ReactiveEvent<T>) => boolean;
-export type Rule<T> = (...params: any[]) => T;
-export type Unsubscriber = () => void;
 
 export class Reactive<T> {
     private __subscriptionList: Reactive<any>[] = [];
@@ -119,7 +119,7 @@ export class Reactive<T> {
         this.__bindingFunctions.add(callback);
         return () => this.__bindingFunctions.delete(callback);
     }
-    allowDuplicate(allow: boolean = true): Reactive<T> {
+    allowDuplicate(allow: boolean = true): this {
         this.__allowDuplicate = allow;
         return this;
     }
