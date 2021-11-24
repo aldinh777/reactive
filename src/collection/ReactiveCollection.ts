@@ -31,6 +31,8 @@ export abstract class ReactiveCollection<T> {
     protected abstract __includesReactive(item: Reactive<T>): boolean;
     abstract forEach(callback: ReactiveItemCallback<T>): void;
     abstract at(index: number | string): Reactive<T> | undefined;
+    abstract insert(index: number | string, item: ReactiveItem<T>): boolean;
+    abstract delete(index: number | string): boolean;
     static objectify<T>(r: Reactive<T>, mapper: WeakMap<ReactiveCollection<T>, any>): any {
         const item = r.value;
         return item instanceof ReactiveCollection ? item.__internalObjectify(mapper) : item;

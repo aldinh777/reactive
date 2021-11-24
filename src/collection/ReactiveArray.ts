@@ -6,10 +6,6 @@ import {
     ReactiveItemCallback
 } from './ReactiveCollection';
 
-export function reactifyArray<T>(items: ReactiveItem<T>[]): Reactive<T>[] {
-    return items.map(it => parseReactive(it));
-}
-
 export class ReactiveArray<T> extends ReactiveCollection<T> {
     private __items: Reactive<T>[] = [];
     constructor(...items: T[]) {
@@ -43,15 +39,32 @@ export class ReactiveArray<T> extends ReactiveCollection<T> {
         }
         return this.__items[index];
     }
+    insert(index: number, item: ReactiveItem<T>): boolean {
+        const r = parseReactive(item);
+        const fixedIndex = index < 0 ? 0 : index > this.length ? this.length : index; 
+        if (this.triggerUpdate('insert', r, fixedIndex)) {
+            this.__items.splice(index, 0, r);
+            return true;
+        }
+        return false;
+    }
+    delete(index: number): boolean {
+        const [deleted] = this.__items.splice(index, 1);
+        if (deleted) {
+            if (this.triggerUpdate('delete', deleted, index)) {
+                return true;
+            } else {
+                this.__items.splice(index, 0, deleted);
+            }
+        }
+        return false;
+    }
     // Array Implementation
     pop(): Reactive<T> | undefined {
-        const popped = this.__items.pop();
-        if (popped) {
-            if (this.triggerUpdate('delete', popped, this.__items.length)) {
-                return popped;
-            } else {
-                this.__items.push(popped);
-            }
+        const index = this.length - 1;
+        const item = this.at(index);
+        if (item && this.delete(index)) {
+            return item;
         }
     }
     push(...items: ReactiveItem<T>[]): number {
@@ -59,43 +72,36 @@ export class ReactiveArray<T> extends ReactiveCollection<T> {
         return this.__items.length;
     }
     shift(): Reactive<T> | undefined {
-        const shifted = this.__items.shift();
-        if (shifted) {
-            if (this.triggerUpdate('delete', shifted, 0)) {
-                return shifted;
-            } else {
-                this.__items.unshift(shifted);
-            }
+        const index = 0;
+        const item = this.at(index);
+        if (item && this.delete(index)) {
+            return item;
         }
     }
     splice(start: number, deleteCount: number = 0, ...items: ReactiveItem<T>[]): Reactive<T>[] {
-        const deleteResult: Reactive<T>[] = [];
-        const unspliced: Reactive<T>[] = [];
-        if (deleteCount) {
-            const spliced = this.__items.splice(start, deleteCount);
-            spliced.forEach((r, curIndex) => {
-                const index = start + curIndex;
-                if (this.triggerUpdate('delete', r, index)) {
-                    deleteResult.push(r);
+        const deleteResults: Reactive<T>[] = [];
+        let targetIndex = start < 0 ? 0 : start;
+        while (deleteCount > 0) {
+            const item = this.at(targetIndex);
+            if (item) {
+                if (this.delete(targetIndex)) {
+                    deleteResults.push(item);
                 } else {
-                    const deleteIndex = start + unspliced.length;
-                    this.__items.splice(deleteIndex, 0, r);
-                    unspliced.push(r);
-                }
-            });
+                    targetIndex++;
+                }    
+            } else {
+                break;
+            }
+            deleteCount--;
         }
         if (items.length) {
-            const filtered: Reactive<T>[] = [];
-            const reactified = reactifyArray(items);
-            reactified.forEach(r => {
-                const index = start + filtered.length + unspliced.length;
-                if (this.triggerUpdate('insert', r, index)) {
-                    this.__items.splice(index, 0, r);
-                    filtered.push(r);
+            items.forEach(item => {
+                if (this.insert(targetIndex, item)) {
+                    targetIndex++;
                 }
             });
         }
-        return deleteResult;
+        return deleteResults;
     }
     unshift(...items: ReactiveItem<T>[]): number {
         this.splice(0, 0, ...items);

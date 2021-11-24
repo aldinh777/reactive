@@ -35,18 +35,16 @@ export class ReactiveMap<T> extends ReactiveCollection<T> {
         }
         return this.__map.get(index);
     }
-    // Map Implementation
-    clear(): void {
-        const backup = this.__map;
-        this.__map = new Map();
-        backup.forEach((r, key) => {
-            if (!this.triggerUpdate('delete', r, key)) {
-                this.__map.set(key, r);
-            }
-        });
+    insert(key: string, value: ReactiveItem<T>): boolean {
+        const item = parseReactive(value);
+        if (this.triggerUpdate('insert', item, key)) {
+            this.__map.set(key, item);
+            return true;
+        }
+        return false;
     }
     delete(key: string): boolean {
-        const item = this.__map.get(key);
+        const item = this.at(key);
         if (item) {
             this.__map.delete(key);
             if (!this.triggerUpdate('delete', item, key)) {
@@ -57,13 +55,16 @@ export class ReactiveMap<T> extends ReactiveCollection<T> {
         }
         return false;
     }
+    // Map Implementation
+    set(key: string, value: ReactiveItem<T>): boolean {
+        return this.insert(key, value);
+    }
+    clear(): void {
+        for (const key of Array.from(this.__map.keys())) {
+            this.delete(key);
+        }
+    }
     has(key: string): boolean {
         return this.__map.has(key);
-    }
-    set(key: string, value: ReactiveItem<T>): void {
-        const item = parseReactive(value);
-        if (this.triggerUpdate('insert', item, key)) {
-            this.__map.set(key, item);
-        }
     }
 }
