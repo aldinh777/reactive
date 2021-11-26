@@ -57,6 +57,11 @@ export class ReactiveMap<T> extends ReactiveCollection<T> {
     }
     // Map Implementation
     set(key: string, value: ReactiveItem<T>): boolean {
+        const item = this.at(key);
+        if (item && !(value instanceof Reactive)) {
+            item.value = value;
+            return true;
+        }
         return this.insert(key, value);
     }
     clear(): void {

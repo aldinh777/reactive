@@ -81,7 +81,9 @@ export class Reactive<T> {
         }
     }
     get value(): T {
-        return this.__rule ? this.__rule(this.__subscriptionList.map(sub => sub.value)) : this.__currentValue as T;
+        return this.__rule ?
+            this.__rule(...this.__subscriptionList.map(sub => sub.value)) :
+            this.__currentValue as T;
     }
     set value(value: T) {
         this.__clearSubscription();
