@@ -5,7 +5,7 @@ export type Operation = 'update' | 'insert' | 'delete';
 export type ReactiveItem<T> = T | Reactive<T>;
 export type ReactiveItemCallback<T> = (value: T, index: number | string, r: Reactive<T>) => void;
 export type ReCollectionUpdater<T> = (ev: ReCollectionEvent<T>) => void;
-export type Injector<T> = (item: Reactive<T>) => Unsubscriber;
+export type Injector<T> = (item: Reactive<T>) => Unsubscriber | undefined;
 export interface ReCollectionEvent<T> {
     operation: Operation;
     index?: number | string;
@@ -29,6 +29,7 @@ export abstract class ReactiveCollection<T> {
     private __updateListener: ReCollectionUpdater<T>[] = [];
     protected abstract __internalObjectify(mapper: WeakMap<ReactiveCollection<T>, any>): any;
     protected abstract __includesReactive(item: Reactive<T>): boolean;
+    abstract get size(): number;
     abstract forEach(callback: ReactiveItemCallback<T>): void;
     abstract at(index: number | string): Reactive<T> | undefined;
     abstract insert(index: number | string, item: ReactiveItem<T>): boolean;
@@ -50,7 +51,10 @@ export abstract class ReactiveCollection<T> {
         }
         const unsubscibers = this.__unsubscribers.get(item);
         if (unsubscibers) {
-            unsubscibers.push(injector(item));
+            const unsub = injector(item);
+            if (unsub) {
+                unsubscibers.push(unsub);
+            }
         }
     }
     private __cleanInjecors(item: Reactive<T>) {
@@ -86,7 +90,9 @@ export abstract class ReactiveCollection<T> {
             switch (operation) {
                 case 'insert':
                     if (this.__executeListener(this.__insertListener, reCollectionEvent)) {
-                        this.__injectors.forEach(injector => this.__applyInjector(injector, item));
+                        if (!this.__unsubscribers.has(item)) {
+                            this.__injectors.forEach(injector => this.__applyInjector(injector, item));
+                        }
                         return true;
                     }
                     return false;

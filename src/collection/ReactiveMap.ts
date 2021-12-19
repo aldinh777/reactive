@@ -37,9 +37,20 @@ export class ReactiveMap<T> extends ReactiveCollection<T> {
     }
     insert(key: string, value: ReactiveItem<T>): boolean {
         const item = parseReactive(value);
-        if (this.triggerUpdate('insert', item, key)) {
-            this.__map.set(key, item);
-            return true;
+        if (this.has(key)) {
+            if (item === this.at(key)) {
+                return false;
+            } else if (this.delete(key)) {
+                if (this.triggerUpdate('insert', item, key)) {
+                    this.__map.set(key, item);
+                    return true;
+                }
+            }
+        } else {
+            if (this.triggerUpdate('insert', item, key)) {
+                this.__map.set(key, item);
+                return true;
+            }
         }
         return false;
     }

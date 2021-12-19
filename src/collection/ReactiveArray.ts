@@ -12,7 +12,7 @@ export class ReactiveArray<T> extends ReactiveCollection<T> {
         super();
         this.push(...items);
     }
-    get length() {
+    get size(): number {
         return this.__items.length;
     }
     // Reactive Collection
@@ -39,12 +39,23 @@ export class ReactiveArray<T> extends ReactiveCollection<T> {
         }
         return this.__items[index];
     }
-    insert(index: number, item: ReactiveItem<T>): boolean {
-        const r = parseReactive(item);
-        const fixedIndex = index < 0 ? 0 : index > this.length ? this.length : index;
-        if (this.triggerUpdate('insert', r, fixedIndex)) {
-            this.__items.splice(index, 0, r);
-            return true;
+    insert(index: number, value: ReactiveItem<T>): boolean {
+        const item = parseReactive(value);
+        const fixedIndex = index < 0 ? 0 : index > this.size ? this.size : index;
+        if (fixedIndex !== this.size) {
+            if (item === this.at(fixedIndex)) {
+                return false;
+            } else {
+                if (this.triggerUpdate('insert', item, fixedIndex)) {
+                    this.__items.splice(index, 0, item);
+                    return true;
+                }    
+            }
+        } else {
+            if (this.triggerUpdate('insert', item, fixedIndex)) {
+                this.__items.splice(index, 0, item);
+                return true;
+            }
         }
         return false;
     }
@@ -61,7 +72,7 @@ export class ReactiveArray<T> extends ReactiveCollection<T> {
     }
     // Array Implementation
     pop(): Reactive<T> | undefined {
-        const index = this.length - 1;
+        const index = this.size - 1;
         const item = this.at(index);
         if (item && this.delete(index)) {
             return item;

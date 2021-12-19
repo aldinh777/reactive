@@ -1,5 +1,4 @@
 export * from './src/Reactive';
-export * from './src/dino';
 export * from './src/util';
 export * from './src/collection/ReactiveCollection';
 export * from './src/collection/ReactiveArray';
