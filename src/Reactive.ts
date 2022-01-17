@@ -1,13 +1,15 @@
+import { Cancelable, Subscription } from './interface';
 import { removeFromArray } from './util';
 
 export type ReactiveUpdater<T> = (value: T, ev: ReactiveEvent<T>) => void;
 export type ReactiveCondition<T> = (value: T, ev: ReactiveEvent<T>) => boolean;
 export type Rule<T> = (...params: any[]) => T;
-export type Unsubscriber = () => void;
-export interface ReactiveEvent<T> {
+export interface ReactiveEvent<T> extends Cancelable {
     oldValue?: T;
     currentReactive?: Reactive<T>;
-    cancel(): void;
+}
+export interface ReactiveSubscription<T> extends Subscription {
+    reactive: Reactive<T>;
 }
 
 export class Reactive<T> {
@@ -95,31 +97,40 @@ export class Reactive<T> {
         subscriptions.forEach(sub => this.__addSubscription(sub));
         this.__rule = rule;
     }
-    onChange(callback: ReactiveUpdater<T>, immediateCall: boolean = false): Unsubscriber {
+    onChange(callback: ReactiveUpdater<T>, immediateCall: boolean = false): ReactiveSubscription<T> {
         this.__onUpdateFunctions.push(callback);
         if (immediateCall) {
             callback(this.value, Reactive.createEmptyEvent(this));
         }
-        return () => removeFromArray(callback, this.__onUpdateFunctions);
+        return {
+            reactive: this,
+            unsubscribe: () => removeFromArray(callback, this.__onUpdateFunctions),
+        };
     }
-    onEquals(compare: T, callback: ReactiveUpdater<T>): Unsubscriber {
+    onEquals(compare: T, callback: ReactiveUpdater<T>): ReactiveSubscription<T> {
         this.__onEqualsFunctions.set(compare, callback);
         if (this.value === compare) {
             callback(this.value, Reactive.createEmptyEvent(this));
         }
-        return () => this.__onEqualsFunctions.delete(compare);
+        return {
+            reactive: this,
+            unsubscribe: () => this.__onEqualsFunctions.delete(compare),
+        };
     }
-    when(condition: ReactiveCondition<T>, callback: ReactiveUpdater<T>): Unsubscriber {
+    when(condition: ReactiveCondition<T>, callback: ReactiveUpdater<T>): ReactiveSubscription<T> {
         return this.onChange(
             (value: T, ev: ReactiveEvent<T>) => condition(value, ev) && callback(value, ev),
             true
         );
     }
-    bindValue(obj: any, param: string, decorator?: (value?: T) => any): Unsubscriber {
+    bindValue(obj: any, param: string, decorator?: (value?: T) => any): ReactiveSubscription<T> {
         const callback = (value?: T) => obj[param] = decorator ? decorator(value) : value;
         callback(this.value);
         this.__bindingFunctions.add(callback);
-        return () => this.__bindingFunctions.delete(callback);
+        return {
+            reactive: this,
+            unsubscribe: () => this.__bindingFunctions.delete(callback),
+        };
     }
     allowDuplicate(allow: boolean = true): this {
         this.__allowDuplicate = allow;

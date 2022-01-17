@@ -1,16 +1,19 @@
-import { Reactive, Unsubscriber } from '../Reactive';
+import { Cancelable, Subscription } from '../interface';
+import { Reactive } from '../Reactive';
 import { removeFromArray } from '../util';
 
 export type Operation = 'update' | 'insert' | 'delete';
 export type ReactiveItem<T> = T | Reactive<T>;
 export type ReactiveItemCallback<T> = (value: T, index: number | string, r: Reactive<T>) => void;
 export type ReCollectionUpdater<T> = (ev: ReCollectionEvent<T>) => void;
-export type Injector<T> = (item: Reactive<T>) => Unsubscriber | undefined;
-export interface ReCollectionEvent<T> {
+export type Injector<T> = (item: Reactive<T>) => (() => void) | void;
+export interface ReCollectionEvent<T> extends Cancelable {
     operation: Operation;
     index?: number | string;
     item: Reactive<T>;
-    cancel: () => void;
+}
+export interface ReCollectionSubscription<T> extends Subscription {
+    collection: ReactiveCollection<T>;
 }
 
 export function parseReactive<T>(item: ReactiveItem<T>): Reactive<T> {
@@ -21,7 +24,7 @@ export function parseReactive<T>(item: ReactiveItem<T>): Reactive<T> {
 }
 
 export abstract class ReactiveCollection<T> {
-    private __unsubscribers: WeakMap<Reactive<T>, Unsubscriber[]> = new WeakMap();
+    private __unsubscriber: WeakMap<Reactive<T>, (() => void)[]> = new WeakMap();
     private __injectors: Injector<T>[] = [];
     private __triggerListener: ReCollectionUpdater<T>[] = [];
     private __insertListener: ReCollectionUpdater<T>[] = [];
@@ -39,32 +42,35 @@ export abstract class ReactiveCollection<T> {
         return item instanceof ReactiveCollection ? item.__internalObjectify(mapper) : item;
     }
     constructor() {
-        this.inject(item => item.onChange((_, ev) => {
-            if (!this.triggerUpdate('update', item)) {
-                ev.cancel();
-            }
-        }));
+        this.inject(item => {
+            const subscription = item.onChange((_, ev) => {
+                if (!this.triggerUpdate('update', item)) {
+                    ev.cancel();
+                }
+            });
+            return () => subscription.unsubscribe();
+        });
     }
     private __applyInjector(injector: Injector<T>, item: Reactive<T>): void {
-        if (!this.__unsubscribers.has(item)) {
-            this.__unsubscribers.set(item, []);
+        if (!this.__unsubscriber.has(item)) {
+            this.__unsubscriber.set(item, []);
         }
-        const unsubscibers = this.__unsubscribers.get(item);
-        if (unsubscibers) {
+        const subscriptions = this.__unsubscriber.get(item);
+        if (subscriptions) {
             const unsub = injector(item);
             if (unsub) {
-                unsubscibers.push(unsub);
+                subscriptions.push(unsub);
             }
         }
     }
-    private __cleanInjecors(item: Reactive<T>) {
-        if (this.__unsubscribers.has(item)) {
+    private __cleanInjectors(item: Reactive<T>) {
+        if (this.__unsubscriber.has(item)) {
             if (!this.__includesReactive(item)) {
-                const unsubcribers = this.__unsubscribers.get(item);
+                const unsubcribers = this.__unsubscriber.get(item);
                 if (unsubcribers) {
                     unsubcribers.forEach(unsub => unsub());
                 }
-                this.__unsubscribers.delete(item);
+                this.__unsubscriber.delete(item);
             }
         }
     }
@@ -90,7 +96,7 @@ export abstract class ReactiveCollection<T> {
             switch (operation) {
                 case 'insert':
                     if (this.__executeListener(this.__insertListener, reCollectionEvent)) {
-                        if (!this.__unsubscribers.has(item)) {
+                        if (!this.__unsubscriber.has(item)) {
                             this.__injectors.forEach(injector => this.__applyInjector(injector, item));
                         }
                         return true;
@@ -98,7 +104,7 @@ export abstract class ReactiveCollection<T> {
                     return false;
                 case 'delete':
                     if (this.__executeListener(this.__deleteListener, reCollectionEvent)) {
-                        this.__cleanInjecors(item);
+                        this.__cleanInjectors(item);
                         return true;
                     }
                     return false;
@@ -115,21 +121,33 @@ export abstract class ReactiveCollection<T> {
         this.forEach((_value, _index, r) => this.__applyInjector(handler, r));
         this.__injectors.push(handler);
     }
-    onTrigger(callback: ReCollectionUpdater<T>): Unsubscriber {
+    onTrigger(callback: ReCollectionUpdater<T>): ReCollectionSubscription<T> {
         this.__triggerListener.push(callback);
-        return () => removeFromArray(callback, this.__triggerListener);
+        return {
+            collection: this,
+            unsubscribe: () => removeFromArray(callback, this.__triggerListener),
+        };
     }
-    onInsert(callback: ReCollectionUpdater<T>): Unsubscriber {
+    onInsert(callback: ReCollectionUpdater<T>): ReCollectionSubscription<T> {
         this.__insertListener.push(callback);
-        return () => removeFromArray(callback, this.__insertListener);
+        return {
+            collection: this,
+            unsubscribe: () => removeFromArray(callback, this.__insertListener),
+        };
     }
-    onDelete(callback: ReCollectionUpdater<T>): Unsubscriber {
+    onDelete(callback: ReCollectionUpdater<T>): ReCollectionSubscription<T> {
         this.__deleteListener.push(callback);
-        return () => removeFromArray(callback, this.__deleteListener);
+        return {
+            collection: this,
+            unsubscribe: () => removeFromArray(callback, this.__deleteListener),
+        };
     }
-    onUpdate(callback: ReCollectionUpdater<T>): Unsubscriber {
+    onUpdate(callback: ReCollectionUpdater<T>): ReCollectionSubscription<T> {
         this.__updateListener.push(callback);
-        return () => removeFromArray(callback, this.__updateListener);
+        return {
+            collection: this,
+            unsubscribe: () => removeFromArray(callback, this.__updateListener),
+        };
     }
     toObject(): any {
         return this.__internalObjectify(new WeakMap());
