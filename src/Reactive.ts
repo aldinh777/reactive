@@ -34,51 +34,48 @@ export class Reactive<T> {
         sub.__subscriberSet.add(this);
     }
     private __clearSubscription(): void {
-        this.__subscriptionList.forEach(sub => sub.__subscriberSet.delete(this));
-        this.__subscriptionList.splice(0, this.__subscriptionList.length);
-    }
-    private __triggerUpdate(value?: T): void {
-        const totalSubscriber = this.__subscriberSet.size;
-        const totalFunctions = this.__bindingFunctions.size +
-            this.__onUpdateFunctions.length + this.__onEqualsFunctions.size;
-        if (!(totalSubscriber + totalFunctions)) {
-            if (value !== undefined) {
-                this.__currentValue = value;
-            }
-            return;
+        if (this.__subscriptionList.length > 0) {
+            this.__subscriptionList.forEach(sub => sub.__subscriberSet.delete(this));
+            this.__subscriptionList.splice(0, this.__subscriptionList.length);
         }
-        const current = value !== undefined ? value : this.value;
-        const changed = current !== this.__currentValue;
-        if (this.__allowDuplicate || changed) {
+    }
+    private __triggerUpdate(nextValue: T): void {
+        const totalSubscriber = this.__subscriberSet.size;
+        const totalFunctions = this.__bindingFunctions.size
+            + this.__onUpdateFunctions.length
+            + this.__onEqualsFunctions.size;
+        if (totalSubscriber + totalFunctions == 0) {
+            this.__currentValue = nextValue;
+        } else if (this.__allowDuplicate || nextValue !== this.__currentValue) {
             const oldValue = this.__currentValue;
-            this.__currentValue = current;
-            if (totalFunctions) {
-                let skip = false;
-                const reactionEvent = {
-                    oldValue,
-                    currentReactive: this,
-                    cancel: () => {
-                        skip = true;
-                        this.__currentValue = oldValue;
-                    },
-                };
-                const equalFunction = this.__onEqualsFunctions.get(current);
+            this.__currentValue = nextValue;
+            let skip = false;
+            const reactionEvent = {
+                oldValue,
+                currentReactive: this,
+                cancel: () => {
+                    skip = true;
+                    this.__currentValue = oldValue;
+                },
+            };
+            if (totalFunctions > 0) {
+                const equalFunction = this.__onEqualsFunctions.get(this.__currentValue);
                 if (equalFunction) {
-                    equalFunction(current, reactionEvent);
+                    equalFunction(this.__currentValue, reactionEvent);
                     if (skip) {
                         return;
                     }
                 }
                 for (const updateFunction of this.__onUpdateFunctions) {
-                    updateFunction(current, reactionEvent);
+                    updateFunction(this.__currentValue, reactionEvent);
                     if (skip) {
                         return;
                     }
                 }
-                this.__bindingFunctions.forEach(bind => bind(current, reactionEvent));
+                this.__bindingFunctions.forEach(bind => bind(this.__currentValue as T, reactionEvent));
             }
-            if (totalSubscriber) {
-                this.__subscriberSet.forEach(sub => sub.__triggerUpdate())
+            if (totalSubscriber > 0) {
+                this.__subscriberSet.forEach(sub => sub.__triggerUpdate(sub.value));
             }
         }
     }
