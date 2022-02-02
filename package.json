@@ -5,11 +5,13 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "mocha"
   },
   "author": "aldinh777",
   "license": "MIT",
   "devDependencies": {
+    "mocha": "^9.2.0",
     "typescript": "^2.9.2"
   }
 }
