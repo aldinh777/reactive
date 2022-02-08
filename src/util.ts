@@ -3,6 +3,9 @@ import { ReactiveCollection } from './collection/ReactiveCollection';
 import { ReactiveMap } from './collection/ReactiveMap';
 import { Reactive, Rule } from './Reactive';
 
+export type ReactiveTimeout = Reactive<ReturnType<typeof setTimeout> | undefined>;
+export type ReactiveInterval = Reactive<ReturnType<typeof setInterval> | undefined>;
+
 export function removeFromArray<T>(elem: T, array: T[]): void {
     const index = array.indexOf(elem);
     if (index !== -1) {
@@ -46,4 +49,24 @@ function parseRecollection(obj: any, rawdata: boolean = false, mapper: WeakMap<a
 
 export function recollection(obj: any, rawdata: boolean = false): ReactiveCollection<any> {
     return parseRecollection(obj, rawdata, new WeakMap());
+}
+
+export function reactiveTimeout(timeout?: ReturnType<typeof setTimeout>): ReactiveTimeout {
+    const val: ReactiveTimeout = reactive(timeout) as ReactiveTimeout;
+    val.onChange((_, ev) => {
+        if (ev.oldValue) {
+            clearTimeout(ev.oldValue);
+        }
+    });
+    return val;
+}
+
+export function reactiveInteval(interval?: ReturnType<typeof setInterval>): ReactiveInterval {
+    const val: ReactiveInterval = reactive(interval) as ReactiveInterval;
+    val.onChange((_, ev) => {
+        if (ev.oldValue) {
+            clearInterval(ev.oldValue);
+        }
+    });
+    return val;
 }
