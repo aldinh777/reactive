@@ -54,7 +54,7 @@ export function recollection(obj: any, rawdata: boolean = false): ReactiveCollec
 export function reactiveTimeout(timeout?: ReturnType<typeof setTimeout>): ReactiveTimeout {
     const val: ReactiveTimeout = reactive(timeout) as ReactiveTimeout;
     val.onChange((_, ev) => {
-        if (ev.oldValue) {
+        if (ev.oldValue !== undefined) {
             clearTimeout(ev.oldValue);
         }
     });
@@ -64,7 +64,7 @@ export function reactiveTimeout(timeout?: ReturnType<typeof setTimeout>): Reacti
 export function reactiveInteval(interval?: ReturnType<typeof setInterval>): ReactiveInterval {
     const val: ReactiveInterval = reactive(interval) as ReactiveInterval;
     val.onChange((_, ev) => {
-        if (ev.oldValue) {
+        if (ev.oldValue !== undefined) {
             clearInterval(ev.oldValue);
         }
     });
