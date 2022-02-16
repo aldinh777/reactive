@@ -20,7 +20,7 @@ Imagine two variable, one depends on the other one
 
 `a = 5`
 
-`b = a + 1 // the value will of b be 6`
+`b = a + 1 // the value of b will be 6`
 
 In your usual Procedural Programming, changing the value of `a` won't affect the value of `b`. But in Reactive, any change of `a` would directly affect the value of `b`
 
@@ -35,8 +35,8 @@ const a = reactive(5);
 const b = reactive((val) => val + 1, a);
 
 console.log(b.value); // 6
-a.value = 6;
-console.log(b.value); // 7
+a.value = 10;
+console.log(b.value); // 11
 ```
 ### Observability
 Let say we want to check if a variable is greater than 10
