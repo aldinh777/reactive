@@ -1,5 +1,5 @@
 const { equal, fail, notEqual } = require('assert');
-const { reactive } = require('../dist');
+const { reactive, observe } = require('../dist');
 
 describe('Reactivity', function () {
     it('Initialization', function () {
@@ -17,7 +17,8 @@ describe('Reactivity', function () {
     });
     it('Subscription', function () {
         const a = reactive('hello');
-        const b = reactive(a => a + ' world!', a);
+        const b = reactive('');
+        observe(a, val => b.value = val + ' world!')
         equal(b.value, 'hello world!');
         a.value = 'hi';
         equal(b.value, 'hi world!');
@@ -25,18 +26,19 @@ describe('Reactivity', function () {
         equal(b.value, 'reset');
     });
     it('External Subscription', function () {
+        // Reactive not even required!!!
         let x = 'hello';
-        const a = reactive(() => x + ' world!');
-        equal(a.value, 'hello world!');
+        const a = () => x + ' world!';
+        equal(a(), 'hello world!');
         x = 'hi';
-        equal(a.value, 'hi world!');
+        equal(a(), 'hi world!');
     });
 });
 
 describe('Observability', function () {
     it('Observation', async function (done) {
         const a = reactive('hello');
-        a.onChange(val => {
+        a.addListener(val => {
             equal(val, 'yes');
             done();
         });
@@ -44,8 +46,9 @@ describe('Observability', function () {
     });
     it('Subscriber Update', async function (done) {
         const a = reactive('hello');
-        const b = reactive(a => a + ' master!', a);
-        b.onChange(val => {
+        const b = reactive('');
+        observe(a, val => b.value = val + ' master!')
+        b.addListener(val => {
             equal(val, 'yes master!');
             done();
         });
@@ -53,32 +56,38 @@ describe('Observability', function () {
     });
     it('Immediate Observe', async function (done) {
         const a = reactive('hello');
-        a.onChange(val => {
+        observe(a, val => {
             equal(val, 'hello');
             done();
-        }, true);
+        });
     });
     it('Conditional Observe', async function (done) {
         const a = reactive('hello');
-        a.when(a => a.length === 6, val => {
-            equal(val.length, 6);
-            done();
+        a.addListener(val => {
+            if (val.length === 6) {
+                equal(val.length, 6);
+                done();
+            }
         });
         a.value = 'ninja';
         a.value = 'hatori';
     });
     it('OnEquals', async function (done) {
         const a = reactive('hello');
-        a.onEquals('hello', val => {
-            equal(val, 'hello');
-            done();
+        observe(a, val => {
+            if (val === 'hello') {
+                equal(val, 'hello');
+                done();
+            }
         });
     });
     it('Value Binding', function () {
         const obj = { attr1: 'jazzie', attr2: 'joggie' };
         const a = reactive('hello');
-        a.bindValue(obj, 'attr1');
-        a.bindValue(obj, 'attr2', x => x + ' world!');
+        observe(a, val => {
+            obj.attr1 = val;
+            obj.attr2 = val + ' world!';
+        });
         equal(obj.attr1, a.value);
         equal(obj.attr2, 'hello world!');
         a.value = 'yahoo';
@@ -88,23 +97,20 @@ describe('Observability', function () {
     it('Unsubscribe', function () {
         const obj = { attr: 'jazzie' };
         const a = reactive('hello');
-        const change = a.onChange(() => fail());
-        const equalsHi = a.onEquals('hi', () => fail());
-        const when = a.when(a => a.length === 6, () => fail());
-        const bind = a.bindValue(obj, 'attr');
-        change.unsubscribe();
-        equalsHi.unsubscribe();
-        when.unsubscribe();
-        bind.unsubscribe();
+        const update = a.addListener(() => fail());
+        update.unsubscribe();
         a.value = 'hi';
         a.value = 'hatori';
         notEqual(obj.attr, a.value);
     });
     it('Old Value Checking', function () {
         const a = reactive('hello');
+        let oldValue = a.value;
         let prev = a.value;
-        a.onChange((_, ev) => {
-            equal(ev.oldValue, prev);
+        a.addListener(val => {
+            equal(oldValue, prev);
+            // This should do, old value doesn't necessary used anyways
+            oldValue = val
         });
         a.value = 'story';
         prev = a.value;
@@ -112,9 +118,12 @@ describe('Observability', function () {
     });
     it('Update Cancellation', function () {
         const a = reactive('hello');
-        a.onChange((val, ev) => {
+        let oldValue = a.value;
+        a.addListener(val => {
             if (val.length > 6) {
-                ev.cancel();
+                a.value = oldValue
+            } else {
+                oldValue = val
             }
         });
         a.value = 'mama';
