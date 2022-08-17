@@ -1,23 +1,23 @@
 const { equal, fail, notEqual } = require('assert');
-const { reactive, observe } = require('../dist');
+const { state, observe } = require('..');
 
 describe('Reactivity', function () {
     it('Initialization', function () {
-        const a = reactive('hello');
-        const undef = reactive();
+        const a = state('hello');
+        const undef = state();
         equal(a.value, 'hello');
         equal(undef.value, undefined);
     });
     it('Value Update', function () {
-        const a = reactive('hello');
+        const a = state('hello');
         a.value = 'hi';
         equal(a.value, 'hi');
         a.value = undefined;
         equal(a.value, undefined);
     });
     it('Subscription', function () {
-        const a = reactive('hello');
-        const b = reactive('');
+        const a = state('hello');
+        const b = state('');
         observe(a, val => b.value = val + ' world!')
         equal(b.value, 'hello world!');
         a.value = 'hi';
@@ -37,7 +37,7 @@ describe('Reactivity', function () {
 
 describe('Observability', function () {
     it('Observation', async function (done) {
-        const a = reactive('hello');
+        const a = state('hello');
         a.addListener(val => {
             equal(val, 'yes');
             done();
@@ -45,8 +45,8 @@ describe('Observability', function () {
         a.value = 'yes';
     });
     it('Subscriber Update', async function (done) {
-        const a = reactive('hello');
-        const b = reactive('');
+        const a = state('hello');
+        const b = state('');
         observe(a, val => b.value = val + ' master!')
         b.addListener(val => {
             equal(val, 'yes master!');
@@ -55,14 +55,14 @@ describe('Observability', function () {
         a.value = 'yes';
     });
     it('Immediate Observe', async function (done) {
-        const a = reactive('hello');
+        const a = state('hello');
         observe(a, val => {
             equal(val, 'hello');
             done();
         });
     });
     it('Conditional Observe', async function (done) {
-        const a = reactive('hello');
+        const a = state('hello');
         a.addListener(val => {
             if (val.length === 6) {
                 equal(val.length, 6);
@@ -72,8 +72,8 @@ describe('Observability', function () {
         a.value = 'ninja';
         a.value = 'hatori';
     });
-    it('OnEquals', async function (done) {
-        const a = reactive('hello');
+    it('On Equals', async function (done) {
+        const a = state('hello');
         observe(a, val => {
             if (val === 'hello') {
                 equal(val, 'hello');
@@ -83,7 +83,7 @@ describe('Observability', function () {
     });
     it('Value Binding', function () {
         const obj = { attr1: 'jazzie', attr2: 'joggie' };
-        const a = reactive('hello');
+        const a = state('hello');
         observe(a, val => {
             obj.attr1 = val;
             obj.attr2 = val + ' world!';
@@ -96,7 +96,7 @@ describe('Observability', function () {
     });
     it('Unsubscribe', function () {
         const obj = { attr: 'jazzie' };
-        const a = reactive('hello');
+        const a = state('hello');
         const update = a.addListener(() => fail());
         update.unsubscribe();
         a.value = 'hi';
@@ -104,26 +104,20 @@ describe('Observability', function () {
         notEqual(obj.attr, a.value);
     });
     it('Old Value Checking', function () {
-        const a = reactive('hello');
-        let oldValue = a.value;
+        const a = state('hello');
         let prev = a.value;
-        a.addListener(val => {
+        a.onChange((_next, oldValue) => {
             equal(oldValue, prev);
-            // This should do, old value doesn't necessary used anyways
-            oldValue = val
         });
         a.value = 'story';
         prev = a.value;
         a.value = 'jojoh';
     });
     it('Update Cancellation', function () {
-        const a = reactive('hello');
-        let oldValue = a.value;
-        a.addListener(val => {
+        const a = state('hello');
+        a.onChange((val, prev) => {
             if (val.length > 6) {
-                a.value = oldValue
-            } else {
-                oldValue = val
+                a.value = prev;
             }
         });
         a.value = 'mama';
