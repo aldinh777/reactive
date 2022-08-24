@@ -1,13 +1,9 @@
+import { Subscription } from '../util';
 import { State, ChangeHandler, StateSubscription } from './State';
 
 export type MultiChangeHandler<T> = (values: T[]) => any;
+export type MultiStateSubscription<T> = Subscription<State<T>[], MultiChangeHandler<T>>;
 
-export interface MultiStateSubscription<T> {
-    states: State<T>[];
-    listener: MultiChangeHandler<T>;
-    unsubscribe(): any;
-    resubscribe(): any;
-}
 export interface StateValued<T> extends State<T> {
     value: T;
 }
@@ -33,23 +29,28 @@ export function observe<T>(state: State<T>, handler: ChangeHandler<T>): StateSub
     return subscription;
 }
 
-export function observeAll<T>(states: State<T>[], handler: MultiChangeHandler<T>): MultiStateSubscription<T> {
-    const subscriptions = states.map(s => s.onChange(() => handler(states.map(s => s.getValue()))));
-    handler(states.map(s => s.getValue()));
+export function observeAll<T>(
+    states: State<T>[],
+    handler: MultiChangeHandler<T>
+): MultiStateSubscription<T> {
+    const subscriptions = states.map((s) =>
+        s.onChange(() => handler(states.map((s) => s.getValue())))
+    );
+    handler(states.map((s) => s.getValue()));
     return {
-        states: states,
+        target: states,
         listener: handler,
-        unsubscribe() {
+        unsub() {
             for (const sub of subscriptions) {
-                sub.unsubscribe();
+                sub.unsub();
             }
         },
-        resubscribe() {
+        resub() {
             for (const sub of subscriptions) {
-                sub.resubscribe();
+                sub.resub();
             }
         }
-    }
+    };
 }
 
 export * from './State';

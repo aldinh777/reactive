@@ -1,15 +1,9 @@
-import { pushNonExists, removeFromArray } from '../util';
+import { createSubscription, Subscription } from '../util';
 
 export type ListUpdateListener<T> = (index: number, next: T, previous: T) => any;
 export type ListInsertListener<T> = (index: number, inserted: T) => any;
 export type ListDeleteListener<T> = (index: number, deleted: T) => any;
-
-export interface StateListSubscription<T, U> {
-    stateList: StateList<T>;
-    listener: U;
-    unsubscribe(): any;
-    resubscribe(): any;
-}
+export type StateListSubscription<T, U> = Subscription<StateList<T>, U>;
 
 export class StateList<T> {
     private _updateListeners: ListUpdateListener<T>[] = [];
@@ -95,29 +89,14 @@ export class StateList<T> {
     }
     onUpdate(listener: ListUpdateListener<T>): StateListSubscription<T, ListUpdateListener<T>> {
         this._updateListeners.push(listener);
-        return {
-            stateList: this,
-            listener: listener,
-            unsubscribe: () => removeFromArray(listener, this._updateListeners),
-            resubscribe: () => pushNonExists(listener, this._updateListeners)
-        };
+        return createSubscription(this, listener, this._updateListeners);
     }
     onInsert(listener: ListInsertListener<T>): StateListSubscription<T, ListInsertListener<T>> {
         this._insertListeners.push(listener);
-        return {
-            stateList: this,
-            listener: listener,
-            unsubscribe: () => removeFromArray(listener, this._insertListeners),
-            resubscribe: () => pushNonExists(listener, this._insertListeners)
-        };
+        return createSubscription(this, listener, this._insertListeners);
     }
     onDelete(listener: ListDeleteListener<T>): StateListSubscription<T, ListDeleteListener<T>> {
         this._deleteListeners.push(listener);
-        return {
-            stateList: this,
-            listener: listener,
-            unsubscribe: () => removeFromArray(listener, this._deleteListeners),
-            resubscribe: () => pushNonExists(listener, this._insertListeners)
-        };
+        return createSubscription(this, listener, this._deleteListeners);
     }
 }
