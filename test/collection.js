@@ -14,7 +14,7 @@ describe('State List', function () {
             nextSum += next;
             prevSum += prev;
         });
-        const array = list.toArray();
+        const array = list.raw();
         for (let i = 0; i < array.length; i++) {
             list[i]++;
         }
@@ -79,7 +79,7 @@ describe('State List', function () {
         it('aftermath', function () {
             const expected = [3, 4, 5, 6, 7, 1, 2];
             const inserteds = [1, 2, 3, 4, 6, 7];
-            deepEqual(list.toArray(), expected);
+            deepEqual(list.raw(), expected);
             equal(insertCounter, inserteds.length);
             equal(insertSum, inserteds.reduce(sum));
         });

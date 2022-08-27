@@ -3,6 +3,8 @@ state/*.js
 state/*.d.ts
 collection/*.js
 collection/*.d.ts
+collection/wrapper/*.js
+collection/wrapper/*.d.ts
 util/*.js
 util/*.d.ts
 test.js
