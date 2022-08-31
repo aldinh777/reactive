@@ -53,4 +53,16 @@ export function observeAll<T>(
     };
 }
 
+export function stateObserve<T, U>(st: State<T>, handler: (value: T) => U): State<U> {
+    const o :State<any> = state(undefined);
+    observe(st, value => o.setValue(handler(value)));
+    return o;
+}
+
+export function stateObserveAll<T, U>(states: State<T>[], handler: (values: T[]) => U): State<U> {
+    const o: State<any> = state(undefined);
+    observeAll(states, (values) => o.setValue(handler(values)));
+    return o;
+}
+
 export * from './State';
