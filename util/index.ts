@@ -19,6 +19,7 @@ function pushNonExists<T>(elem: T, array: T[]): void {
 }
 
 export function createSubscription<S, T>(target: S, listener: T, array: T[]): Subscription<S, T> {
+    pushNonExists(listener, array);
     return {
         target: target,
         listener: listener,

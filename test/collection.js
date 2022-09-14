@@ -1,10 +1,10 @@
 const { equal, fail, deepEqual } = require('assert');
-const { stateList, stateMap } = require('../collection');
+const { statelist, statemap } = require('../collection');
 
 const sum = (prev, next) => prev + next;
 
 describe('State List', function () {
-    const list = stateList([1, 2, 3, 4, 5]);
+    const list = statelist([1, 2, 3, 4, 5]);
     it('Update', function () {
         let updateCounter = 0;
         let nextSum = 0;
@@ -85,7 +85,7 @@ describe('State List', function () {
         });
     });
     describe('Unsubscribe', function () {
-        const testlist = stateList([1, 2, 3, 4, 5]);
+        const testlist = statelist([1, 2, 3, 4, 5]);
         it('update', function () {
             const updsubs = testlist.onUpdate(() => fail('List Update Listener not removed'));
             updsubs.unsub();
@@ -107,7 +107,7 @@ describe('State List', function () {
         });
     });
     describe('Resubscribe', function () {
-        const testlist = stateList([1, 2, 3, 4, 5]);
+        const testlist = statelist([1, 2, 3, 4, 5]);
         it('update', async function (done) {
             const updsubs = testlist.onUpdate(() => done());
             updsubs.unsub();
@@ -130,7 +130,7 @@ describe('State List', function () {
 });
 
 describe('State Map', function () {
-    const map = stateMap({ a: 0 });
+    const map = statemap({ a: 0 });
     it('Update', async function (done) {
         map.onUpdate((key, val) => {
             if (key === 'a' && val === 10) {
@@ -156,7 +156,7 @@ describe('State Map', function () {
         map.delete('moo');
     });
     describe('Unsubscribe', function () {
-        const testmap = stateMap({ a: 0 });
+        const testmap = statemap({ a: 0 });
         it('update', function () {
             const sub = testmap.onUpdate(() => fail('Map Update Listener not removed'));
             sub.unsub();
@@ -174,7 +174,7 @@ describe('State Map', function () {
         });
     });
     describe('Resubscribe', function () {
-        const testmap = stateMap({ a: 0 });
+        const testmap = statemap({ a: 0 });
         it('update', async function (done) {
             const sub = testmap.onUpdate(() => done());
             sub.unsub();

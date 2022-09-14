@@ -21,7 +21,6 @@ export class State<T> {
         }
     }
     addListener(listener: UpdateListener<T>): StateSubscription<T> {
-        this._listeners.push(listener);
         return createSubscription(this, listener, this._listeners);
     }
     onChange(handler: ChangeHandler<T>): StateSubscription<T> {

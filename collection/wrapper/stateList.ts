@@ -4,7 +4,7 @@ export interface StateListProxy<T> extends StateList<T> {
     [index: number]: T;
 }
 
-export function stateList<T>(list: T[]): StateListProxy<T> {
+export function statelist<T>(list: T[]): StateListProxy<T> {
     return new Proxy(new StateList(list), {
         get(target, p, receiver) {
             if (typeof p === 'string') {

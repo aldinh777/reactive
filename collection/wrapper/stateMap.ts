@@ -5,7 +5,7 @@ interface SimpleObject<T> {
 }
 export type StateMapProxy<T> = StateMap<T> & SimpleObject<T>;
 
-export function stateMap<T>(map: StateMapObject<T> | Map<string, T>): StateMapProxy<T> {
+export function statemap<T>(map: StateMapObject<T> | Map<string, T>): StateMapProxy<T> {
     return new Proxy(new StateMap(map), {
         get(target, p, receiver) {
             if (!Reflect.has(target, p)) {
