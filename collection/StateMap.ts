@@ -20,6 +20,7 @@ export class StateMap<T> extends StateCollection<string, T, Map<string, T>> {
         return this._collect.get(key);
     }
     set(key: string, value: T): this {
+        this._collect.set(key, value);
         if (this._collect.has(key)) {
             const prev = this._collect.get(key);
             for (const upd of this._updListeners) {
@@ -30,7 +31,6 @@ export class StateMap<T> extends StateCollection<string, T, Map<string, T>> {
                 ins(key, value);
             }
         }
-        this._collect.set(key, value);
         return this;
     }
     raw(): Map<string, T> {
