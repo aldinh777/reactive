@@ -20,7 +20,7 @@ export abstract class StateCollection<K, V, R> {
     protected _upd: UpdateListener<K, V>[] = [];
     protected _ins: InsertListener<K, V>[] = [];
     protected _del: DeleteListener<K, V>[] = [];
-    protected raw!: R;
+    raw!: R;
 
     abstract get(index: K): V | undefined;
     abstract set(index: K, value: V): this;
