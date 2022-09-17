@@ -1,4 +1,4 @@
-import { Subscription } from '../util';
+import { createMultiSubscriptions, Subscription } from '../util';
 import { State, ChangeHandler, StateSubscription } from './State';
 
 export type MultiChangeHandler<T> = (values: T[]) => any;
@@ -36,26 +36,12 @@ export function observeAll<T>(
     const subscriptions = states.map((s) =>
         s.onChange(() => handler(states.map((s) => s.getValue())))
     );
-    handler(states.map((s) => s.getValue()));
-    return {
-        target: states,
-        listener: handler,
-        unsub() {
-            for (const sub of subscriptions) {
-                sub.unsub();
-            }
-        },
-        resub() {
-            for (const sub of subscriptions) {
-                sub.resub();
-            }
-        }
-    };
+    return createMultiSubscriptions(states, handler, subscriptions);
 }
 
 export function stateObserve<T, U>(st: State<T>, handler: (value: T) => U): State<U> {
-    const o :State<any> = state(undefined);
-    observe(st, value => o.setValue(handler(value)));
+    const o: State<any> = state(undefined);
+    observe(st, (value) => o.setValue(handler(value)));
     return o;
 }
 

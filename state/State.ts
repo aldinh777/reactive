@@ -5,7 +5,7 @@ export type ChangeHandler<T> = (next: T, previous: T) => any;
 export type StateSubscription<T> = Subscription<State<T>, UpdateListener<T>>;
 
 export class State<T> {
-    private _listeners: UpdateListener<T>[] = [];
+    private _upd: UpdateListener<T>[] = [];
     private _val: T;
 
     constructor(initial: T) {
@@ -16,12 +16,12 @@ export class State<T> {
     }
     setValue(value: T) {
         this._val = value;
-        for (const listener of this._listeners) {
+        for (const listener of this._upd) {
             listener(value);
         }
     }
     addListener(listener: UpdateListener<T>): StateSubscription<T> {
-        return createSubscription(this, listener, this._listeners);
+        return createSubscription(this, listener, this._upd);
     }
     onChange(handler: ChangeHandler<T>): StateSubscription<T> {
         let oldValue = this.getValue();

@@ -1,9 +1,9 @@
-import { createSubscription, Subscription } from '../util';
+import { createMultiSubscriptions, createSubscription, Subscription } from '../util';
 
 export type UpdateListener<K, V> = (index: K, next: V, previous: V) => any;
 export type InsertListener<K, V> = (index: K, inserted: V) => any;
 export type DeleteListener<K, V> = (index: K, deleted: V) => any;
-export type ResizeListener<K, V> = (type: 'insert' | 'delete', index: K, item: V) => any;
+export type ResizeListener<K, V> = (type: '+' | '-', index: K, item: V) => any;
 export type CollectSubscription<K, V, C, U> = Subscription<StateCollection<K, V, C>, U>;
 
 /**
@@ -17,37 +17,27 @@ export type CollectSubscription<K, V, C, U> = Subscription<StateCollection<K, V,
  * - R: string[] to store it's raw data internally
  */
 export abstract class StateCollection<K, V, R> {
-    protected _updListeners: UpdateListener<K, V>[] = [];
-    protected _insListeners: InsertListener<K, V>[] = [];
-    protected _delListeners: DeleteListener<K, V>[] = [];
-    protected _collect!: R;
+    protected _upd: UpdateListener<K, V>[] = [];
+    protected _ins: InsertListener<K, V>[] = [];
+    protected _del: DeleteListener<K, V>[] = [];
+    protected raw!: R;
 
     abstract get(index: K): V | undefined;
     abstract set(index: K, value: V): this;
-    abstract raw(): R;
     onUpdate(listener: UpdateListener<K, V>): CollectSubscription<K, V, R, UpdateListener<K, V>> {
-        return createSubscription(this, listener, this._updListeners);
+        return createSubscription(this, listener, this._upd);
     }
     onInsert(listener: InsertListener<K, V>): CollectSubscription<K, V, R, InsertListener<K, V>> {
-        return createSubscription(this, listener, this._insListeners);
+        return createSubscription(this, listener, this._ins);
     }
     onDelete(listener: DeleteListener<K, V>): CollectSubscription<K, V, R, DeleteListener<K, V>> {
-        return createSubscription(this, listener, this._delListeners);
+        return createSubscription(this, listener, this._del);
     }
     onResize(listener: ResizeListener<K, V>): CollectSubscription<K, V, R, ResizeListener<K, V>> {
-        const subins = this.onInsert((index, inserted) => listener('insert', index, inserted));
-        const subdel = this.onDelete((index, deleted) => listener('delete', index, deleted));
-        return {
-            target: this,
-            listener: listener,
-            unsub() {
-                subins.unsub();
-                subdel.unsub();
-            },
-            resub() {
-                subins.resub();
-                subdel.resub();
-            }
-        };
+        const subscriptions = [
+            this.onInsert((index, inserted) => listener('+', index, inserted)),
+            this.onDelete((index, deleted) => listener('-', index, deleted))
+        ];
+        return createMultiSubscriptions(this, listener, subscriptions);
     }
 }

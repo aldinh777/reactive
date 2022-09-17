@@ -31,3 +31,24 @@ export function createSubscription<S, T>(target: S, listener: T, array: T[]): Su
         }
     };
 }
+
+export function createMultiSubscriptions<S, T, X, U>(
+    target: S,
+    listener: T,
+    subscriptions: Subscription<X, U>[]
+): Subscription<S, T> {
+    return {
+        target: target,
+        listener: listener,
+        unsub() {
+            for (const sub of subscriptions) {
+                sub.unsub();
+            }
+        },
+        resub() {
+            for (const sub of subscriptions) {
+                sub.resub();
+            }
+        }
+    };
+}
