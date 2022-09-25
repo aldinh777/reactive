@@ -1,9 +1,11 @@
-import { createMultiSubscriptions, createSubscription, Subscription } from '../util';
+import { createSubscription, Subscription } from '../util';
 
-export type UpdateListener<K, V> = (index: K, next: V, previous: V) => any;
-export type InsertListener<K, V> = (index: K, inserted: V) => any;
-export type DeleteListener<K, V> = (index: K, deleted: V) => any;
-export type ResizeListener<K, V> = (type: '+' | '-', index: K, item: V) => any;
+export type Operation = 'ins' | 'del' | 'set';
+
+export type OperationHandler<K, V> = (index: K, value: V, ...rest: any[]) => any;
+export type OperationListeners<K, V> = {
+    [op in Operation]: OperationHandler<K, V>[];
+};
 
 /**
  * Abstract class to be extended as an actual observable collection
@@ -13,35 +15,30 @@ export type ResizeListener<K, V> = (type: '+' | '-', index: K, item: V) => any;
  * - R -> Raw Collection Type: (ex. string[], Map<string, string>).
  */
 export abstract class StateCollection<K, V, R> {
-    protected _upd: UpdateListener<K, V>[] = [];
-    protected _ins: InsertListener<K, V>[] = [];
-    protected _del: DeleteListener<K, V>[] = [];
+    protected _upd: OperationListeners<K, V> = { ins: [], del: [], set: [] };
     raw!: R;
 
     abstract get(index: K): V | undefined;
     abstract set(index: K, value: V): this;
+    trigger(op: Operation, index: K, value: V, ...rest: any[]): void {
+        const handlers = this._upd[op];
+        for (const handle of handlers || []) {
+            handle(index, value, ...rest);
+        }
+    }
     onUpdate(
-        listener: UpdateListener<K, V>
-    ): Subscription<StateCollection<K, V, R>, UpdateListener<K, V>> {
-        return createSubscription(this, listener, this._upd);
+        listener: OperationHandler<K, V>
+    ): Subscription<StateCollection<K, V, R>, OperationHandler<K, V>> {
+        return createSubscription(this, listener, this._upd.set || []);
     }
     onInsert(
-        listener: InsertListener<K, V>
-    ): Subscription<StateCollection<K, V, R>, InsertListener<K, V>> {
-        return createSubscription(this, listener, this._ins);
+        listener: OperationHandler<K, V>
+    ): Subscription<StateCollection<K, V, R>, OperationHandler<K, V>> {
+        return createSubscription(this, listener, this._upd.ins || []);
     }
     onDelete(
-        listener: DeleteListener<K, V>
-    ): Subscription<StateCollection<K, V, R>, DeleteListener<K, V>> {
-        return createSubscription(this, listener, this._del);
-    }
-    onResize(
-        listener: ResizeListener<K, V>
-    ): Subscription<StateCollection<K, V, R>, ResizeListener<K, V>> {
-        const subscriptions = [
-            this.onInsert((index, inserted) => listener('+', index, inserted)),
-            this.onDelete((index, deleted) => listener('-', index, deleted))
-        ];
-        return createMultiSubscriptions(this, listener, subscriptions);
+        listener: OperationHandler<K, V>
+    ): Subscription<StateCollection<K, V, R>, OperationHandler<K, V>> {
+        return createSubscription(this, listener, this._upd.del || []);
     }
 }
