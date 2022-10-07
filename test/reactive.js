@@ -1,5 +1,5 @@
 const { equal, fail, notEqual } = require('assert');
-const { state, observe } = require('..');
+const { state, observe } = require('../util');
 
 describe('Reactivity', function () {
     const hello = state('');

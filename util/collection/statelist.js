@@ -1,23 +1,20 @@
-import { StateList } from '../StateList';
-
-export interface StateListProxy<T> extends StateList<T> {
-    [index: number]: T;
-}
-
-export function statelist<T>(list: T[]): StateListProxy<T> {
-    return new Proxy(new StateList(list), {
-        get(target, p, receiver) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var StateList_1 = require("../../collection/StateList");
+function statelist(list) {
+    return new Proxy(new StateList_1.StateList(list), {
+        get: function (target, p, receiver) {
             if (typeof p === 'string') {
-                const index = parseInt(p);
+                var index = parseInt(p);
                 if (Number.isInteger(index)) {
                     return target.get(index);
                 }
             }
             return Reflect.get(target, p, receiver);
         },
-        set(target, p, value, receiver) {
+        set: function (target, p, value, receiver) {
             if (typeof p === 'string') {
-                const index = parseInt(p);
+                var index = parseInt(p);
                 if (Number.isInteger(index)) {
                     target.set(index, value);
                     return true;
@@ -25,5 +22,6 @@ export function statelist<T>(list: T[]): StateListProxy<T> {
             }
             return Reflect.set(target, p, value, receiver);
         }
-    }) as StateListProxy<T>;
+    });
 }
+exports.statelist = statelist;

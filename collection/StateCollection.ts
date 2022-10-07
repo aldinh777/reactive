@@ -1,4 +1,4 @@
-import { createSubscription, Subscription } from '../util';
+import { createSubscription, Subscription } from '../util/helper';
 
 export type Operation = 'ins' | 'del' | 'set';
 

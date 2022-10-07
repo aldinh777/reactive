@@ -1,4 +1,4 @@
-import { StateMap, StateMapObject } from '../StateMap';
+import { StateMap, StateMapObject } from '../../collection/StateMap';
 
 interface SimpleObject<T> {
     [key: string]: T;

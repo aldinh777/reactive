@@ -1,5 +1,5 @@
 const { equal, fail, deepEqual } = require('assert');
-const { statelist, statemap } = require('../collection');
+const { statelist, statemap } = require('../util/collection');
 
 const sum = (prev, next) => prev + next;
 

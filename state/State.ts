@@ -1,4 +1,4 @@
-import { createSubscription, Subscription } from '../util';
+import { createSubscription, Subscription } from '../util/helper';
 
 export type UpdateListener<T> = (value: T) => any;
 export type ChangeHandler<T> = (next: T, previous: T) => any;
