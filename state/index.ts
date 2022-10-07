@@ -36,6 +36,7 @@ export function observeAll<T>(
     const subscriptions = states.map((s) =>
         s.onChange(() => handler(states.map((s) => s.getValue())))
     );
+    handler(states.map((s) => s.getValue()));
     return createMultiSubscriptions(states, handler, subscriptions);
 }
 
