@@ -1,12 +1,6 @@
+.vscode
 node_modules
-state/*.js
-state/*.d.ts
-collection/*.js
-collection/*.d.ts
-collection/*/*.js
-collection/*/*.d.ts
-util/*.js
-util/*.d.ts
-util/*/*.js
-util/*/*.d.ts
-test.js
+*.d.ts
+collection/**/*.js
+state/**/*.js
+util/**/*.js
