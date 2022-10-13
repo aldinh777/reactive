@@ -20,7 +20,7 @@ describe('State List', function () {
         }
         equal(updateCounter, array.length);
         equal(prevSum, [1, 2, 3, 4, 5].reduce(sum));
-        equal(nextSum, [2, 3, 4, 5, 6].reduce(sum))
+        equal(nextSum, [2, 3, 4, 5, 6].reduce(sum));
     });
     describe('Delete', function () {
         // current value = [2, 3, 4, 5, 6]
@@ -92,14 +92,14 @@ describe('State List', function () {
             testlist[0] = 0;
         });
         it('delete', function () {
-            const delsubs = testlist.onDelete(() => fail('List Delete Listener not removed'))
+            const delsubs = testlist.onDelete(() => fail('List Delete Listener not removed'));
             delsubs.unsub();
             testlist.splice(0, 1);
             testlist.pop();
             testlist.shift();
         });
         it('insert', function () {
-            const inssubs = testlist.onDelete(() => fail('List Insert Listener not removed'))
+            const inssubs = testlist.onDelete(() => fail('List Insert Listener not removed'));
             inssubs.unsub();
             testlist.push(0);
             testlist.unshift(0);
@@ -193,5 +193,5 @@ describe('State Map', function () {
             sub.resub();
             testmap.delete('moo');
         });
-    })
+    });
 });

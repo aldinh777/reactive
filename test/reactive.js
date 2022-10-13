@@ -18,7 +18,7 @@ describe('Reactivity', function () {
     it('Subscription', function () {
         hello.value = 'hello';
         const helloWorld = state('');
-        observe(hello, val => helloWorld.value = val + ' world!')
+        observe(hello, (val) => (helloWorld.value = val + ' world!'));
         equal(helloWorld.value, 'hello world!');
         hello.value = 'hi';
         equal(helloWorld.value, 'hi world!');
@@ -28,7 +28,7 @@ describe('Reactivity', function () {
 describe('Observability', function () {
     it('Observation', async function (done) {
         const hello = state('hello');
-        hello.addListener(val => {
+        hello.addListener((val) => {
             equal(val, 'yes');
             done();
         });
@@ -37,8 +37,8 @@ describe('Observability', function () {
     it('Subscriber Update', async function (done) {
         const hello = state('hello');
         const helloMaster = state('');
-        observe(hello, val => helloMaster.value = val + ' master!')
-        helloMaster.addListener(val => {
+        observe(hello, (val) => (helloMaster.value = val + ' master!'));
+        helloMaster.addListener((val) => {
             equal(val, 'yes master!');
             done();
         });
@@ -46,14 +46,14 @@ describe('Observability', function () {
     });
     it('Immediate Observe', async function (done) {
         const hello = state('hello');
-        observe(hello, val => {
+        observe(hello, (val) => {
             equal(val, 'hello');
             done();
         });
     });
     it('Conditional Observe', async function (done) {
         const hello = state('hello');
-        hello.addListener(val => {
+        hello.addListener((val) => {
             if (val.length === 6) {
                 equal(val.length, 6);
                 done();
@@ -64,7 +64,7 @@ describe('Observability', function () {
     });
     it('On Equals', async function (done) {
         const hello = state('hello');
-        observe(hello, val => {
+        observe(hello, (val) => {
             if (val === 'hello') {
                 equal(val, 'hello');
                 done();
@@ -74,7 +74,7 @@ describe('Observability', function () {
     it('Object Property Binding', function () {
         const obj = { attr1: 'jazzie', attr2: 'joggie' };
         const hello = state('hello');
-        observe(hello, val => {
+        observe(hello, (val) => {
             obj.attr1 = val;
             obj.attr2 = val + ' world!';
         });
@@ -99,12 +99,12 @@ describe('Observability', function () {
     it('Resubscribe', function () {
         let samp = '';
         const hello = state('hello');
-        const sub = hello.addListener(val => {
+        const sub = hello.addListener((val) => {
             samp = val;
         });
         sub.unsub();
         sub.resub();
-        hello.value = 'moola'
+        hello.value = 'moola';
         equal(samp, hello.value);
     });
     it('Old Value Checking', function () {
