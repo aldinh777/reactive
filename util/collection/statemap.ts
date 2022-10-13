@@ -1,12 +1,13 @@
-import { StateMap, StateMapObject } from '../../collection/StateMap';
+import { StateMapObject } from '../../collection/map/StateMap';
+import { MutableStateMap } from '../../collection/map/MutableStateMap';
 
 interface SimpleObject<T> {
     [key: string]: T;
 }
-export type StateMapProxy<T> = StateMap<T> & SimpleObject<T>;
+export type StateMapProxy<T> = MutableStateMap<T> & SimpleObject<T>;
 
 export function statemap<T>(map: StateMapObject<T> | Map<string, T>): StateMapProxy<T> {
-    return new Proxy(new StateMap(map), {
+    return new Proxy(new MutableStateMap(map), {
         get(target, p, receiver) {
             if (!Reflect.has(target, p)) {
                 if (typeof p === 'string') {

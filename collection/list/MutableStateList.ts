@@ -1,13 +1,10 @@
-import { StateCollection } from './StateCollection';
+import { MutableStateCollection } from '../StateCollection';
+import { StateList } from './StateList';
 
-export class StateList<T> extends StateCollection<number, T, T[]> {
-    constructor(initial: T[] = []) {
-        super();
-        this.raw = initial;
-    }
-    get(index: number): T | undefined {
-        return this.raw[index];
-    }
+export class MutableStateList<T>
+    extends StateList<T>
+    implements MutableStateCollection<number, T, T[]>
+{
     set(index: number, value: T) {
         const previous = this.raw[index];
         if (previous === value) {

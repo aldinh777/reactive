@@ -19,7 +19,6 @@ export abstract class StateCollection<K, V, R> {
     raw!: R;
 
     abstract get(index: K): V | undefined;
-    abstract set(index: K, value: V): this;
     trigger(op: Operation, index: K, value: V, ...rest: any[]): void {
         const handlers = this._upd[op];
         for (const handle of handlers || []) {
@@ -41,4 +40,8 @@ export abstract class StateCollection<K, V, R> {
     ): Subscription<StateCollection<K, V, R>, OperationHandler<K, V>> {
         return createSubscription(this, listener, this._upd.del || []);
     }
+}
+
+export interface MutableStateCollection<K, V, R> extends StateCollection<K, V, R> {
+    set(index: K, value: V): this;
 }

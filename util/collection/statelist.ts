@@ -1,11 +1,11 @@
-import { StateList } from '../../collection/StateList';
+import { MutableStateList } from '../../collection/list/MutableStateList';
 
-export interface StateListProxy<T> extends StateList<T> {
+export interface StateListProxy<T> extends MutableStateList<T> {
     [index: number]: T;
 }
 
 export function statelist<T>(list: T[]): StateListProxy<T> {
-    return new Proxy(new StateList(list), {
+    return new Proxy(new MutableStateList(list), {
         get(target, p, receiver) {
             if (typeof p === 'string') {
                 const index = parseInt(p);
