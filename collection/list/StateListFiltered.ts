@@ -2,8 +2,11 @@ import { StateList } from '../StateList';
 
 export class StateListFiltered<T> extends StateList<T> {
     private _f: boolean[] = [];
+    private _filter: (item: T) => boolean;
+
     constructor(list: StateList<T>, filter: (item: T) => boolean) {
         super([]);
+        this._filter = filter;
         for (const item of list.raw) {
             const allow = filter(item);
             this._f.push(allow);
@@ -12,7 +15,7 @@ export class StateListFiltered<T> extends StateList<T> {
             }
         }
         list.onUpdate((index, value, prev) => {
-            const allow = filter(value);
+            const allow = this._filter(value);
             if (this._f[index]) {
                 if (allow) {
                     this.updateFiltered(index, value, prev);
@@ -26,7 +29,7 @@ export class StateListFiltered<T> extends StateList<T> {
             }
         });
         list.onInsert((index, value) => {
-            const allow = filter(value);
+            const allow = this._filter(value);
             this._f.splice(index, 0, allow);
             if (allow) {
                 this.insertFiltered(index, value);

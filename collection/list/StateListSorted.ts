@@ -1,10 +1,11 @@
 import { StateList } from '../StateList';
 
 export class StateListSorted<T> extends StateList<T> {
-    sorter: (item: T, compare: T) => boolean;
+    private _sort: (item: T, compare: T) => boolean;
+    
     constructor(list: StateList<T>, sorter?: (item: T, compare: T) => boolean) {
         super([]);
-        this.sorter = sorter || ((item, compare) => item < compare);
+        this._sort = sorter || ((item, compare) => item < compare);
         for (const item of list.raw) {
             this.insertItem(item);
         }
@@ -37,7 +38,7 @@ export class StateListSorted<T> extends StateList<T> {
         let insertIndex = this.raw.length;
         for (let i = 0; i < this.raw.length; i++) {
             const elem = this.raw[i];
-            if (this.sorter(item, elem)) {
+            if (this._sort(item, elem)) {
                 insertIndex = i;
                 break;
             }
