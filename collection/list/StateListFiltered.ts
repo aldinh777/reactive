@@ -11,13 +11,6 @@ export class StateListFiltered<T> extends StateList<T> {
                 this.raw.push(item);
             }
         }
-        list.onInsert((index, value) => {
-            const allow = filter(value);
-            this._f.splice(index, 0, allow);
-            if (allow) {
-                this.insertFiltered(index, value);
-            }
-        });
         list.onUpdate((index, value, prev) => {
             const allow = filter(value);
             if (this._f[index]) {
@@ -32,11 +25,18 @@ export class StateListFiltered<T> extends StateList<T> {
                 this.insertFiltered(index, value);
             }
         });
+        list.onInsert((index, value) => {
+            const allow = filter(value);
+            this._f.splice(index, 0, allow);
+            if (allow) {
+                this.insertFiltered(index, value);
+            }
+        });
         list.onDelete((index, value) => {
             const allow = this._f[index];
             if (allow) {
                 this.deleteFiltered(index, value);
-``            }
+            }
             this._f.splice(index, 1);
         });
     }
