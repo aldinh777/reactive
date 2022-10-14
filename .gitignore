@@ -4,4 +4,5 @@ node_modules
 collection/**/*.js
 state/**/*.js
 util/**/*.js
+debug.ts
 debug.js
