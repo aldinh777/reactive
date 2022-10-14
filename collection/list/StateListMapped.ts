@@ -1,4 +1,4 @@
-import { StateList } from './StateList';
+import { StateList } from '../StateList';
 
 export class StateListMapped<S, T> extends StateList<T> {
     constructor(list: StateList<S>, mapper: (item: S) => T) {

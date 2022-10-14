@@ -1,4 +1,4 @@
-import { MutableStateCollection } from '../StateCollection';
+import { MutableStateCollection } from './StateCollection';
 import { StateMap } from './StateMap';
 
 export class MutableStateMap<T>

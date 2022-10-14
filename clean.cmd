@@ -15,5 +15,3 @@ del collection\*.d.ts
 del collection\*.js
 del collection\list\*.d.ts
 del collection\list\*.js
-del collection\map\*.d.ts
-del collection\map\*.js

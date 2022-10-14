@@ -1,5 +1,5 @@
-import { StateMapObject } from '../../collection/map/StateMap';
-import { MutableStateMap } from '../../collection/map/MutableStateMap';
+import { StateMapObject } from '../../collection/StateMap';
+import { MutableStateMap } from '../../collection/MutableStateMap';
 
 interface SimpleObject<T> {
     [key: string]: T;

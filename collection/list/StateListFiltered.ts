@@ -1,4 +1,4 @@
-import { StateList } from './StateList';
+import { StateList } from '../StateList';
 
 export class StateListFiltered<T> extends StateList<T> {
     private _f: boolean[] = [];

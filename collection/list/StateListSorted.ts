@@ -1,4 +1,4 @@
-import { StateList } from './StateList';
+import { StateList } from '../StateList';
 
 export class StateListSorted<T> extends StateList<T> {
     sorter: (item: T, compare: T) => boolean;

@@ -1,4 +1,4 @@
-import { MutableStateList } from '../../collection/list/MutableStateList';
+import { MutableStateList } from '../../collection/MutableStateList';
 
 export interface StateListProxy<T> extends MutableStateList<T> {
     [index: number]: T;

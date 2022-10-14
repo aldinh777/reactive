@@ -1,4 +1,4 @@
-import { StateCollection } from '../StateCollection';
+import { StateCollection } from './StateCollection';
 
 export interface StateMapObject<T> {
     [key: string]: T;
