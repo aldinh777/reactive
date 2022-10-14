@@ -1,6 +1,7 @@
 const { statelist } = require('../util/collection');
 const { StateListMapped } = require('../collection/list/StateListMapped');
 const { StateListFiltered } = require('../collection/list/StateListFiltered');
+const { StateListSorted } = require('../collection/list/StateListSorted');
 
 describe('Mapped State List', function () {
     const list = statelist([1, 2, 3, 4, 5]);
@@ -24,7 +25,7 @@ describe('Filtered State List', function () {
     const filtered = new StateListFiltered(list, (i) => i >= 0);
     const Y = true;
     const N = false;
-    it('initial state correct', function () {
+    it('filtered correctly', function () {
         expect(filtered.raw).toEqual([1, 3, 4, 5]);
         expect(filtered._f).toEqual([Y, N, Y, Y, Y]);
     });
@@ -75,5 +76,33 @@ describe('Filtered State List', function () {
         list.splice(2, 1);
         expect(filtered.raw).toEqual([1, 2, 6, 5]);
         expect(filtered._f).toEqual([Y, Y, Y, N, Y]);
+    });
+});
+
+describe('Sorted State List', function () {
+    const list = statelist([5, 1, 4, 2, 3]);
+    const sorted = new StateListSorted(list);
+    it('sorted correctly', function () {
+        expect(sorted.raw).toEqual([1, 2, 3, 4, 5]);
+    });
+    it('watch update position still', function () {
+        // [6, 1, 4, 2, 3]
+        list[0] = 6;
+        expect(sorted.raw).toEqual([1, 2, 3, 4, 6]);
+    });
+    it('watch update position change', function () {
+        // [6, 1, 7, 2, 3]
+        list[2] = 7;
+        expect(sorted.raw).toEqual([1, 2, 3, 6, 7]);
+    });
+    it('watch item inserted', function () {
+        // [6, 1, 4, 2, 3, 5, 4]
+        list.push(5, 4);
+        expect(sorted.raw).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    });
+    it('watch item deleted', function () {
+        // [6, 1, 5, 4]
+        list.splice(2, 3);
+        expect(sorted.raw).toEqual([1, 4, 5, 6]);
     });
 });
