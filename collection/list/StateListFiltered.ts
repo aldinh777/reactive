@@ -1,11 +1,13 @@
 import { StateList } from '../StateList';
 
 export class StateListFiltered<T> extends StateList<T> {
+    private _list: StateList<T>;
     private _f: boolean[] = [];
     private _filter: (item: T) => boolean;
 
     constructor(list: StateList<T>, filter: (item: T) => boolean) {
         super([]);
+        this._list = list;
         this._filter = filter;
         for (const item of list.raw) {
             const allow = filter(item);
@@ -42,6 +44,31 @@ export class StateListFiltered<T> extends StateList<T> {
             }
             this._f.splice(index, 1);
         });
+    }
+    replaceFilter(filter: (item: T) => boolean): void {
+        this._filter = filter;
+        const f = this._list.raw.map(filter);
+        let currentIndex = 0;
+        for (let i = 0; i < f.length; i++) {
+            const prevAllow = this._f[i];
+            const nextAllow = f[i];
+            if (prevAllow) {
+                if (nextAllow) {
+                    currentIndex++;
+                } else {
+                    const deleted = this.raw[currentIndex];
+                    this.raw.splice(currentIndex, 1);
+                    this.trigger('del', currentIndex, deleted);
+                    currentIndex = currentIndex && currentIndex - 1;
+                }
+            } else if (nextAllow) {
+                const inserted = this._list.raw[i];
+                this.raw.splice(currentIndex, 0, inserted);
+                this.trigger('ins', currentIndex, inserted);
+                currentIndex++;
+            }
+        }
+        this._f = f;
     }
     private updateFiltered(index: number, value: T, prev: T): void {
         const fIndex = this.findFilteredIndex(index);

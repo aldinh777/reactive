@@ -18,6 +18,10 @@ describe('Mapped State List', function () {
         list.splice(2, 1);
         expect(mapped.raw).toEqual([2, 40, 6, 8, 10]);
     });
+    it('replace mapper', function () {
+        mapped.replaceMapper((i) => i * 3);
+        expect(mapped.raw).toEqual([3, 60, 9, 12, 15]);
+    });
 });
 
 describe('Filtered State List', function () {
@@ -76,6 +80,11 @@ describe('Filtered State List', function () {
         list.splice(2, 1);
         expect(filtered.raw).toEqual([1, 2, 6, 5]);
         expect(filtered._f).toEqual([Y, Y, Y, N, Y]);
+    });
+    it('replace filter', function () {
+        filtered.replaceFilter((i) => Math.abs(i) > 3);
+        expect(filtered.raw).toEqual([6, -7, 5]);
+        expect(filtered._f).toEqual([N, N, Y, Y, Y]);
     });
 });
 

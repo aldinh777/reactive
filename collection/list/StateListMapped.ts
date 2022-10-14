@@ -1,10 +1,12 @@
 import { StateList } from '../StateList';
 
 export class StateListMapped<S, T> extends StateList<T> {
+    private _list: StateList<S>;
     private _map: (item: S) => T;
 
     constructor(list: StateList<S>, mapper: (item: S) => T) {
         super(list.raw.map(mapper));
+        this._list = list;
         this._map = mapper;
         list.onUpdate((index, value) => {
             const mapped = this._map(value);
@@ -22,5 +24,15 @@ export class StateListMapped<S, T> extends StateList<T> {
             this.raw.splice(index, 1);
             this.trigger('del', index, value);
         });
+    }
+    replaceMapper(mapper: (item: S) => T): void {
+        this._map = mapper;
+        for (let i = 0; i < this._list.raw.length; i++) {
+            const item = this._list.raw[i];
+            const prev = this.raw[i];
+            const value = this._map(item);
+            this.raw[i] = value;
+            this.trigger('set', i, value, prev);
+        }
     }
 }
