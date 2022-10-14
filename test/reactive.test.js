@@ -1,4 +1,3 @@
-const { equal, fail, notEqual } = require('assert');
 const { state, observe } = require('../util');
 
 describe('Reactivity', function () {
@@ -6,67 +5,67 @@ describe('Reactivity', function () {
     const undef = state();
     it('Initialization', function () {
         hello.value = 'hello';
-        equal(hello.value, 'hello');
-        equal(undef.value, undefined);
+        expect(hello.value).toBe('hello');
+        expect(undef.value).toBe(undefined);
     });
     it('Value Update', function () {
         hello.value = 'hi';
-        equal(hello.value, 'hi');
+        expect(hello.value).toBe('hi');
         hello.value = undefined;
-        equal(hello.value, undefined);
+        expect(hello.value).toBe(undefined);
     });
     it('Subscription', function () {
         hello.value = 'hello';
         const helloWorld = state('');
         observe(hello, (val) => (helloWorld.value = val + ' world!'));
-        equal(helloWorld.value, 'hello world!');
+        expect(helloWorld.value).toBe('hello world!');
         hello.value = 'hi';
-        equal(helloWorld.value, 'hi world!');
+        expect(helloWorld.value).toBe('hi world!');
     });
 });
 
 describe('Observability', function () {
-    it('Observation', async function (done) {
+    it('Observation', function (done) {
         const hello = state('hello');
         hello.addListener((val) => {
-            equal(val, 'yes');
+            expect(val).toBe('yes');
             done();
         });
         hello.value = 'yes';
     });
-    it('Subscriber Update', async function (done) {
+    it('Subscriber Update', function (done) {
         const hello = state('hello');
         const helloMaster = state('');
         observe(hello, (val) => (helloMaster.value = val + ' master!'));
         helloMaster.addListener((val) => {
-            equal(val, 'yes master!');
+            expect(val).toBe('yes master!');
             done();
         });
         hello.value = 'yes';
     });
-    it('Immediate Observe', async function (done) {
+    it('Immediate Observe', function (done) {
         const hello = state('hello');
         observe(hello, (val) => {
-            equal(val, 'hello');
+            expect(val).toBe('hello');
             done();
         });
     });
-    it('Conditional Observe', async function (done) {
+    it('Conditional Observe', function (done) {
         const hello = state('hello');
         hello.addListener((val) => {
             if (val.length === 6) {
-                equal(val.length, 6);
+                expect(val.length).toBe(6);
                 done();
             }
         });
         hello.value = 'ninja';
         hello.value = 'hatori';
     });
-    it('On Equals', async function (done) {
+    it('On Equals', function (done) {
         const hello = state('hello');
         observe(hello, (val) => {
             if (val === 'hello') {
-                equal(val, 'hello');
+                expect(val).toBe('hello');
                 done();
             }
         });
@@ -78,23 +77,23 @@ describe('Observability', function () {
             obj.attr1 = val;
             obj.attr2 = val + ' world!';
         });
-        equal(obj.attr1, hello.value);
-        equal(obj.attr2, 'hello world!');
+        expect(obj.attr1).toBe(hello.value);
+        expect(obj.attr2).toBe('hello world!');
         hello.value = 'yahoo';
-        equal(obj.attr1, 'yahoo');
-        equal(obj.attr2, 'yahoo world!');
+        expect(obj.attr1).toBe('yahoo');
+        expect(obj.attr2).toBe('yahoo world!');
     });
     it('Unsubscribe', function () {
         const obj = { attr: 'jazzie' };
         const hello = state('hello');
         const sub = hello.addListener((val) => {
             obj.attr = val;
-            fail('State not unsubscribed');
+            throw Error('State not unsubscribed');
         });
         sub.unsub();
         hello.value = 'hi';
         hello.value = 'hatori';
-        notEqual(obj.attr, hello.value);
+        expect(obj.attr).not.toBe(hello.value);
     });
     it('Resubscribe', function () {
         let samp = '';
@@ -105,13 +104,13 @@ describe('Observability', function () {
         sub.unsub();
         sub.resub();
         hello.value = 'moola';
-        equal(samp, hello.value);
+        expect(samp).toBe(hello.value);
     });
     it('Old Value Checking', function () {
         const hello = state('hello');
         let prev = hello.value;
         hello.onChange((_next, oldValue) => {
-            equal(oldValue, prev);
+            expect(oldValue).toBe(prev);
         });
         hello.value = 'story';
         prev = hello.value;
@@ -125,10 +124,10 @@ describe('Observability', function () {
             }
         });
         a.value = 'mama';
-        equal(a.value, 'mama');
+        expect(a.value).toBe('mama');
         a.value = 'mamamia';
-        equal(a.value, 'mama');
+        expect(a.value).toBe('mama');
         a.value = 'papa';
-        equal(a.value, 'papa');
+        expect(a.value).toBe('papa');
     });
 });

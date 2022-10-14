@@ -1,4 +1,3 @@
-const { equal, fail, deepEqual } = require('assert');
 const { statelist, statemap } = require('../util/collection');
 
 const sum = (prev, next) => prev + next;
@@ -18,9 +17,9 @@ describe('State List', function () {
         for (let i = 0; i < array.length; i++) {
             list[i]++;
         }
-        equal(updateCounter, array.length);
-        equal(prevSum, [1, 2, 3, 4, 5].reduce(sum));
-        equal(nextSum, [2, 3, 4, 5, 6].reduce(sum));
+        expect(updateCounter).toBe(array.length);
+        expect(prevSum).toBe([1, 2, 3, 4, 5].reduce(sum));
+        expect(nextSum).toBe([2, 3, 4, 5, 6].reduce(sum));
     });
     describe('Delete', function () {
         // current value = [2, 3, 4, 5, 6]
@@ -33,25 +32,25 @@ describe('State List', function () {
         it('splice', function () {
             // aftermath [2, 5, 6] | spliced [3, 4]
             const spliced = list.splice(1, 2);
-            equal(spliced.length, 2);
-            deepEqual(spliced, [3, 4]);
+            expect(spliced.length).toBe(2);
+            expect(spliced).toEqual([3, 4]);
         });
         it('pop', function () {
             // aftermath [2, 5] | popped -> 6
             const popped = list.pop();
-            equal(popped, 6);
+            expect(popped).toBe(6);
         });
         it('shift', function () {
             // aftermath [5] | shifted -> 2
             const shifted = list.shift();
-            equal(shifted, 2);
+            expect(shifted).toBe(2);
         });
         it('aftermath', function () {
             // deleteds [2, 3, 4, 6]
-            equal(deleteCounter, 4);
-            equal(deleteSum, [2, 3, 4, 6].reduce(sum));
+            expect(deleteCounter).toBe(4);
+            expect(deleteSum).toBe([2, 3, 4, 6].reduce(sum));
             // current [5]
-            equal(list[0], 5);
+            expect(list[0]).toBe(5);
         });
     });
     describe('Insert', function () {
@@ -65,12 +64,12 @@ describe('State List', function () {
         it('push', function () {
             // aftermath [5, 1, 2] | newlength -> 3
             let newlength = list.push(1, 2);
-            equal(newlength, 3);
+            expect(newlength).toBe(3);
         });
         it('unshift', function () {
             // aftermath [3, 4, 5, 1, 2] | newlength -> 5
             newlength = list.unshift(3, 4);
-            equal(newlength, 5);
+            expect(newlength).toBe(5);
         });
         it('splice', function () {
             // aftermath [3, 4, 5, 6, 7, 1, 2]
@@ -79,9 +78,9 @@ describe('State List', function () {
         it('aftermath', function () {
             const expected = [3, 4, 5, 6, 7, 1, 2];
             const inserteds = [1, 2, 3, 4, 6, 7];
-            deepEqual(list.raw, expected);
-            equal(insertCounter, inserteds.length);
-            equal(insertSum, inserteds.reduce(sum));
+            expect(list.raw).toEqual(expected);
+            expect(insertCounter).toBe(inserteds.length);
+            expect(insertSum).toBe(inserteds.reduce(sum));
         });
     });
     describe('Unsubscribe', function () {
@@ -108,7 +107,7 @@ describe('State List', function () {
     });
     describe('Resubscribe', function () {
         const testlist = statelist([1, 2, 3, 4, 5]);
-        it('update', async function (done) {
+        it('update', function (done) {
             const updsubs = testlist.onUpdate(() => done());
             updsubs.unsub();
             updsubs.resub();
@@ -131,7 +130,7 @@ describe('State List', function () {
 
 describe('State Map', function () {
     const map = statemap({ a: 0 });
-    it('Update', async function (done) {
+    it('Update', function (done) {
         map.onUpdate((key, val) => {
             if (key === 'a' && val === 10) {
                 done();
@@ -139,7 +138,7 @@ describe('State Map', function () {
         });
         map.a = 10;
     });
-    it('Insert', async function (done) {
+    it('Insert', function (done) {
         map.onInsert((key, val) => {
             if (key === 'moo' && val === 20) {
                 done();
@@ -147,7 +146,7 @@ describe('State Map', function () {
         });
         map.moo = 20;
     });
-    it('Delete', async function (done) {
+    it('Delete', function (done) {
         map.onDelete((key, val) => {
             if (key === 'moo' && val === 20) {
                 done();
@@ -175,7 +174,7 @@ describe('State Map', function () {
     });
     describe('Resubscribe', function () {
         const testmap = statemap({ a: 0 });
-        it('update', async function (done) {
+        it('update', function (done) {
             const sub = testmap.onUpdate(() => done());
             sub.unsub();
             sub.resub();
