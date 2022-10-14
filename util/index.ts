@@ -4,11 +4,11 @@ import { State, ChangeHandler, StateSubscription } from '../state/State';
 export type MultiChangeHandler<T> = (values: T[]) => any;
 export type MultiStateSubscription<T> = Subscription<State<T>[], MultiChangeHandler<T>>;
 
-export interface StateValued<T> extends State<T> {
+export interface StateProxy<T> extends State<T> {
     value: T;
 }
 
-export function state<T>(initial: T): StateValued<T> {
+export function state<T>(initial: T): StateProxy<T> {
     const o = new State(initial);
     return Object.defineProperties(o, {
         value: {
@@ -19,7 +19,7 @@ export function state<T>(initial: T): StateValued<T> {
                 o.setValue(value);
             }
         }
-    }) as StateValued<T>;
+    }) as StateProxy<T>;
 }
 
 export function observe<T>(state: State<T>, handler: ChangeHandler<T>): StateSubscription<T> {
