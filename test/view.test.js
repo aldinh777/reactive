@@ -119,3 +119,87 @@ describe('Sorted State List', function () {
         expect(sorted.raw).toEqual([6, 5, 4, 1]);
     });
 });
+
+describe('Does it work with object?', function () {
+    const list = statelist([{ x: 1 }, { x: 5 }, { x: -2 }, { x: 4 }, { x: 3 }]);
+    // SIMPLY REPLACE OBJECT EVERY UPDATE
+    const mappedSimple = new ListViewMapped(list, (o) => ({ a: o.x }));
+    // MAP AND STORE VALUES BASED ON OBJECT REFFERENCE
+    const mappedObj = new ListViewMapped(
+        list,
+        (o) => ({ a: o.x }),
+        (i, e) => (e.a = i.x)
+    );
+    const filtered = new ListViewFiltered(list, (o) => o.x > 0);
+    const sorted = new ListViewSorted(list, (i, e) => i.x > e.x);
+    it('initialize flawlessly', function () {
+        expect(mappedSimple.raw).toEqual([{ a: 1 }, { a: 5 }, { a: -2 }, { a: 4 }, { a: 3 }]);
+        expect(mappedObj.raw).toEqual([{ a: 1 }, { a: 5 }, { a: -2 }, { a: 4 }, { a: 3 }]);
+        expect(filtered.raw).toEqual([{ x: 1 }, { x: 5 }, { x: 4 }, { x: 3 }]);
+        expect(sorted.raw).toEqual([{ x: 5 }, { x: 4 }, { x: 3 }, { x: 1 }, { x: -2 }]);
+    });
+    it('watch update flawlessly', function () {
+        list[0].x = -3;
+        // MUST TRIGGER MANUALLY!!!
+        list.trigger('set', 0, list[0], list[0]);
+        expect(mappedSimple.raw).toEqual([{ a: -3 }, { a: 5 }, { a: -2 }, { a: 4 }, { a: 3 }]);
+        expect(mappedObj.raw).toEqual([{ a: -3 }, { a: 5 }, { a: -2 }, { a: 4 }, { a: 3 }]);
+        expect(filtered.raw).toEqual([{ x: 5 }, { x: 4 }, { x: 3 }]);
+        expect(sorted.raw).toEqual([{ x: 5 }, { x: 4 }, { x: 3 }, { x: -2 }, { x: -3 }]);
+    });
+    it('watch object replace + ensure object mapper is work', function () {
+        const orig = list[3];
+        const osmap = mappedSimple.get(3);
+        const omap = mappedObj.get(3);
+        list[3] = { x: 6 };
+        expect(mappedSimple.raw).toEqual([{ a: -3 }, { a: 5 }, { a: -2 }, { a: 6 }, { a: 3 }]);
+        expect(mappedObj.raw).toEqual([{ a: -3 }, { a: 5 }, { a: -2 }, { a: 6 }, { a: 3 }]);
+        expect(filtered.raw).toEqual([{ x: 5 }, { x: 6 }, { x: 3 }]);
+        expect(sorted.raw).toEqual([{ x: 6 }, { x: 5 }, { x: 3 }, { x: -2 }, { x: -3 }]);
+        /**
+         * This is the difference between simple vs with obj mapper
+         *
+         * ListViewMapped with obj mapper will use previously stored value
+         * to not waste resource for recreating value each update or insert
+         *
+         * The problem however, when the object is removed from the list and
+         * is updated while not being observed, the previous object won't be
+         * up to date with current value, that's why remapper must be specified
+         * to ensure current value is up to date with actual object
+         */
+        orig.x = 9;
+        list[3] = orig;
+        expect(mappedSimple.raw).toEqual([{ a: -3 }, { a: 5 }, { a: -2 }, { a: 9 }, { a: 3 }]);
+        expect(mappedObj.raw).toEqual([{ a: -3 }, { a: 5 }, { a: -2 }, { a: 9 }, { a: 3 }]);
+        expect(filtered.raw).toEqual([{ x: 5 }, { x: 9 }, { x: 3 }]);
+        expect(sorted.raw).toEqual([{ x: 9 }, { x: 5 }, { x: 3 }, { x: -2 }, { x: -3 }]);
+        /**
+         * As seen here, mappedObj remember the previous value
+         * based on previous object stored while mappedSimple
+         * simply create new object regardless the object.
+         * Simple but a little costly
+         */
+        expect(mappedSimple.get(3)).not.toBe(osmap);
+        expect(mappedObj.get(3)).toBe(omap);
+    });
+    it('watch deleted without sweat', function () {
+        list.pop();
+        expect(mappedSimple.raw).toEqual([{ a: -3 }, { a: 5 }, { a: -2 }, { a: 9 }]);
+        expect(mappedObj.raw).toEqual([{ a: -3 }, { a: 5 }, { a: -2 }, { a: 9 }]);
+        expect(filtered.raw).toEqual([{ x: 5 }, { x: 9 }]);
+        expect(sorted.raw).toEqual([{ x: 9 }, { x: 5 }, { x: -2 }, { x: -3 }]);
+    });
+    it('watch inserted without effort', function () {
+        list.push({ x: 1_000_000 });
+        expect(mappedSimple.raw).toEqual([
+            { a: -3 },
+            { a: 5 },
+            { a: -2 },
+            { a: 9 },
+            { a: 1_000_000 }
+        ]);
+        expect(mappedObj.raw).toEqual([{ a: -3 }, { a: 5 }, { a: -2 }, { a: 9 }, { a: 1_000_000 }]);
+        expect(filtered.raw).toEqual([{ x: 5 }, { x: 9 }, { x: 1_000_000 }]);
+        expect(sorted.raw).toEqual([{ x: 1_000_000 }, { x: 9 }, { x: 5 }, { x: -2 }, { x: -3 }]);
+    });
+});
