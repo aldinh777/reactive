@@ -1,12 +1,11 @@
 import { StateList } from '../StateList';
+import { ListView } from './ListView';
 
-export class StateListMapped<S, T> extends StateList<T> {
-    private _list: StateList<S>;
+export class ListViewMapped<S, T> extends ListView<S, T> {
     private _map: (item: S) => T;
 
     constructor(list: StateList<S>, mapper: (item: S) => T) {
-        super(list.raw.map(mapper));
-        this._list = list;
+        super(list.raw.map(mapper), list);
         this._map = mapper;
         list.onUpdate((index, value) => {
             const mapped = this._map(value);

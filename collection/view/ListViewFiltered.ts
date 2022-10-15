@@ -1,13 +1,12 @@
 import { StateList } from '../StateList';
+import { ListView } from './ListView';
 
-export class StateListFiltered<T> extends StateList<T> {
-    private _list: StateList<T>;
+export class ListViewFiltered<T> extends ListView<T, T> {
     private _f: boolean[] = [];
     private _filter: (item: T) => boolean;
 
     constructor(list: StateList<T>, filter: (item: T) => boolean) {
-        super([]);
-        this._list = list;
+        super([], list);
         this._filter = filter;
         for (const item of list.raw) {
             const allow = filter(item);

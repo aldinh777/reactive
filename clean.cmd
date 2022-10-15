@@ -13,5 +13,5 @@ del state\*.js
 :: Collections
 del collection\*.d.ts
 del collection\*.js
-del collection\list\*.d.ts
-del collection\list\*.js
+del collection\view\*.d.ts
+del collection\view\*.js

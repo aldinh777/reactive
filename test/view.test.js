@@ -1,11 +1,11 @@
 const { statelist } = require('../util/collection');
-const { StateListMapped } = require('../collection/list/StateListMapped');
-const { StateListFiltered } = require('../collection/list/StateListFiltered');
-const { StateListSorted } = require('../collection/list/StateListSorted');
+const { ListViewMapped } = require('../collection/view/ListViewMapped');
+const { ListViewFiltered } = require('../collection/view/ListViewFiltered');
+const { ListViewSorted } = require('../collection/view/ListViewSorted');
 
 describe('Mapped State List', function () {
     const list = statelist([1, 2, 3, 4, 5]);
-    const mapped = new StateListMapped(list, (i) => i * 2);
+    const mapped = new ListViewMapped(list, (i) => i * 2);
     it('watch update', function () {
         list[1] = 10;
         expect(mapped.raw).toEqual([2, 20, 6, 8, 10]);
@@ -26,7 +26,7 @@ describe('Mapped State List', function () {
 
 describe('Filtered State List', function () {
     const list = statelist([1, -2, 3, 4, 5]);
-    const filtered = new StateListFiltered(list, (i) => i >= 0);
+    const filtered = new ListViewFiltered(list, (i) => i >= 0);
     const Y = true;
     const N = false;
     it('filtered correctly', function () {
@@ -90,7 +90,7 @@ describe('Filtered State List', function () {
 
 describe('Sorted State List', function () {
     const list = statelist([5, 1, 4, 2, 3]);
-    const sorted = new StateListSorted(list);
+    const sorted = new ListViewSorted(list);
     it('sorted correctly', function () {
         expect(sorted.raw).toEqual([1, 2, 3, 4, 5]);
     });
@@ -115,8 +115,6 @@ describe('Sorted State List', function () {
         expect(sorted.raw).toEqual([1, 4, 5, 6]);
     });
     it('replace sorter', function () {
-        sorted.onInsert((i, v) => console.log('insert', v, 'at', i));
-        sorted.onDelete((i, v) => console.log('delete', v, 'at', i));
         sorted.replaceSorter((i, e) => i > e);
         expect(sorted.raw).toEqual([6, 5, 4, 1]);
     });

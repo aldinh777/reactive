@@ -1,12 +1,11 @@
 import { StateList } from '../StateList';
+import { ListView } from './ListView';
 
-export class StateListSorted<T> extends StateList<T> {
-    private _list: StateList<T>;
+export class ListViewSorted<T> extends ListView<T, T> {
     private _sort: (item: T, compare: T) => boolean;
 
     constructor(list: StateList<T>, sorter?: (item: T, compare: T) => boolean) {
-        super([]);
-        this._list = list;
+        super([], list);
         this._sort = sorter || ((item, compare) => item < compare);
         for (const item of list.raw) {
             this.insertItem(this.raw, item);
