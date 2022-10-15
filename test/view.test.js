@@ -1,11 +1,9 @@
 const { statelist } = require('../util/collection');
-const { ListViewMapped } = require('../collection/view/ListViewMapped');
-const { ListViewFiltered } = require('../collection/view/ListViewFiltered');
-const { ListViewSorted } = require('../collection/view/ListViewSorted');
+const { filterview, mapview, sortview } = require('../util/view');
 
 describe('Mapped State List', function () {
     const list = statelist([1, 2, 3, 4, 5]);
-    const mapped = new ListViewMapped(list, (i) => i * 2);
+    const mapped = mapview(list, (i) => i * 2);
     it('watch update', function () {
         list[1] = 10;
         expect(mapped.raw).toEqual([2, 20, 6, 8, 10]);
@@ -26,7 +24,7 @@ describe('Mapped State List', function () {
 
 describe('Filtered State List', function () {
     const list = statelist([1, -2, 3, 4, 5]);
-    const filtered = new ListViewFiltered(list, (i) => i >= 0);
+    const filtered = filterview(list, (i) => i >= 0);
     const Y = true;
     const N = false;
     it('filtered correctly', function () {
@@ -90,7 +88,7 @@ describe('Filtered State List', function () {
 
 describe('Sorted State List', function () {
     const list = statelist([5, 1, 4, 2, 3]);
-    const sorted = new ListViewSorted(list);
+    const sorted = sortview(list);
     it('sorted correctly', function () {
         expect(sorted.raw).toEqual([1, 2, 3, 4, 5]);
     });
@@ -123,15 +121,15 @@ describe('Sorted State List', function () {
 describe('Does it work with object?', function () {
     const list = statelist([{ x: 1 }, { x: 5 }, { x: -2 }, { x: 4 }, { x: 3 }]);
     // SIMPLY REPLACE OBJECT EVERY UPDATE
-    const mappedSimple = new ListViewMapped(list, (o) => ({ a: o.x }));
+    const mappedSimple = mapview(list, (o) => ({ a: o.x }));
     // MAP AND STORE VALUES BASED ON OBJECT REFFERENCE
-    const mappedObj = new ListViewMapped(
+    const mappedObj = mapview(
         list,
         (o) => ({ a: o.x }),
         (i, e) => (e.a = i.x)
     );
-    const filtered = new ListViewFiltered(list, (o) => o.x > 0);
-    const sorted = new ListViewSorted(list, (i, e) => i.x > e.x);
+    const filtered = filterview(list, (o) => o.x > 0);
+    const sorted = sortview(list, (i, e) => i.x > e.x);
     it('initialize flawlessly', function () {
         expect(mappedSimple.raw).toEqual([{ a: 1 }, { a: 5 }, { a: -2 }, { a: 4 }, { a: 3 }]);
         expect(mappedObj.raw).toEqual([{ a: 1 }, { a: 5 }, { a: -2 }, { a: 4 }, { a: 3 }]);
