@@ -114,4 +114,10 @@ describe('Sorted State List', function () {
         list.splice(2, 3);
         expect(sorted.raw).toEqual([1, 4, 5, 6]);
     });
+    it('replace sorter', function () {
+        sorted.onInsert((i, v) => console.log('insert', v, 'at', i));
+        sorted.onDelete((i, v) => console.log('delete', v, 'at', i));
+        sorted.replaceSorter((i, e) => i > e);
+        expect(sorted.raw).toEqual([6, 5, 4, 1]);
+    });
 });
