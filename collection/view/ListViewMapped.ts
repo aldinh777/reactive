@@ -17,8 +17,10 @@ export class ListViewMapped<S, T> extends ListView<S, T> {
             const replace = prev === value;
             const mapped = this.mapItem(value, replace);
             const before = this.raw[index];
-            this.raw[index] = mapped;
-            this.trigger('set', index, mapped, before);
+            if (mapped !== before) {
+                this.raw[index] = mapped;
+                this.trigger('set', index, mapped, before);
+            }
         });
         list.onInsert((index, value) => {
             const mapped = this.mapItem(value, false);
