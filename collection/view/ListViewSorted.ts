@@ -5,7 +5,7 @@ export class ListViewSorted<T> extends ListView<T, T> {
     private _sort: (item: T, compare: T) => boolean;
 
     constructor(list: StateList<T>, sorter?: (item: T, compare: T) => boolean) {
-        super([], list);
+        super(list);
         this._sort = sorter || ((item, compare) => item < compare);
         for (const item of list.raw) {
             this.insertItem(this.raw, item);

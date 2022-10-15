@@ -6,7 +6,7 @@ export class ListViewFiltered<T> extends ListView<T, T> {
     private _filter: (item: T) => boolean;
 
     constructor(list: StateList<T>, filter: (item: T) => boolean) {
-        super([], list);
+        super(list);
         this._filter = filter;
         for (const item of list.raw) {
             const allow = filter(item);

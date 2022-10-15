@@ -7,7 +7,7 @@ export class ListViewMapped<S, T> extends ListView<S, T> {
     private _map: (item: S) => T;
 
     constructor(list: StateList<S>, mapper: (item: S) => T, remap?: (item: S, elem: T) => void) {
-        super([], list);
+        super(list);
         this._map = mapper;
         this._remap = remap;
         for (const item of list.raw) {

@@ -9,8 +9,8 @@ import { StateList } from '../StateList';
 export abstract class ListView<S, T> extends StateList<T> {
     protected _list: StateList<S>;
 
-    constructor(initial: T[], list: StateList<S>) {
-        super(initial);
+    constructor(list: StateList<S>) {
+        super([]);
         this._list = list;
     }
 }
