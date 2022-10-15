@@ -40,14 +40,17 @@ export function observeAll<T>(
     return createMultiSubscriptions(states, handler, subscriptions);
 }
 
-export function stateObserve<T, U>(st: State<T>, handler: (value: T) => U): State<U> {
-    const o: State<any> = state(undefined);
+export function stateObserve<T, U>(st: State<T>, handler: (value: T) => U): StateProxy<U> {
+    const o: StateProxy<any> = state(undefined);
     observe(st, (value) => o.setValue(handler(value)));
     return o;
 }
 
-export function stateObserveAll<T, U>(states: State<T>[], handler: (values: T[]) => U): State<U> {
-    const o: State<any> = state(undefined);
+export function stateObserveAll<T, U>(
+    states: State<T>[],
+    handler: (values: T[]) => U
+): StateProxy<U> {
+    const o: StateProxy<any> = state(undefined);
     observeAll(states, (values) => o.setValue(handler(values)));
     return o;
 }
