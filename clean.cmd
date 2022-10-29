@@ -1,10 +1,8 @@
 @echo off
 
-:: Utils
-del util\*.d.ts
-del util\*.js
-del util\collection\*.d.ts
-del util\collection\*.js
+:: Helper
+del helper\*.d.ts
+del helper\*.js
 
 :: State
 del state\*.d.ts
