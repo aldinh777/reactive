@@ -18,7 +18,7 @@ export function removeFromArray<T>(elem: T, array: T[]): void {
  * @param array array to be pushed
  */
 export function pushNonExists<T>(elem: T, array: T[]): void {
-    if (!array.includes(elem)) {
+    if (array.indexOf(elem) === -1) {
         array.push(elem);
     }
 }
