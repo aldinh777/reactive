@@ -47,12 +47,13 @@ export class ListViewMapped<S, T> extends ListView<S, T> {
         if (!(this._remap && typeof item === 'object')) {
             return this._map(item);
         }
-        if (replace) {
-            const mapped = this._map(item);
-            this._om.set(item, mapped);
-            return mapped;
+        if (!replace && this._om.has(item)) {
+            const elem = this._om.get(item);
+            this._remap(item, elem);
+            return elem;
         }
-        const elem = this._om.get(item);
-        return this._remap(item, elem) || elem;
+        const mapped = this._map(item);
+        this._om.set(item, mapped);
+        return mapped;
     }
 }
