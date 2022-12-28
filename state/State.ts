@@ -8,7 +8,6 @@ export class State<T> {
     private _upd: UpdateListener<T>[] = [];
     private _val: T;
     private _lock: boolean = false;
-    private _next!: T;
 
     constructor(initial: T) {
         this._val = initial;
@@ -17,20 +16,15 @@ export class State<T> {
         return this._val;
     }
     setValue(value: T) {
-        this._next = value;
-        if (!this._lock) {
-            this._next = value;
-            do {
-                const next = this._next;
-                this._lock = true;
-                this._val = next;
-                for (const listener of this._upd) {
-                    listener(next);
-                    if (!this._lock) {
-                        break;
-                    }
+        this._val = value;
+        while (!this._lock) {
+            this._lock = true;
+            for (const listener of this._upd) {
+                listener(this._val);
+                if (!this._lock) {
+                    break;
                 }
-            } while (!this._lock);
+            }
         }
         this._lock = false;
     }

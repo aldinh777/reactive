@@ -6,14 +6,10 @@ export class MutableStateMap<T>
     implements MutableStateCollection<string, T, Map<string, T>>
 {
     set(key: string, value: T): this {
-        if (this.raw.has(key)) {
-            const prev = this.raw.get(key);
-            this.raw.set(key, value);
-            this.trigger('set', key, value, prev);
-        } else {
-            this.raw.set(key, value);
-            this.trigger('ins', key, value);
-        }
+        const triggerStatus = this.raw.has(key) ? 'set' : 'ins';
+        const prev = this.raw.get(key);
+        this.raw.set(key, value);
+        this.trigger(triggerStatus, key, value, prev);
         return this;
     }
     clear(): void {

@@ -8,25 +8,23 @@ export class ListViewFiltered<T> extends ListView<T, T> {
     constructor(list: StateList<T>, filter: (item: T) => boolean) {
         super(list);
         this._filter = filter;
-        for (const item of list.raw) {
-            const allow = filter(item);
-            this._f.push(allow);
-            if (allow) {
-                this.raw.push(item);
+        this._f = list.raw.map(filter);
+        for (let i = 0; i < list.raw.length; i++) {
+            if (this._f[i]) {
+                this.raw.push(list.raw[i]);
             }
         }
         list.onUpdate((index, value, prev) => {
-            const allow = this._filter(value);
-            if (this._f[index]) {
-                if (allow) {
-                    this.updateFiltered(index, value, prev);
+            const allowAfter = this._filter(value);
+            if (this._f[index] !== allowAfter) {
+                this._f[index] = allowAfter;
+                if (allowAfter) {
+                    this.insertFiltered(index, value);
                 } else {
-                    this._f[index] = false;
                     this.deleteFiltered(index, value);
                 }
-            } else if (allow) {
-                this._f[index] = true;
-                this.insertFiltered(index, value);
+            } else if (allowAfter) {
+                this.updateFiltered(index, value, prev);
             }
         });
         list.onInsert((index, value) => {
@@ -37,8 +35,7 @@ export class ListViewFiltered<T> extends ListView<T, T> {
             }
         });
         list.onDelete((index, value) => {
-            const allow = this._f[index];
-            if (allow) {
+            if (this._f[index]) {
                 this.deleteFiltered(index, value);
             }
             this._f.splice(index, 1);
@@ -46,13 +43,15 @@ export class ListViewFiltered<T> extends ListView<T, T> {
     }
     replaceFilter(filter: (item: T) => boolean): void {
         this._filter = filter;
-        const f = this._list.raw.map(filter);
+        const next_f = this._list.raw.map(filter);
         let currentIndex = 0;
-        for (let i = 0; i < f.length; i++) {
-            const prevAllow = this._f[i];
-            const nextAllow = f[i];
-            if (prevAllow) {
-                if (nextAllow) {
+        for (let i = 0; i < next_f.length; i++) {
+            const allowNext = next_f[i];
+            if (this._f[i] !== allowNext) {
+                if (allowNext) {
+                    const inserted = this._list.raw[i];
+                    this.raw.splice(currentIndex, 0, inserted);
+                    this.trigger('ins', currentIndex, inserted);
                     currentIndex++;
                 } else {
                     const deleted = this.raw[currentIndex];
@@ -60,14 +59,11 @@ export class ListViewFiltered<T> extends ListView<T, T> {
                     this.trigger('del', currentIndex, deleted);
                     currentIndex = currentIndex && currentIndex - 1;
                 }
-            } else if (nextAllow) {
-                const inserted = this._list.raw[i];
-                this.raw.splice(currentIndex, 0, inserted);
-                this.trigger('ins', currentIndex, inserted);
+            } else if (allowNext) {
                 currentIndex++;
             }
         }
-        this._f = f;
+        this._f = next_f;
     }
     private updateFiltered(index: number, value: T, prev: T): void {
         const fIndex = this.findFilteredIndex(index);

@@ -2,7 +2,7 @@ import { StateList } from '../StateList';
 import { ListView } from './ListView';
 
 export class ListViewMapped<S, T> extends ListView<S, T> {
-    private _remap?: (item: S, elem: T) => void;
+    private _remap?: (item: S, elem: T) => void | T;
     private _om: WeakMap<object, T> = new WeakMap();
     private _map: (item: S) => T;
 
@@ -11,11 +11,10 @@ export class ListViewMapped<S, T> extends ListView<S, T> {
         this._map = mapper;
         this._remap = remap;
         for (const item of list.raw) {
-            this.raw.push(this.mapItem(item, true));
+            this.raw.push(this.mapItem(item));
         }
         list.onUpdate((index, value, prev) => {
-            const replace = prev === value;
-            const mapped = this.mapItem(value, replace);
+            const mapped = this.mapItem(value, prev === value);
             const before = this.raw[index];
             if (mapped !== before) {
                 this.raw[index] = mapped;
@@ -39,24 +38,21 @@ export class ListViewMapped<S, T> extends ListView<S, T> {
         for (let i = 0; i < this._list.raw.length; i++) {
             const item = this._list.raw[i];
             const prev = this.raw[i];
-            const value = this.mapItem(item, true);
+            const value = this.mapItem(item);
             this.raw[i] = value;
             this.trigger('set', i, value, prev);
         }
     }
-    private mapItem(item: any, replace: boolean): T {
-        if (this._remap && typeof item === 'object') {
-            if (!replace) {
-                const elem = this._om.get(item);
-                if (elem) {
-                    this._remap(item, elem);
-                    return elem;
-                }
-            }
+    private mapItem(item: any, replace: boolean = true): T {
+        if (!(this._remap && typeof item === 'object')) {
+            return this._map(item);
+        }
+        if (replace) {
             const mapped = this._map(item);
             this._om.set(item, mapped);
             return mapped;
         }
-        return this._map(item);
+        const elem = this._om.get(item);
+        return this._remap(item, elem) || elem;
     }
 }
