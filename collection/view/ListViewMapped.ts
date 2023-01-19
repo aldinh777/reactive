@@ -43,7 +43,7 @@ export class ListViewMapped<S, T> extends ListView<S, T> {
             this.trigger('set', i, value, prev);
         }
     }
-    private mapItem(item: any, replace: boolean = true): T {
+    private mapItem(item: S, replace: boolean = true): T {
         if (!(this._remap && typeof item === 'object')) {
             return this._map(item);
         }
