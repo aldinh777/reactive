@@ -51,12 +51,12 @@ export class ListViewFiltered<T> extends ListView<T, T> {
                 if (allowNext) {
                     const inserted = this._list.raw[i];
                     this.raw.splice(currentIndex, 0, inserted);
-                    this.trigger('ins', currentIndex, inserted);
+                    this.trigger('+', currentIndex, inserted);
                     currentIndex++;
                 } else {
                     const deleted = this.raw[currentIndex];
                     this.raw.splice(currentIndex, 1);
-                    this.trigger('del', currentIndex, deleted);
+                    this.trigger('-', currentIndex, deleted);
                     currentIndex = currentIndex && currentIndex - 1;
                 }
             } else if (allowNext) {
@@ -68,18 +68,18 @@ export class ListViewFiltered<T> extends ListView<T, T> {
     private updateFiltered(index: number, value: T, prev: T): void {
         const fIndex = this.findFilteredIndex(index);
         this.raw[fIndex] = value;
-        this.trigger('set', fIndex, value, prev);
+        this.trigger('=', fIndex, value, prev);
     }
     private insertFiltered(index: number, value: T): void {
         const fIndex = this.findFilteredIndex(index);
         this.raw.splice(fIndex, 0, value);
-        this.trigger('ins', fIndex, value);
+        this.trigger('+', fIndex, value);
     }
     private deleteFiltered(index: number, value: T): void {
         const fIndex = this.findFilteredIndex(index);
         const prev = this.raw[fIndex];
         this.raw.splice(fIndex, 1);
-        this.trigger('del', fIndex, prev);
+        this.trigger('-', fIndex, prev);
     }
     private findFilteredIndex(sourceIndex: number): number {
         let filteredIndex = 0;

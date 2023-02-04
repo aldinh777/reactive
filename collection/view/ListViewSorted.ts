@@ -16,22 +16,22 @@ export class ListViewSorted<T> extends ListView<T, T> {
                 this.raw.splice(prevIndex, 1);
                 const nextIndex = this.insertItem(this.raw, value);
                 if (prevIndex === nextIndex) {
-                    this.trigger('set', nextIndex, value, prev);
+                    this.trigger('=', nextIndex, value, prev);
                 } else {
-                    this.trigger('del', prevIndex, prev);
-                    this.trigger('ins', nextIndex, value);
+                    this.trigger('-', prevIndex, prev);
+                    this.trigger('+', nextIndex, value);
                 }
             }
         });
         list.onInsert((_, value) => {
             const insertIndex = this.insertItem(this.raw, value);
-            this.trigger('ins', insertIndex, value);
+            this.trigger('+', insertIndex, value);
         });
         list.onDelete((_, value) => {
             const index = this.raw.indexOf(value);
             if (index !== -1) {
                 this.raw.splice(index, 1);
-                this.trigger('del', index, value);
+                this.trigger('-', index, value);
             }
         });
     }
@@ -48,9 +48,9 @@ export class ListViewSorted<T> extends ListView<T, T> {
                 const deleteIndex = this.raw.indexOf(item);
                 const swap = this.raw[deleteIndex];
                 this.raw.splice(deleteIndex, 1);
-                this.trigger('del', deleteIndex, swap);
+                this.trigger('-', deleteIndex, swap);
                 this.raw.splice(i, 0, swap);
-                this.trigger('ins', i, swap);
+                this.trigger('+', i, swap);
             }
         }
     }

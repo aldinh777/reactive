@@ -11,5 +11,8 @@
   "license": "MIT",
   "devDependencies": {
     "typescript": "^4.8.4"
+  },
+  "dependencies": {
+    "@aldinh777/toolbox": "^1.0.0"
   }
 }

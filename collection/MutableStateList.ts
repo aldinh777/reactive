@@ -11,7 +11,7 @@ export class MutableStateList<T>
             return this;
         }
         this.raw[index] = value;
-        this.trigger('set', index, value, previous);
+        this.trigger('=', index, value, previous);
         return this;
     }
     push(...items: T[]): number {
@@ -31,10 +31,10 @@ export class MutableStateList<T>
     splice(start: number, deleteCount: number = 0, ...items: T[]): T[] {
         const deletedItems = this.raw.splice(start, deleteCount, ...items);
         for (const deleted of deletedItems) {
-            this.trigger('del', start, deleted);
+            this.trigger('-', start, deleted);
         }
         for (let i = 0; i < items.length; i++) {
-            this.trigger('ins', start + i, items[i]);
+            this.trigger('+', start + i, items[i]);
         }
         return deletedItems;
     }

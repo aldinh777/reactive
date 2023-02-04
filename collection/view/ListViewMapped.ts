@@ -18,18 +18,18 @@ export class ListViewMapped<S, T> extends ListView<S, T> {
             const before = this.raw[index];
             if (mapped !== before) {
                 this.raw[index] = mapped;
-                this.trigger('set', index, mapped, before);
+                this.trigger('=', index, mapped, before);
             }
         });
         list.onInsert((index, value) => {
             const mapped = this.mapItem(value, false);
             this.raw.splice(index, 0, mapped);
-            this.trigger('ins', index, mapped);
+            this.trigger('+', index, mapped);
         });
         list.onDelete((index) => {
             const value = this.raw[index];
             this.raw.splice(index, 1);
-            this.trigger('del', index, value);
+            this.trigger('-', index, value);
         });
     }
     replaceMapper(mapper: (item: S) => T): void {
@@ -40,7 +40,7 @@ export class ListViewMapped<S, T> extends ListView<S, T> {
             const prev = this.raw[i];
             const value = this.mapItem(item);
             this.raw[i] = value;
-            this.trigger('set', i, value, prev);
+            this.trigger('=', i, value, prev);
         }
     }
     private mapItem(item: S, replace: boolean = true): T {

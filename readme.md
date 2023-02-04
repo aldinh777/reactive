@@ -58,9 +58,9 @@ a = 15 // A is GREATER THAN 10
 This is how we obtain the same effect in this library
 
 ```js
-const { state } = require('@aldinh777/reactive');
+const { State } = require('@aldinh777/reactive');
 
-const a = state(5);
+const a = new State(5);
 a.onChange(val => {
     if (val > 10) {
         console.log('A is GREATER THAN 10');

@@ -1,6 +1,6 @@
 import { createSubscription, Subscription } from '../helper/subscription-helper';
 
-export type Operation = 'ins' | 'del' | 'set';
+export type Operation = '+' | '-' | '=';
 
 export type OperationHandler<K, V> = (index: K, value: V, ...rest: any[]) => any;
 export type OperationListeners<K, V> = {
@@ -15,7 +15,7 @@ export type OperationListeners<K, V> = {
  * - R -> Raw Collection Type: (ex. string[], Map<string, string>).
  */
 export abstract class StateCollection<K, V, R> {
-    protected _upd: OperationListeners<K, V> = { ins: [], del: [], set: [] };
+    protected _upd: OperationListeners<K, V> = { ['+']: [], ['-']: [], ['=']: [] };
     raw!: R;
 
     abstract get(index: K): V | undefined;
@@ -28,17 +28,17 @@ export abstract class StateCollection<K, V, R> {
     onUpdate(
         listener: OperationHandler<K, V>
     ): Subscription<StateCollection<K, V, R>, OperationHandler<K, V>> {
-        return createSubscription(this, listener, this._upd.set || []);
+        return createSubscription(this, listener, this._upd['='] || []);
     }
     onInsert(
         listener: OperationHandler<K, V>
     ): Subscription<StateCollection<K, V, R>, OperationHandler<K, V>> {
-        return createSubscription(this, listener, this._upd.ins || []);
+        return createSubscription(this, listener, this._upd['+'] || []);
     }
     onDelete(
         listener: OperationHandler<K, V>
     ): Subscription<StateCollection<K, V, R>, OperationHandler<K, V>> {
-        return createSubscription(this, listener, this._upd.del || []);
+        return createSubscription(this, listener, this._upd['-'] || []);
     }
 }
 

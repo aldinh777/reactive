@@ -6,7 +6,7 @@ export class MutableStateMap<T>
     implements MutableStateCollection<string, T, Map<string, T>>
 {
     set(key: string, value: T): this {
-        const triggerStatus = this.raw.has(key) ? 'set' : 'ins';
+        const triggerStatus = this.raw.has(key) ? '=' : '+';
         const prev = this.raw.get(key);
         this.raw.set(key, value);
         this.trigger(triggerStatus, key, value, prev);
@@ -16,14 +16,14 @@ export class MutableStateMap<T>
         const items = Array.from(this.raw.entries());
         this.raw.clear();
         for (const [key, deleted] of items) {
-            this.trigger('del', key, deleted);
+            this.trigger('-', key, deleted);
         }
     }
     delete(key: string): boolean {
         const item = this.raw.get(key);
         const result = this.raw.delete(key);
         if (result) {
-            this.trigger('del', key, item as T);
+            this.trigger('-', key, item as T);
         }
         return result;
     }

@@ -1,4 +1,4 @@
-import { pushNonExists, removeFromArray } from './array-helper';
+import { pushNonExists, removeFromArray } from '@aldinh777/toolbox/array/operation';
 
 /** Object That store subscriptions information */
 export interface Subscription<S, T> {
@@ -21,15 +21,15 @@ export interface Subscription<S, T> {
  * @returns object literals that store subscription informations
  */
 export function createSubscription<T, L>(target: T, listener: L, array: L[]): Subscription<T, L> {
-    pushNonExists(listener, array);
+    pushNonExists(array, listener);
     return {
         target: target,
         listener: listener,
         unsub() {
-            removeFromArray(listener, array);
+            removeFromArray(array, listener);
         },
         resub() {
-            pushNonExists(listener, array);
+            pushNonExists(array, listener);
         }
     };
 }
