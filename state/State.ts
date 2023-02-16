@@ -4,7 +4,7 @@ export type UpdateListener<T> = (value: T) => any;
 export type ChangeHandler<T> = (next: T, previous: T) => any;
 export type StateSubscription<T> = Subscription<State<T>, UpdateListener<T>>;
 
-export class State<T> {
+export class State<T = unknown> {
     /** List of active update listeners */
     private _upd: UpdateListener<T>[] = [];
     /** The actual value being stored */
@@ -21,7 +21,7 @@ export class State<T> {
      */
     private _hlock: boolean = false;
 
-    constructor(initial: T) {
+    constructor(initial?: T) {
         this._val = initial;
     }
     getValue(): T {

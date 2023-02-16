@@ -4,7 +4,7 @@ export interface StateMapObject<T> {
     [key: string]: T;
 }
 
-export class StateMap<T> extends StateCollection<string, T, Map<string, T>> {
+export class StateMap<T = unknown> extends StateCollection<string, T, Map<string, T>> {
     constructor(initial: StateMapObject<T> | Map<string, T> = new Map()) {
         super();
         const isMapObject = initial instanceof Map;
