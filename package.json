@@ -13,6 +13,6 @@
     "typescript": "^4.8.4"
   },
   "dependencies": {
-    "@aldinh777/toolbox": "^1.2.0"
+    "@aldinh777/toolbox": "^1.2.1"
   }
 }
