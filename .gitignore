@@ -4,4 +4,3 @@ collection/**/*.js
 state/**/*.js
 util/**/*.js
 helper/**/*.js
-debug
