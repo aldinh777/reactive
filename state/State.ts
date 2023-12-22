@@ -4,7 +4,7 @@ export type UpdateListener<T> = (value: T) => any;
 export type ChangeHandler<T> = (next: T, previous: T) => any;
 export type StateSubscription<T> = Subscription<State<T>, UpdateListener<T>>;
 
-export class State<T = unknown> {
+export class State<T = any> {
     /** List of active update listeners */
     private _upd: UpdateListener<T>[] = [];
     /** The actual value being stored */

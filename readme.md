@@ -2,7 +2,7 @@
 Another attempt to implement Reactive Programming with Javascript
 
 ## Why?
-> Because Reactive Programming is Just cool!
+> Because reactive programming is just amazing!
 
 ## Guide
 ### Data Binding
@@ -19,15 +19,15 @@ In your usual Procedural Programming, changing the value of `a` won't affect the
 This is how we do it in this library
 
 ```js
-const { state, observe } = require('@aldinh777/reactive');
+const { State } = require('@aldinh777/reactive');
 
-const a = state(5);
-const b = state(0);
-observe(a, val => b.value = val + 1)
+const a = new State(5);
+const b = new State(0);
+a.onChange(val => b.setValue(val + 1))
 
-console.log(b.value); // 6
+console.log(b.getValue()); // 6
 a.value = 10;
-console.log(b.value); // 11
+console.log(b.getValue()); // 11
 ```
 ### Observability
 Let say we want to check if a variable is greater than 10
@@ -74,5 +74,3 @@ a.value = 15 // A is GREATER THAN 10
 
 ### That's it! for now
 That was basically the main idea of this library
-
-Previous version actually have too many functionality such as acquiring the old value a reactive, update cancellation, and reactive collections. However, all of them doesn't feel necessary, so i trimmed as many as i can and this is the result.
