@@ -1,6 +1,6 @@
 import { StateCollection } from './StateCollection';
 
-export abstract class StateList<T = unknown> extends StateCollection<number, T, T[]> {
+export abstract class StateList<T = any> extends StateCollection<number, T, T[]> {
     constructor(initial: T[] = []) {
         super();
         this.raw = initial;
