@@ -3,7 +3,6 @@
     "declaration": true,
     "module": "ESNext",
     "target": "ES6",
-    "removeComments": true,
     "moduleResolution": "Node"
   },
   "include": [
