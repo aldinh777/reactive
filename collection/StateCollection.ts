@@ -1,8 +1,8 @@
-import { createSubscription, Subscription } from '../helper/subscription-helper';
+import { subscribe, Subscription } from '../helper/subscription-helper';
 
 export type Operation = '+' | '-' | '=';
 
-export type OperationHandler<K, V> = (index: K, value: V, ...rest: any[]) => any;
+export type OperationHandler<K, V> = (index: K, value: V, prev: V) => any;
 export type OperationListeners<K, V> = {
     [op in Operation]: OperationHandler<K, V>[];
 };
@@ -15,30 +15,24 @@ export type OperationListeners<K, V> = {
  * - R -> Raw Collection Type: (ex. string[], Map<string, string>).
  */
 export abstract class StateCollection<K, V, R> {
-    protected _upd: OperationListeners<K, V> = { ['+']: [], ['-']: [], ['=']: [] };
+    protected _upd: OperationListeners<K, V> = { '+': [], '-': [], '=': [] };
     raw!: R;
 
     abstract get(index: K): V | undefined;
-    trigger(op: Operation, index: K, value: V, ...rest: any[]): void {
+    trigger(op: Operation, index: K, value: V, updated?: V): void {
         const handlers = this._upd[op];
         for (const handle of handlers || []) {
-            handle(index, value, ...rest);
+            handle(index, value, updated);
         }
     }
-    onUpdate(
-        listener: OperationHandler<K, V>
-    ): Subscription<StateCollection<K, V, R>, OperationHandler<K, V>> {
-        return createSubscription(this, listener, this._upd['='] || []);
+    onUpdate(listener: OperationHandler<K, V>): Subscription {
+        return subscribe(listener, this._upd['='] || []);
     }
-    onInsert(
-        listener: OperationHandler<K, V>
-    ): Subscription<StateCollection<K, V, R>, OperationHandler<K, V>> {
-        return createSubscription(this, listener, this._upd['+'] || []);
+    onInsert(listener: OperationHandler<K, V>): Subscription {
+        return subscribe(listener, this._upd['+'] || []);
     }
-    onDelete(
-        listener: OperationHandler<K, V>
-    ): Subscription<StateCollection<K, V, R>, OperationHandler<K, V>> {
-        return createSubscription(this, listener, this._upd['-'] || []);
+    onDelete(listener: OperationHandler<K, V>): Subscription {
+        return subscribe(listener, this._upd['-'] || []);
     }
 }
 
