@@ -1,15 +1,11 @@
 import { pushNonExists, removeFromArray } from '@aldinh777/toolbox/array/operation';
 
 /** Object That store subscriptions information */
-export interface Subscription<S, T> {
-    /** observed item */
-    target: S;
-    /** listener that listen when update happen */
-    listener: T;
+export interface Subscription {
     /** disable listener to watch update */
-    unsub(): any;
+    unsubscribe(): void;
     /** reenable listener to watch update */
-    resub(): any;
+    resubscribe(): void;
 }
 
 /**
@@ -20,15 +16,13 @@ export interface Subscription<S, T> {
  * @param array array that stores listeners
  * @returns object literals that store subscription informations
  */
-export function createSubscription<T, L>(target: T, listener: L, array: L[]): Subscription<T, L> {
+export function subscribe<L>(listener: L, array: L[]): Subscription {
     pushNonExists(array, listener);
     return {
-        target: target,
-        listener: listener,
-        unsub() {
+        unsubscribe() {
             removeFromArray(array, listener);
         },
-        resub() {
+        resubscribe() {
             pushNonExists(array, listener);
         }
     };
@@ -42,22 +36,16 @@ export function createSubscription<T, L>(target: T, listener: L, array: L[]): Su
  * @param subscriptions subscriptions to be handled
  * @returns object literals that store subscription information
  */
-export function createMultiSubscriptions<T, L, S extends Subscription<any, any>>(
-    target: T,
-    listener: L,
-    subscriptions: S[]
-): Subscription<T, L> {
+export function subscribeAll<S extends Subscription>(subscriptions: S[]): Subscription {
     return {
-        target: target,
-        listener: listener,
-        unsub() {
+        unsubscribe() {
             for (const sub of subscriptions) {
-                sub.unsub();
+                sub.unsubscribe();
             }
         },
-        resub() {
+        resubscribe() {
             for (const sub of subscriptions) {
-                sub.resub();
+                sub.resubscribe();
             }
         }
     };

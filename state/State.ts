@@ -1,8 +1,7 @@
-import { createSubscription, Subscription } from '../helper/subscription-helper';
+import { subscribe, Subscription } from '../helper/subscription-helper';
 
 export type UpdateListener<T> = (value: T) => any;
 export type ChangeHandler<T> = (next: T, previous: T) => any;
-export type StateSubscription<T> = Subscription<State<T>, UpdateListener<T>>;
 
 export class State<T = any> {
     /** List of active update listeners */
@@ -44,11 +43,11 @@ export class State<T = any> {
         this._ulock = this._hlock;
     }
     /** Add listener to be called when the value are updated */
-    addListener(listener: UpdateListener<T>): StateSubscription<T> {
-        return createSubscription(this, listener, this._upd);
+    addListener(listener: UpdateListener<T>): Subscription {
+        return subscribe(listener, this._upd);
     }
     /** Add listener to be called only when the value are changed */
-    onChange(handler: ChangeHandler<T>): StateSubscription<T> {
+    onChange(handler: ChangeHandler<T>): Subscription {
         let oldValue = this.getValue();
         return this.addListener((value) => {
             if (value !== oldValue) {
