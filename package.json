@@ -1,6 +1,6 @@
 {
   "name": "@aldinh777/reactive",
-  "version": "0.28.11",
+  "version": "0.29.0",
   "description": "another attempt to Reactive programming",
   "main": "state/State.js",
   "types": "state/State.d.ts",
