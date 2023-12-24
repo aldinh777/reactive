@@ -1,10 +1,10 @@
 import { Watchable, watchify } from '../helper/collection';
 
-export interface StateMapObject<T> {
+export interface DictObject<T> {
     [key: string]: T;
 }
 
-interface RDict<T> extends Watchable<string, T> {
+export interface RDict<T> extends Watchable<string, T> {
     (): T[];
     (key: string): T;
     (key: string, value: T): RDict<T>;
@@ -12,7 +12,7 @@ interface RDict<T> extends Watchable<string, T> {
     clear(): void;
 }
 
-export function dict<T>(initial: StateMapObject<T> | Map<string, T> = new Map()) {
+export function dict<T>(initial: DictObject<T> | Map<string, T> = new Map()) {
     const isMap = initial instanceof Map;
     const raw = isMap ? initial : new Map<string, T>();
     if (!isMap) {

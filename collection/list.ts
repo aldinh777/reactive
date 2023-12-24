@@ -1,6 +1,6 @@
 import { Watchable, watchify } from '../helper/collection';
 
-interface RList<T> extends Watchable<number, T> {
+export interface RList<T> extends Watchable<number, T> {
     (): T[];
     (key: number): T;
     (key: number, value: T): RList<T>;
@@ -21,7 +21,9 @@ export function list<T>(initial: T[] = []) {
         if (arg.length === 1) {
             return raw[key];
         }
+        const prev = raw[key];
         raw[key] = value;
+        trigger('=', key, value, prev);
         return RList;
     };
     const trigger = watchify(RList);
