@@ -27,26 +27,3 @@ export function subscribe<L>(listener: L, array: L[]): Subscription {
         }
     };
 }
-
-/**
- * create subscription object that control another subscriptions behaviour
- *
- * @param target item or items being observed
- * @param listener callback when update happen
- * @param subscriptions subscriptions to be handled
- * @returns object literals that store subscription information
- */
-export function subscribeAll<S extends Subscription>(subscriptions: S[]): Subscription {
-    return {
-        unsubscribe() {
-            for (const sub of subscriptions) {
-                sub.unsubscribe();
-            }
-        },
-        resubscribe() {
-            for (const sub of subscriptions) {
-                sub.resubscribe();
-            }
-        }
-    };
-}
