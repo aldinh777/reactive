@@ -25,24 +25,23 @@ export function state<T = any>(initial?: T): State<T> {
      */
     let hlock = false;
     const State = (...arg: T[]) => {
-        if (arg.length) {
-            val = arg[0];
-            hlock = ulock;
-            while (!ulock) {
-                ulock = true;
-                for (const listener of upd) {
-                    listener(val);
-                    if (hlock) {
-                        break;
-                    }
-                }
-                ulock = !hlock;
-                hlock = false;
-            }
-            ulock = hlock;
-        } else {
+        if (!arg.length) {
             return val;
         }
+        val = arg[0];
+        hlock = ulock;
+        while (!ulock) {
+            ulock = true;
+            for (const listener of upd) {
+                listener(val);
+                if (hlock) {
+                    break;
+                }
+            }
+            ulock = !hlock;
+            hlock = false;
+        }
+        ulock = hlock;
     };
     State.onChange = (handler: ChangeHandler<T>) => {
         let oldValue = val;

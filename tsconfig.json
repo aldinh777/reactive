@@ -1,12 +1,9 @@
 {
-  "compilerOptions": {
-    "declaration": true,
-    "module": "ESNext",
-    "target": "ES6",
-    "moduleResolution": "Node"
-  },
-  "include": [
-    "state",
-    "collection",
-  ]
+    "compilerOptions": {
+        "declaration": true,
+        "module": "ESNext",
+        "target": "ES6",
+        "moduleResolution": "Node"
+    },
+    "include": ["state", "collection", "helper"]
 }
