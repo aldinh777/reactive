@@ -4,7 +4,8 @@ export type UpdateListener<T> = (value: T) => any;
 export type ChangeHandler<T> = (next: T, previous: T) => any;
 
 interface State<T = any> {
-    (value?: T): T;
+    (): T;
+    (value: T): void;
     onChange(handler: ChangeHandler<T>): Subscription;
 }
 
@@ -24,7 +25,7 @@ export function state<T = any>(initial?: T): State<T> {
      *                  and act as marker
      */
     let hlock = false;
-    const State = (...arg: T[]) => {
+    const State = (...arg: [T?]) => {
         if (!arg.length) {
             return val;
         }
