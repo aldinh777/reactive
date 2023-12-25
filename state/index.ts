@@ -3,7 +3,7 @@ import { subscribe, Subscription } from '../helper/subscription-helper';
 export type UpdateListener<T> = (value: T) => any;
 export type ChangeHandler<T> = (next: T, previous: T) => any;
 
-interface State<T = any> {
+export interface State<T = any> {
     (): T;
     (value: T): void;
     onChange(handler: ChangeHandler<T>): Subscription;
