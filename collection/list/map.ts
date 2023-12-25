@@ -1,13 +1,11 @@
-import { Watchable, watchify } from '../../helper/collection';
-import { RList } from '../list';
+import { watchify } from '../../helper/collection';
+import { WatchableList } from '../list';
 
-interface RListMap<S, T> extends Watchable<number, T> {
-    (): T[];
-    (index: number): T;
+interface RListMap<S, T> extends WatchableList<T> {
     replaceMapper(mapper: (item: S) => T): void;
 }
 
-export function maplist<S, T>(list: RList<S>, map: (item: S) => T, remap?: (item: S, elem: T) => T) {
+export function maplist<S, T>(list: WatchableList<S>, map: (item: S) => T, remap?: (item: S, elem: T) => T) {
     let om: WeakMap<object, T> = new WeakMap();
     const raw: T[] = [];
     function mapItem(item: S, replace: boolean = true): T {
