@@ -1,4 +1,4 @@
-import { watchify } from '../../helper/collection';
+import { watchify } from '../../helper/watchable';
 import { WatchableList } from '../list';
 
 interface RListSort<T> extends WatchableList<T> {
