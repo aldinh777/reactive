@@ -1,4 +1,4 @@
-import { subscribe, Subscription } from '../helper/subscription-helper';
+import { subscribe, Unsubscribe } from '../helper/subscription';
 
 export type UpdateListener<T> = (value: T) => any;
 export type ChangeHandler<T> = (next: T, previous: T) => any;
@@ -6,7 +6,7 @@ export type ChangeHandler<T> = (next: T, previous: T) => any;
 export interface State<T = any> {
     (): T;
     (value: T): void;
-    onChange(handler: ChangeHandler<T>): Subscription;
+    onChange(handler: ChangeHandler<T>): Unsubscribe;
 }
 
 export function state<T = any>(initial?: T): State<T> {

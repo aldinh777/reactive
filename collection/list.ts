@@ -1,4 +1,4 @@
-import { Watchable, watchify } from '../helper/collection';
+import { Watchable, watchify } from '../helper/watchable';
 
 export interface WatchableList<T> extends Watchable<number, T> {
     (): T[];
