@@ -1,13 +1,11 @@
-import { Watchable, watchify } from '../../helper/collection';
-import { RList } from '../list';
+import { watchify } from '../../helper/collection';
+import { WatchableList } from '../list';
 
-interface RListFilter<T> extends Watchable<number, T> {
-    (): T[];
-    (index: number): T;
+interface RListFilter<T> extends WatchableList<T> {
     replaceFilter(filter: (item: T) => boolean): void;
 }
 
-export function filterlist<T>(list: RList<T>, filter: (item: T) => boolean): RListFilter<T> {
+export function filterlist<T>(list: WatchableList<T>, filter: (item: T) => boolean): RListFilter<T> {
     const raw: T[] = [];
     const _f: boolean[] = list().map(filter);
     for (let i = 0; i < _f.length; i++) {

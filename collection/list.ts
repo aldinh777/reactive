@@ -1,8 +1,11 @@
 import { Watchable, watchify } from '../helper/collection';
 
-export interface RList<T> extends Watchable<number, T> {
+export interface WatchableList<T> extends Watchable<number, T> {
     (): T[];
     (key: number): T;
+}
+
+export interface RList<T> extends Watchable<number, T>, WatchableList<T> {
     (key: number, value: T): RList<T>;
     push(...items: T[]): number;
     pop(): T | undefined;
