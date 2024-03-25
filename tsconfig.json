@@ -5,5 +5,5 @@
         "target": "ES6",
         "moduleResolution": "Node"
     },
-    "include": ["state", "collection", "helper"]
+    "include": ["state", "collection", "utils"]
 }

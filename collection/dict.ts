@@ -1,4 +1,4 @@
-import { Watchable, watchify } from '../helper/watchable';
+import { Watchable, watchify } from '../utils/watchable';
 
 export interface DictObject<T> {
     [key: string]: T;

@@ -1,4 +1,4 @@
-import { subscribe, Unsubscribe } from '../helper/subscription';
+import { subscribe, Unsubscribe } from '../utils/subscription';
 
 export type UpdateListener<T> = (value: T) => any;
 export type ChangeHandler<T> = (next: T, previous: T) => any;
