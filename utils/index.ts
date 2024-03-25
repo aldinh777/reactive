@@ -1,5 +1,5 @@
-import { pushNonExists } from '@aldinh777/toolbox/array/operation';
-import { State, state } from '.';
+import { pushNonExists } from '@aldinh777/toolbox/array-operation';
+import { State, state } from '../state';
 
 const ROOT_LIST = new WeakMap<State, State[]>();
 
