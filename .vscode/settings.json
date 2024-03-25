@@ -5,6 +5,8 @@
     "**/helper/**/*.d.ts": true,
     "**/helper/**/*.js": true,
     "**/state/**/*.d.ts": true,
-    "**/state/**/*.js": true
+    "**/state/**/*.js": true,
+    "**/utils/**/*.d.ts": true,
+    "**/utils/**/*.js": true
   }
 }
