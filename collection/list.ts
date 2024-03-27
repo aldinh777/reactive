@@ -1,4 +1,4 @@
-import { Watchable, watchify } from '../utils/watchable';
+import { Watchable, watchify } from '../utils/watchable.js';
 
 export interface WatchableList<T> extends Watchable<number, T> {
     (): T[];

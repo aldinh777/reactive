@@ -1,12 +1,7 @@
 {
-  "files.exclude": {
-    "**/collection/**/*.d.ts": true,
-    "**/collection/**/*.js": true,
-    "**/helper/**/*.d.ts": true,
-    "**/helper/**/*.js": true,
-    "**/state/**/*.d.ts": true,
-    "**/state/**/*.js": true,
-    "**/utils/**/*.d.ts": true,
-    "**/utils/**/*.js": true
-  }
+    "files.exclude": {
+        "**/*.d.ts": true,
+        "**/*.js": true,
+    },
+    "prettier.semi": true
 }

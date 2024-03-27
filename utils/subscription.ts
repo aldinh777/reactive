@@ -1,4 +1,4 @@
-import { pushNonExists, removeFromArray } from '@aldinh777/toolbox/array-operation';
+import { pushNonExists, removeFromArray } from '@aldinh777/toolbox/array-operation.js';
 
 export type Unsubscribe = () => void;
 

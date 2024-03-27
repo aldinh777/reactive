@@ -1,5 +1,5 @@
-import { watchify } from '../../utils/watchable';
-import { WatchableList } from '../list';
+import { watchify } from '../../utils/watchable.js';
+import { WatchableList } from '../list.js';
 
 interface RListSort<T> extends WatchableList<T> {
     replaceSorter(sorter: (item: T, compare: T) => boolean): void;

@@ -1,5 +1,5 @@
-import { watchify } from '../../utils/watchable';
-import { WatchableList } from '../list';
+import { watchify } from '../../utils/watchable.js';
+import { WatchableList } from '../list.js';
 
 interface RListMap<S, T> extends WatchableList<T> {
     replaceMapper(mapper: (item: S) => T): void;

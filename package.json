@@ -4,15 +4,16 @@
   "description": "another attempt to Reactive programming",
   "main": "state/index.js",
   "types": "state/index.d.ts",
+  "type": "module",
   "scripts": {
     "build": "tsc"
   },
   "author": "aldinh777",
   "license": "MIT",
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.3"
   },
   "dependencies": {
-    "@aldinh777/toolbox": "^1.4.0"
+    "@aldinh777/toolbox": "^1.4.1"
   }
 }

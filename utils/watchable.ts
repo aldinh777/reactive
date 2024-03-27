@@ -1,4 +1,4 @@
-import { Unsubscribe, subscribe } from './subscription';
+import { Unsubscribe, subscribe } from './subscription.js';
 
 export type Operation = '+' | '-' | '=';
 export type OperationHandler<K, V> = (key: K, value: V, prev: V) => any;

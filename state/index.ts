@@ -1,4 +1,4 @@
-import { subscribe, Unsubscribe } from '../utils/subscription';
+import { subscribe, Unsubscribe } from '../utils/subscription.js';
 
 export type UpdateListener<T> = (value: T) => any;
 export type ChangeHandler<T> = (next: T, previous: T) => any;
