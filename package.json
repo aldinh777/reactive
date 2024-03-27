@@ -1,6 +1,6 @@
 {
   "name": "@aldinh777/reactive",
-  "version": "0.31.0",
+  "version": "0.31.1",
   "description": "another attempt to Reactive programming",
   "main": "state/index.js",
   "types": "state/index.d.ts",
