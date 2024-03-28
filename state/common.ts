@@ -1,4 +1,5 @@
-import { State, state } from './index.js';
+import type { State } from './index.js';
+import { state } from './index.js';
 
 type ToggleOutput = [state: State<boolean>, open: Function, close: Function, toggle: Function];
 export const stateToggle = (initial: boolean): ToggleOutput => {

@@ -1,5 +1,6 @@
+import type { State } from '../state/index.js';
 import { pushNonExists } from '@aldinh777/toolbox/array-operation.js';
-import { State, state } from '../state/index.js';
+import { state } from '../state/index.js';
 
 const ROOT_LIST = new WeakMap<State, State[]>();
 
