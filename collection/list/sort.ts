@@ -1,10 +1,7 @@
-import type { WatchableList } from '../list.js';
-import type { Stoppable } from '../../utils/watchable.js';
+import type { ObservedList, WatchableList } from '../list.js';
 import { watchify } from '../../utils/watchable.js';
 
-interface RListSort<T> extends WatchableList<T>, Stoppable {
-    replaceSorter(sorter: (item: T, compare: T) => boolean): void;
-}
+type RListSort<T> = ObservedList<T, (prev: T, next: T) => boolean>;
 
 export function sortlist<T>(list: WatchableList<T>, sorter: (item: T, compare: T) => boolean) {
     const raw: T[] = [];
@@ -54,7 +51,7 @@ export function sortlist<T>(list: WatchableList<T>, sorter: (item: T, compare: T
         return raw[index];
     };
     const trigger = watchify(RListSort);
-    RListSort.replaceSorter = (sort: (item: T, elem: T) => boolean) => {
+    RListSort.replaceMutator = (sort: (prev: T, next: T) => boolean) => {
         sorter = sort;
         const sorted: T[] = [];
         for (const item of list()) {
@@ -78,5 +75,5 @@ export function sortlist<T>(list: WatchableList<T>, sorter: (item: T, compare: T
         unsubInsert();
         unsubDelete();
     };
-    return RListSort as RListSort<T>;
+    return RListSort as unknown as RListSort<T>;
 }

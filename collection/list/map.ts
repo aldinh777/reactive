@@ -1,10 +1,7 @@
-import type { WatchableList } from '../list.js';
-import type { Stoppable } from '../../utils/watchable.js';
+import type { ObservedList, WatchableList } from '../list.js';
 import { watchify } from '../../utils/watchable.js';
 
-interface RListMap<S, T> extends WatchableList<T>, Stoppable {
-    replaceMapper(mapper: (item: S) => T): void;
-}
+type RListMap<S, T> = ObservedList<T, (item: S) => T>;
 
 export function maplist<S, T>(list: WatchableList<S>, map: (item: S) => T, remap?: (item: S, elem: T) => T) {
     let om: WeakMap<object, T> = new WeakMap();
@@ -50,7 +47,7 @@ export function maplist<S, T>(list: WatchableList<S>, map: (item: S) => T, remap
         return raw[index];
     };
     const trigger = watchify(RListMap);
-    RListMap.replaceMapper = (mapper: (item: S) => T): void => {
+    RListMap.replaceMutator = (mapper: (item: S) => T): void => {
         map = mapper;
         om = new WeakMap();
         for (let i = 0; i < list().length; i++) {
