@@ -1,12 +1,9 @@
-import type { WatchableList } from '../list.js';
-import type { Stoppable } from '../../utils/watchable.js';
+import type { ObservedList, WatchableList } from '../list.js';
 import { watchify } from '../../utils/watchable.js';
 
-interface RListFilter<T> extends WatchableList<T>, Stoppable {
-    replaceFilter(filter: (item: T) => boolean): void;
-}
+type RListFilter<T> = ObservedList<T, (item: T) => boolean>;
 
-export function filterlist<T>(list: WatchableList<T>, filter: (item: T) => boolean): RListFilter<T> {
+export function filterlist<T>(list: WatchableList<T>, filter: (item: T) => boolean) {
     const raw: T[] = [];
     const _f: boolean[] = list().map(filter);
     for (let i = 0; i < _f.length; i++) {
@@ -72,7 +69,7 @@ export function filterlist<T>(list: WatchableList<T>, filter: (item: T) => boole
         return raw[index];
     };
     const trigger = watchify(RListFilter);
-    RListFilter.replaceFilter = (newFilter: (item: T) => boolean): void => {
+    RListFilter.replaceMutator = (newFilter: (item: T) => boolean): void => {
         filter = newFilter;
         const next_f = list().map(newFilter);
         let currentIndex = 0;
