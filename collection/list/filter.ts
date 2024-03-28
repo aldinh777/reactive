@@ -1,7 +1,5 @@
 import type { ObservedList, WatchableList } from '../list.js';
-import { watchify } from '../../utils/watchable.js';
-
-type RListFilter<T> = ObservedList<T, (item: T) => boolean>;
+import { stopify, watchify } from '../../utils/watchable.js';
 
 export function filterlist<T>(list: WatchableList<T>, filter: (item: T) => boolean) {
     const raw: T[] = [];
@@ -36,68 +34,40 @@ export function filterlist<T>(list: WatchableList<T>, filter: (item: T) => boole
         }
         return filteredIndex;
     };
-    const unsubUpdate = list.onUpdate((index, value, prev) => {
-        const allowAfter = filter(value);
-        if (_f[index] !== allowAfter) {
-            _f[index] = allowAfter;
-            if (allowAfter) {
-                insertFiltered(index, value);
-            } else {
-                deleteFiltered(index, value);
-            }
-        } else if (allowAfter) {
-            updateFiltered(index, value, prev);
-        }
-    });
-    const unsubInsert = list.onInsert((index, value) => {
-        const allow = filter(value);
-        _f.splice(index, 0, allow);
-        if (allow) {
-            insertFiltered(index, value);
-        }
-    });
-    const unsubDelete = list.onDelete((index, value) => {
-        if (_f[index]) {
-            deleteFiltered(index, value);
-        }
-        _f.splice(index, 1);
-    });
-    const RListFilter = (index?: number) => {
+    const FilteredList = (index?: number) => {
         if (index === undefined) {
             return raw;
         }
         return raw[index];
     };
-    const trigger = watchify(RListFilter);
-    RListFilter.replaceMutator = (newFilter: (item: T) => boolean): void => {
-        filter = newFilter;
-        const next_f = list().map(newFilter);
-        let currentIndex = 0;
-        for (let i = 0; i < next_f.length; i++) {
-            const allowNext = next_f[i];
-            if (_f[i] !== allowNext) {
-                if (allowNext) {
-                    const inserted = list(i);
-                    raw.splice(currentIndex, 0, inserted);
-                    trigger('+', currentIndex, inserted);
-                    currentIndex++;
+    const trigger = watchify(FilteredList);
+    FilteredList.stop = stopify([
+        list.onUpdate((index, value, prev) => {
+            const allowAfter = filter(value);
+            if (_f[index] !== allowAfter) {
+                _f[index] = allowAfter;
+                if (allowAfter) {
+                    insertFiltered(index, value);
                 } else {
-                    const deleted = raw[currentIndex];
-                    raw.splice(currentIndex, 1);
-                    trigger('-', currentIndex, deleted);
-                    currentIndex = currentIndex && currentIndex - 1;
+                    deleteFiltered(index, value);
                 }
-            } else if (allowNext) {
-                currentIndex++;
+            } else if (allowAfter) {
+                updateFiltered(index, value, prev);
             }
-        }
-        _f.length = 0;
-        _f.push(...next_f);
-    };
-    RListFilter.stop = () => {
-        unsubUpdate();
-        unsubInsert();
-        unsubDelete();
-    };
-    return RListFilter as RListFilter<T>;
+        }),
+        list.onInsert((index, value) => {
+            const allow = filter(value);
+            _f.splice(index, 0, allow);
+            if (allow) {
+                insertFiltered(index, value);
+            }
+        }),
+        list.onDelete((index, value) => {
+            if (_f[index]) {
+                deleteFiltered(index, value);
+            }
+            _f.splice(index, 1);
+        })
+    ]);
+    return FilteredList as ObservedList<T>;
 }
