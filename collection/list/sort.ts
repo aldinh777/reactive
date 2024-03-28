@@ -1,13 +1,14 @@
+import type { WatchableList } from '../list.js';
+import type { Stoppable } from '../../utils/watchable.js';
 import { watchify } from '../../utils/watchable.js';
-import { WatchableList } from '../list.js';
 
-interface RListSort<T> extends WatchableList<T> {
+interface RListSort<T> extends WatchableList<T>, Stoppable {
     replaceSorter(sorter: (item: T, compare: T) => boolean): void;
 }
 
 export function sortlist<T>(list: WatchableList<T>, sorter: (item: T, compare: T) => boolean) {
     const raw: T[] = [];
-    function insertItem(array: T[], item: T): number {
+    const insertItem = (array: T[], item: T): number => {
         let insertIndex = array.length;
         for (let i = 0; i < array.length; i++) {
             const elem = array[i];
@@ -18,11 +19,11 @@ export function sortlist<T>(list: WatchableList<T>, sorter: (item: T, compare: T
         }
         array.splice(insertIndex, 0, item);
         return insertIndex;
-    }
+    };
     for (const item of list()) {
         insertItem(raw, item);
     }
-    list.onUpdate((_, value, prev) => {
+    const unsubUpdate = list.onUpdate((_, value, prev) => {
         const prevIndex = raw.indexOf(prev);
         if (prevIndex !== -1) {
             raw.splice(prevIndex, 1);
@@ -35,11 +36,11 @@ export function sortlist<T>(list: WatchableList<T>, sorter: (item: T, compare: T
             }
         }
     });
-    list.onInsert((_, value) => {
+    const unsubInsert = list.onInsert((_, value) => {
         const insertIndex = insertItem(raw, value);
         trigger('+', insertIndex, value);
     });
-    list.onDelete((_, value) => {
+    const unsubDelete = list.onDelete((_, value) => {
         const index = raw.indexOf(value);
         if (index !== -1) {
             raw.splice(index, 1);
@@ -71,6 +72,11 @@ export function sortlist<T>(list: WatchableList<T>, sorter: (item: T, compare: T
                 trigger('+', i, swap);
             }
         }
+    };
+    RListSort.stop = () => {
+        unsubUpdate();
+        unsubInsert();
+        unsubDelete();
     };
     return RListSort as RListSort<T>;
 }

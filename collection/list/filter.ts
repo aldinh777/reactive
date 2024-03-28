@@ -1,7 +1,8 @@
+import type { WatchableList } from '../list.js';
+import type { Stoppable } from '../../utils/watchable.js';
 import { watchify } from '../../utils/watchable.js';
-import { WatchableList } from '../list.js';
 
-interface RListFilter<T> extends WatchableList<T> {
+interface RListFilter<T> extends WatchableList<T>, Stoppable {
     replaceFilter(filter: (item: T) => boolean): void;
 }
 
@@ -13,23 +14,23 @@ export function filterlist<T>(list: WatchableList<T>, filter: (item: T) => boole
             raw.push(list(i));
         }
     }
-    function updateFiltered(index: number, value: T, prev: T): void {
+    const updateFiltered = (index: number, value: T, prev: T): void => {
         const fIndex = findFilteredIndex(index);
         raw[fIndex] = value;
         trigger('=', fIndex, value, prev);
-    }
-    function insertFiltered(index: number, value: T): void {
+    };
+    const insertFiltered = (index: number, value: T): void => {
         const fIndex = findFilteredIndex(index);
         raw.splice(fIndex, 0, value);
         trigger('+', fIndex, value);
-    }
-    function deleteFiltered(index: number, value: T): void {
+    };
+    const deleteFiltered = (index: number, _value: T): void => {
         const fIndex = findFilteredIndex(index);
         const prev = raw[fIndex];
         raw.splice(fIndex, 1);
         trigger('-', fIndex, prev);
-    }
-    function findFilteredIndex(sourceIndex: number): number {
+    };
+    const findFilteredIndex = (sourceIndex: number): number => {
         let filteredIndex = 0;
         for (let i = 0; i < sourceIndex; i++) {
             if (_f[i]) {
@@ -37,8 +38,8 @@ export function filterlist<T>(list: WatchableList<T>, filter: (item: T) => boole
             }
         }
         return filteredIndex;
-    }
-    list.onUpdate((index, value, prev) => {
+    };
+    const unsubUpdate = list.onUpdate((index, value, prev) => {
         const allowAfter = filter(value);
         if (_f[index] !== allowAfter) {
             _f[index] = allowAfter;
@@ -51,14 +52,14 @@ export function filterlist<T>(list: WatchableList<T>, filter: (item: T) => boole
             updateFiltered(index, value, prev);
         }
     });
-    list.onInsert((index, value) => {
+    const unsubInsert = list.onInsert((index, value) => {
         const allow = filter(value);
         _f.splice(index, 0, allow);
         if (allow) {
             insertFiltered(index, value);
         }
     });
-    list.onDelete((index, value) => {
+    const unsubDelete = list.onDelete((index, value) => {
         if (_f[index]) {
             deleteFiltered(index, value);
         }
@@ -95,6 +96,11 @@ export function filterlist<T>(list: WatchableList<T>, filter: (item: T) => boole
         }
         _f.length = 0;
         _f.push(...next_f);
+    };
+    RListFilter.stop = () => {
+        unsubUpdate();
+        unsubInsert();
+        unsubDelete();
     };
     return RListFilter as RListFilter<T>;
 }

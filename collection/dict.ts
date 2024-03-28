@@ -1,4 +1,5 @@
-import { Watchable, watchify } from '../utils/watchable.js';
+import type { Watchable } from '../utils/watchable.js';
+import { watchify } from '../utils/watchable.js';
 
 export interface DictObject<T> {
     [key: string]: T;

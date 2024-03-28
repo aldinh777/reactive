@@ -1,14 +1,15 @@
+import type { WatchableList } from '../list.js';
+import type { Stoppable } from '../../utils/watchable.js';
 import { watchify } from '../../utils/watchable.js';
-import { WatchableList } from '../list.js';
 
-interface RListMap<S, T> extends WatchableList<T> {
+interface RListMap<S, T> extends WatchableList<T>, Stoppable {
     replaceMapper(mapper: (item: S) => T): void;
 }
 
 export function maplist<S, T>(list: WatchableList<S>, map: (item: S) => T, remap?: (item: S, elem: T) => T) {
     let om: WeakMap<object, T> = new WeakMap();
     const raw: T[] = [];
-    function mapItem(item: S, replace: boolean = true): T {
+    const mapItem = (item: S, replace: boolean = true): T => {
         if (!(remap && typeof item === 'object')) {
             return map(item);
         }
@@ -20,11 +21,11 @@ export function maplist<S, T>(list: WatchableList<S>, map: (item: S) => T, remap
         const mapped = map(item);
         om.set(item, mapped);
         return mapped;
-    }
+    };
     for (const item of list()) {
         raw.push(mapItem(item));
     }
-    list.onUpdate((index, value, prev) => {
+    const unsubUpdate = list.onUpdate((index, value, prev) => {
         const mapped = mapItem(value, prev === value);
         const before = raw[index];
         if (mapped !== before) {
@@ -32,12 +33,12 @@ export function maplist<S, T>(list: WatchableList<S>, map: (item: S) => T, remap
             trigger('=', index, mapped, before);
         }
     });
-    list.onInsert((index, value) => {
+    const unsubInsert = list.onInsert((index, value) => {
         const mapped = mapItem(value, false);
         raw.splice(index, 0, mapped);
         trigger('+', index, mapped);
     });
-    list.onDelete((index) => {
+    const unsubDelete = list.onDelete((index) => {
         const value = raw[index];
         raw.splice(index, 1);
         trigger('-', index, value);
@@ -59,6 +60,11 @@ export function maplist<S, T>(list: WatchableList<S>, map: (item: S) => T, remap
             raw[i] = value;
             trigger('=', i, value, prev);
         }
+    };
+    RListMap.stop = () => {
+        unsubUpdate();
+        unsubInsert();
+        unsubDelete();
     };
     return RListMap as RListMap<S, T>;
 }
