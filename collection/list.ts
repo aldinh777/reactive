@@ -1,8 +1,7 @@
 import type { Watchable } from '../utils/watchable.js';
 import { watchify } from '../utils/watchable.js';
 
-export interface ObservedList<T, M> extends WatchableList<T> {
-    replaceMutator: M;
+export interface ObservedList<T> extends WatchableList<T> {
     stop(): void;
 }
 

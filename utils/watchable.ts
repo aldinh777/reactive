@@ -30,3 +30,9 @@ export function watchify<K, V>(RData: any) {
     RData.onDelete = (listener: OperationHandler<K, V>) => subscribe(listener, upd['-']);
     return trigger;
 }
+
+export const stopify = (stoppers: Unsubscribe[]) => () => {
+    for (const stop of stoppers) {
+        stop();
+    }
+};
