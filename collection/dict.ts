@@ -5,10 +5,10 @@ export interface DictObject<T> {
     [key: string]: T;
 }
 
-export interface RDict<T> extends Watchable<string, T> {
+export interface ReactiveDictionary<T> extends Watchable<string, T> {
     (): T[];
     (key: string): T;
-    (key: string, value: T): RDict<T>;
+    (key: string, value: T): ReactiveDictionary<T>;
     delete(key: string): boolean;
     clear(): void;
 }
@@ -21,7 +21,7 @@ export function dict<T>(initial: DictObject<T> | Map<string, T> = new Map()) {
             raw.set(key, initial[key]);
         }
     }
-    const RDict = (...arg: [string?, T?]) => {
+    const ReactiveDictionary = (...arg: [string?, T?]) => {
         if (!arg.length) {
             return raw;
         }
@@ -33,10 +33,10 @@ export function dict<T>(initial: DictObject<T> | Map<string, T> = new Map()) {
         const prev = raw.get(key);
         raw.set(key, value);
         trigger(op, key, value, prev);
-        return RDict;
+        return ReactiveDictionary;
     };
-    const trigger = watchify(RDict);
-    RDict.delete = (key: string): boolean => {
+    const trigger = watchify(ReactiveDictionary);
+    ReactiveDictionary.delete = (key: string): boolean => {
         const item = raw.get(key);
         const result = raw.delete(key);
         if (result) {
@@ -44,12 +44,12 @@ export function dict<T>(initial: DictObject<T> | Map<string, T> = new Map()) {
         }
         return result;
     };
-    RDict.clear = (): void => {
+    ReactiveDictionary.clear = (): void => {
         const items = Array.from(raw.entries());
         raw.clear();
         for (const [key, deleted] of items) {
             trigger('-', key, deleted);
         }
     };
-    return RDict as RDict<T>;
+    return ReactiveDictionary as ReactiveDictionary<T>;
 }

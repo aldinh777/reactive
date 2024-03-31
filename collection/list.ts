@@ -10,8 +10,8 @@ export interface WatchableList<T> extends Watchable<number, T> {
     (key: number): T;
 }
 
-export interface RList<T> extends Watchable<number, T>, WatchableList<T> {
-    (key: number, value: T): RList<T>;
+export interface ReactiveList<T> extends Watchable<number, T>, WatchableList<T> {
+    (key: number, value: T): ReactiveList<T>;
     push(...items: T[]): number;
     pop(): T | undefined;
     shift(): T | undefined;
@@ -21,7 +21,7 @@ export interface RList<T> extends Watchable<number, T>, WatchableList<T> {
 
 export function list<T>(initial: T[] = []) {
     const raw = initial;
-    const RList = (...arg: [number?, T?]) => {
+    const ReactiveList = (...arg: [number?, T?]) => {
         if (!arg.length) {
             return raw;
         }
@@ -32,24 +32,24 @@ export function list<T>(initial: T[] = []) {
         const prev = raw[key];
         raw[key] = value;
         trigger('=', key, value, prev);
-        return RList;
+        return ReactiveList;
     };
-    const trigger = watchify(RList);
-    RList.push = (...items: T[]): number => {
-        RList.splice(raw.length, 0, ...items);
+    const trigger = watchify(ReactiveList);
+    ReactiveList.push = (...items: T[]): number => {
+        ReactiveList.splice(raw.length, 0, ...items);
         return raw.length;
     };
-    RList.pop = (): T | undefined => {
-        return RList.splice(raw.length - 1, 1)[0];
+    ReactiveList.pop = (): T | undefined => {
+        return ReactiveList.splice(raw.length - 1, 1)[0];
     };
-    RList.shift = (): T | undefined => {
-        return RList.splice(0, 1)[0];
+    ReactiveList.shift = (): T | undefined => {
+        return ReactiveList.splice(0, 1)[0];
     };
-    RList.unshift = (...items: T[]): number => {
-        RList.splice(0, 0, ...items);
+    ReactiveList.unshift = (...items: T[]): number => {
+        ReactiveList.splice(0, 0, ...items);
         return raw.length;
     };
-    RList.splice = (start: number, deleteCount: number = 0, ...items: T[]): T[] => {
+    ReactiveList.splice = (start: number, deleteCount: number = 0, ...items: T[]): T[] => {
         const deletedItems = raw.splice(start, deleteCount, ...items);
         for (const deleted of deletedItems) {
             trigger('-', start, deleted);
@@ -59,5 +59,5 @@ export function list<T>(initial: T[] = []) {
         }
         return deletedItems;
     };
-    return RList as RList<T>;
+    return ReactiveList as ReactiveList<T>;
 }
