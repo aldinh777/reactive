@@ -54,5 +54,6 @@ export function state<T = any>(initial?: T): State<T> {
             }
         }, upd);
     };
+    State.toString = () => `State { value: ${val} }`
     return State;
 }
