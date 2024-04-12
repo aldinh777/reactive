@@ -8,6 +8,7 @@ export type ChangeHandler<T> = (next: T, previous: T) => any;
 export interface State<T = any> {
     (): T;
     (value: T): void;
+    clearListeners(): void;
     onChange(handler: ChangeHandler<T>): Unsubscribe;
 }
 
@@ -58,7 +59,7 @@ export function state<T = any>(initial?: T): State<T> {
             }
         });
     };
-    State.stop = () => (upd = []);
+    State.clearListeners = () => (upd = []);
     State.toString = () => `State { value: ${val} }`;
     return State;
 }
