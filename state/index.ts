@@ -51,12 +51,12 @@ export function state<T = any>(initial?: T): State<T> {
     };
     State.onChange = (handler: ChangeHandler<T>) => {
         let oldValue = val;
-        return subscribe((value: T) => {
+        return subscribe(upd, (value: T) => {
             if (value !== oldValue) {
                 handler(value, oldValue);
                 oldValue = value;
             }
-        }, upd);
+        });
     };
     State.stop = () => (upd = []);
     State.toString = () => `State { value: ${val} }`;
