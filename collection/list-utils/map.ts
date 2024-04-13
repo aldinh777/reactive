@@ -1,7 +1,7 @@
 import type { ObservedList, WatchableList } from '../list.js';
 import { stopify, watchify } from '../../utils/watchable.js';
 
-export function maplist<S, T>(list: WatchableList<S>, map: (item: S) => T, remap?: (item: S, elem: T) => T) {
+export function map<S, T>(list: WatchableList<S>, map: (item: S) => T, remap?: (item: S, elem: T) => T) {
     let om: WeakMap<object, T> = new WeakMap();
     const raw: T[] = [];
     const mapItem = (item: S, replace: boolean = true): T => {
@@ -47,5 +47,6 @@ export function maplist<S, T>(list: WatchableList<S>, map: (item: S) => T, remap
             trigger('-', index, value);
         })
     ]);
+    MappedList.toString = () => `MappedList [ ${raw.join(', ')} ]`;
     return MappedList as ObservedList<T>;
 }

@@ -60,6 +60,7 @@ export const mutatedFrom = <T>(...states: State<T>[]) => {
                 unsub();
             }
         };
+        st.toString = () => `Mutated { value: ${st()} }`;
         return st;
     };
 };

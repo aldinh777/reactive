@@ -24,7 +24,7 @@ export interface Watchable<K, V> {
     watch(operations: BulkWatcher<K, V>): Unsubscribe;
 }
 
-export function watchify<K, V>(RData: any) {
+export function watchify<K, V>(Watchable: any) {
     const upd: OperationListeners<K, V> = { '+': [], '-': [], '=': [] };
     const trigger = (op: Operation, key: K, value: V, updated?: V) => {
         const handlers = upd[op];
@@ -32,10 +32,10 @@ export function watchify<K, V>(RData: any) {
             handle(key, value, updated);
         }
     };
-    RData.onUpdate = (listener: OperationHandler<K, V>) => subscribe(upd['='], listener);
-    RData.onInsert = (listener: OperationHandler<K, V>) => subscribe(upd['+'], listener);
-    RData.onDelete = (listener: OperationHandler<K, V>) => subscribe(upd['-'], listener);
-    RData.watch = (operations: BulkWatcher<K, V>) => {
+    Watchable.onUpdate = (listener: OperationHandler<K, V>) => subscribe(upd['='], listener);
+    Watchable.onInsert = (listener: OperationHandler<K, V>) => subscribe(upd['+'], listener);
+    Watchable.onDelete = (listener: OperationHandler<K, V>) => subscribe(upd['-'], listener);
+    Watchable.watch = (operations: BulkWatcher<K, V>) => {
         const unsubs: Unsubscribe[] = [];
         if (operations.update) {
             unsubs.push(subscribe(upd['='], operations.update));
@@ -52,7 +52,7 @@ export function watchify<K, V>(RData: any) {
             }
         };
     };
-    RData.toString = () => 'Reactive Collection {}';
+    Watchable.toString = () => 'Watchable {}';
     return trigger;
 }
 
