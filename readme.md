@@ -15,22 +15,22 @@ a `State` always have a value, and its value can and will changes overtime to be
 Lets start simple, this is how you create a state, simple and straighforward
 
 ```js
-import { state } from '@aldinh777/reactive'
+import { state } from '@aldinh777/reactive';
 
-const x = state(0)
+const x = state(0);
 ```
 
 now the variable `x` is a state with its current value is 0. to update its value, just call the variable as a function with an argument, and to get the current value, just call
 it without an argument
 
 ```js
-import { state } from '@aldinh777/reactive'
+import { state } from '@aldinh777/reactive';
 
-const x = state(0)
+const x = state(0);
 
-console.log(x())    // 0
-x(4)                // set the current value to 4
-console.log(x())    // 4
+console.log(x()); // 0
+x(4); // set the current value to 4
+console.log(x()); // 4
 ```
 
 ### Data Binding
@@ -66,18 +66,18 @@ print(b)    # 12
 This is how we acquire the same effect using this library
 
 ```js
-import { state } from '@aldinh777/reactive'
-import { stateFrom } from '@aldinh777/reactive/utils'
+import { state } from '@aldinh777/reactive';
+import { mutated } from '@aldinh777/reactive/utils';
 
-const a = state(5)
-const b = stateFrom(a)((a) => a * 2)
+const a = state(5);
+const b = mutated(() => a() * 2);
 
-console.log('current value = ', b())
+console.log('current value = ', b());
 // output: current value = 10
 
-a(6)
+a(6);
 
-console.log('current value = ', b())
+console.log('current value = ', b());
 // output: current value = 12
 ```
 
@@ -116,38 +116,38 @@ Now, any changes to `a` will trigger check and only run the command only when th
 This is how we obtain the same effect using this library
 
 ```js
-import { state } from '@aldinh777/reactive'
+import { state } from '@aldinh777/reactive';
 
-const a = state(5)
+const a = state(5);
 a.onChange((val) => {
     if (val > 10) {
-        console.log('A is currently GREATER THAN 10')
+        console.log('A is currently GREATER THAN 10');
     }
-})
+});
 
-a(10)   // A is currently GREATER THAN 10
-a(9)    // (nothing happened...)
-a(15)   // A is currently GREATER THAN 10
+a(10); // A is currently GREATER THAN 10
+a(9); // (nothing happened...)
+a(15); // A is currently GREATER THAN 10
 ```
 
 if there is multiple state to be observed, you can use the `observe` method from `utils`
 
 ```js
-import { state } from '@aldinh777/reactive'
-import { observe } from '@aldinh777/reactive/utils'
+import { state } from '@aldinh777/reactive';
+import { effect } from '@aldinh777/reactive/utils';
 
-const a = state(2)
-const b = state(3)
+const a = state(2);
+const b = state(3);
 
-observe(a, b)((a, b) => {
-    if (a + b > 10) {
-        console.log(`A and B combined which is ${a + b} is GREATER THAN 10`)
+effect(() => {
+    if (a() + b() > 10) {
+        console.log(`A and B combined which is ${a() + b()} is GREATER THAN 10`);
     }
-})
+});
 
-a(8)   // A and B combined which is 11 is GREATER THAN 10
-a(5)   // (nothing happened...)
-b(7)   // A and B combined which is 12 is GREATER THAN 10
+a(8); // A and B combined which is 11 is GREATER THAN 10
+a(5); // (nothing happened...)
+b(7); // A and B combined which is 12 is GREATER THAN 10
 ```
 
 ### That's it! for now
