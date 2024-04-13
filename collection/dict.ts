@@ -51,5 +51,6 @@ export function dict<T>(initial: DictObject<T> | Map<string, T> = new Map()) {
             trigger('-', key, deleted);
         }
     };
+    ReactiveDictionary.toString = () => `ReactiveDictionary { ${[...raw].map((i) => i.join(':')).join(', ')} }`;
     return ReactiveDictionary as ReactiveDictionary<T>;
 }

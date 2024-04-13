@@ -1,7 +1,9 @@
 import type { ObservedList, WatchableList } from '../list.js';
 import { stopify, watchify } from '../../utils/watchable.js';
 
-export function sortlist<T>(list: WatchableList<T>, sorter: (item: T, elem: T) => boolean) {
+const defaultSorter = (item: any, elem: any) => item < elem;
+
+export function sort<T>(list: WatchableList<T>, sorter: (item: T, elem: T) => boolean = defaultSorter) {
     const raw: T[] = [];
     const insertItem = (array: T[], item: T): number => {
         let insertIndex = array.length;
@@ -51,5 +53,6 @@ export function sortlist<T>(list: WatchableList<T>, sorter: (item: T, elem: T) =
             }
         })
     ]);
+    SortedList.toString = () => `SortedList [ ${raw.join(', ')} ]`;
     return SortedList as ObservedList<T>;
 }

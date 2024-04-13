@@ -59,5 +59,6 @@ export function list<T>(initial: T[] = []) {
         }
         return deletedItems;
     };
+    ReactiveList.toString = () => `ReactiveList [ ${raw.join(', ')} ]`;
     return ReactiveList as ReactiveList<T>;
 }

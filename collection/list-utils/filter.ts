@@ -1,7 +1,7 @@
 import type { ObservedList, WatchableList } from '../list.js';
 import { stopify, watchify } from '../../utils/watchable.js';
 
-export function filterlist<T>(list: WatchableList<T>, filter: (item: T) => boolean) {
+export function filter<T>(list: WatchableList<T>, filter: (item: T) => boolean) {
     const raw: T[] = [];
     const _f: boolean[] = list().map(filter);
     for (let i = 0; i < _f.length; i++) {
@@ -69,5 +69,6 @@ export function filterlist<T>(list: WatchableList<T>, filter: (item: T) => boole
             _f.splice(index, 1);
         })
     ]);
+    FilteredList.toString = () => `FilteredList [ ${raw.join(', ')} ]`;
     return FilteredList as ObservedList<T>;
 }
