@@ -32,13 +32,24 @@ export function watchify<K, V>(Watchable: any) {
             handle(key, value, updated);
         }
     };
-    Watchable.onUpdate = (listener: OperationHandler<K, V>) => subscribe(upd['='], listener);
+    Watchable.onUpdate = (listener: OperationHandler<K, V>) =>
+        subscribe(upd['='], (key, value, prev) => {
+            if (value !== prev) {
+                listener(key, value, prev);
+            }
+        });
     Watchable.onInsert = (listener: OperationHandler<K, V>) => subscribe(upd['+'], listener);
     Watchable.onDelete = (listener: OperationHandler<K, V>) => subscribe(upd['-'], listener);
     Watchable.watch = (operations: BulkWatcher<K, V>) => {
         const unsubs: Unsubscribe[] = [];
         if (operations.update) {
-            unsubs.push(subscribe(upd['='], operations.update));
+            unsubs.push(
+                subscribe(upd['='], (key, value, prev) => {
+                    if (value !== prev) {
+                        operations.update(key, value, prev);
+                    }
+                })
+            );
         }
         if (operations.insert) {
             unsubs.push(subscribe(upd['+'], operations.insert));

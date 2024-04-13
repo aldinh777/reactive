@@ -59,6 +59,7 @@ export const mutatedFrom = <T>(...states: State<T>[]) => {
             for (const unsub of unsubs) {
                 unsub();
             }
+            __ROOT_LIST.delete(st);
         };
         st.toString = () => `Mutated { value: ${st()} }`;
         return st;
@@ -67,7 +68,7 @@ export const mutatedFrom = <T>(...states: State<T>[]) => {
 
 export const effect = (effectHandler: () => any): Unsubscribe => {
     if (__MUTATED_DATA._isExecuting) {
-        throw Error('nested effect are not allowed');
+        throw Error('nested mutated or effect are not allowed');
     }
     __MUTATED_DATA._isExecuting = true;
     effectHandler();
@@ -79,7 +80,7 @@ export const effect = (effectHandler: () => any): Unsubscribe => {
 
 export const mutated = <T>(mutator: () => T) => {
     if (__MUTATED_DATA._isExecuting) {
-        throw Error('nested mutated are not allowed');
+        throw Error('nested mutated or effect are not allowed');
     }
     __MUTATED_DATA._isExecuting = true;
     const result = mutator();
