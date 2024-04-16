@@ -70,7 +70,7 @@ import { state } from '@aldinh777/reactive';
 import { mutated } from '@aldinh777/reactive/utils';
 
 const a = state(5);
-const b = mutatedFrom(a)((a) => a * 2);
+const b = mutated((a) => a * 2);
 
 console.log('current value = ', b());
 // output: current value = 10
@@ -130,7 +130,7 @@ a(9); // (nothing happened...)
 a(15); // A is currently GREATER THAN 10
 ```
 
-if there is multiple state to be observed, you can use the `effectFrom` method from `utils`
+if there is multiple state to be observed, you can use the `effect`
 
 ```js
 import { state } from '@aldinh777/reactive';
@@ -139,9 +139,9 @@ import { effect } from '@aldinh777/reactive/utils';
 const a = state(2);
 const b = state(3);
 
-effectFrom(a, b)((a, b) => {
-    if (a + b > 10) {
-        console.log(`A and B combined which is ${a + b} is GREATER THAN 10`);
+effect(() => {
+    if (a() + b() > 10) {
+        console.log(`A and B combined which is ${a() + b()} is GREATER THAN 10`);
     }
 });
 
@@ -149,7 +149,3 @@ a(8); // A and B combined which is 11 is GREATER THAN 10
 a(5); // (nothing happened...)
 b(7); // A and B combined which is 12 is GREATER THAN 10
 ```
-
-### That's it! for now
-
-That was basically the main idea of this library
