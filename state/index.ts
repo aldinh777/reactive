@@ -38,7 +38,7 @@ export function state<T = any>(initial?: T): State<T> {
         hlock = ulock;
         while (!ulock) {
             ulock = true;
-            for (const listener of upd) {
+            for (const listener of [...upd]) {
                 listener(val);
                 if (hlock) {
                     break;
