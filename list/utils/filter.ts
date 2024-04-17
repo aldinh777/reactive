@@ -1,5 +1,4 @@
-import type { ObservedList, WatchableList } from '../list.js';
-import { stopify, watchify } from '../../utils/watchable.js';
+import { ObservedList, WatchableList, stopify, watchify } from '../watchable.js';
 
 export function filter<T>(list: WatchableList<T>, filter: (item: T) => boolean) {
     const raw: T[] = [];
