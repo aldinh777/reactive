@@ -1,16 +1,7 @@
-import type { Watchable } from '../utils/watchable.js';
-import { watchify } from '../utils/watchable.js';
+import type { WatchableList } from './watchable.js';
+import { watchify } from './watchable.js';
 
-export interface ObservedList<T> extends WatchableList<T> {
-    stop(): void;
-}
-
-export interface WatchableList<T> extends Watchable<number, T> {
-    (): T[];
-    (key: number): T;
-}
-
-export interface ReactiveList<T> extends Watchable<number, T>, WatchableList<T> {
+export interface ReactiveList<T> extends WatchableList<T> {
     (key: number, value: T): ReactiveList<T>;
     push(...items: T[]): number;
     pop(): T | undefined;

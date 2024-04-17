@@ -13,15 +13,20 @@ interface BulkWatcher<K, V> {
     delete?: OperationHandler<K, V>;
 }
 
-export interface Stoppable {
-    stop(): void;
-}
-
 export interface Watchable<K, V> {
     onUpdate(listener: OperationHandler<K, V>): Unsubscribe;
     onInsert(listener: OperationHandler<K, V>): Unsubscribe;
     onDelete(listener: OperationHandler<K, V>): Unsubscribe;
     watch(operations: BulkWatcher<K, V>): Unsubscribe;
+}
+
+export interface WatchableList<T> extends Watchable<number, T> {
+    (): T[];
+    (key: number): T;
+}
+
+export interface ObservedList<T> extends WatchableList<T> {
+    stop(): void;
 }
 
 export function watchify<K, V>(Watchable: any) {

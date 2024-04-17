@@ -1,5 +1,4 @@
-import type { ObservedList, WatchableList } from '../list.js';
-import { stopify, watchify } from '../../utils/watchable.js';
+import { ObservedList, WatchableList, stopify, watchify } from '../watchable.js';
 
 export function map<S, T>(list: WatchableList<S>, map: (item: S) => T, remap?: (item: S, elem: T) => T) {
     let om: WeakMap<object, T> = new WeakMap();

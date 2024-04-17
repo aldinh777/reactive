@@ -1,5 +1,4 @@
-import type { ObservedList, WatchableList } from '../list.js';
-import { stopify, watchify } from '../../utils/watchable.js';
+import { ObservedList, WatchableList, stopify, watchify } from '../watchable.js';
 
 const defaultSorter = (item: any, elem: any) => item < elem;
 
