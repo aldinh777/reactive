@@ -1,14 +1,10 @@
 import type { State } from '../state/index.js';
 import type { Unsubscribe } from './subscription.js';
-import { __ROOT_SET, __MUTATED_DATA } from '../state/internal.js';
+import { __ROOT_SET, __MUTATED_DATA, __DYNAMICS } from '../state/internal.js';
 import { state } from '../state/index.js';
 
 export interface MutatedState<T> extends State<T> {
-    /**
-     * a flag to check if a mutated state are created through effect and may have dynamic dependencies
-     */
-    _dd?: boolean;
-    stop(): void;
+    stop: Unsubscribe;
 }
 
 function filterDeps(states: Set<State>) {
@@ -26,12 +22,13 @@ function filterDeps(states: Set<State>) {
     return deps;
 }
 
-function handleEffect<T>(effectHandler: () => T, state?: MutatedState<T>): [() => void, Unsubscribe] {
+function handleEffect<T>(effectHandler: () => T, state?: MutatedState<T>): Unsubscribe {
     if (__MUTATED_DATA._isExecuting) {
         throw Error('nested mutated or effect are not allowed');
     }
     const rootDepsMap = new Map<State, Unsubscribe>();
     if (state) {
+        __DYNAMICS.add(state);
         __ROOT_SET.set(state, rootDepsMap);
     }
     const exec = () => {
@@ -54,21 +51,22 @@ function handleEffect<T>(effectHandler: () => T, state?: MutatedState<T>): [() =
         }
         state?.(result);
     };
-    const stop: Unsubscribe = () => {
+    exec();
+    return () => {
         for (const unsub of rootDepsMap.values()) {
             unsub();
         }
         if (state) {
+            __DYNAMICS.delete(state);
             __ROOT_SET.delete(state);
         }
     };
-    return [exec, stop];
 }
 
-function staticEffect<T, U>(states: (State<T> | MutatedState<T>)[], handler: (...values: T[]) => U, state?: State<U>) {
-    if (states.some((s) => '_dd' in s)) {
+function handleStaticEffect<T, U>(states: State<T>[], handler: (...values: T[]) => U, state?: State<U>) {
+    if (states.some((st) => __DYNAMICS.has(st))) {
         throw Error(
-            'creating static effect or mutated using some states that may have dynamic dependency is prohibited'
+            'creating static effect or mutated using some states that may have dynamic dependency is forbidden'
         );
     }
     const rootDepsMap = new Map<State, Unsubscribe>();
@@ -83,7 +81,8 @@ function staticEffect<T, U>(states: (State<T> | MutatedState<T>)[], handler: (..
     for (const dep of deps) {
         rootDepsMap.set(dep, dep.onChange(exec));
     }
-    const stop: Unsubscribe = () => {
+    exec();
+    return () => {
         for (const unsub of rootDepsMap.values()) {
             unsub();
         }
@@ -91,34 +90,21 @@ function staticEffect<T, U>(states: (State<T> | MutatedState<T>)[], handler: (..
             __ROOT_SET.delete(state);
         }
     };
-    return [exec, stop];
 }
 
-export function setEffect(effectHandler: () => any): Unsubscribe {
-    const [exec, stop] = handleEffect(effectHandler);
-    exec();
-    return stop;
-}
+export const setEffect = (effectHandler: () => any) => handleEffect(effectHandler);
+
+export const setEffectStatic = <T>(states: State<T>[], handler: (...values: T[]) => any) =>
+    handleStaticEffect(states, handler);
 
 export function mutated<T>(mutator: () => T) {
     const st = state() as MutatedState<T>;
-    const [exec, stop] = handleEffect(mutator, st);
-    st.stop = stop;
-    st._dd = true;
-    exec();
+    st.stop = handleEffect(mutator, st);
     return st;
-}
-
-export function setEffectStatic<T>(states: State<T>[], handler: (...values: T[]) => any) {
-    const [exec, stop] = staticEffect(states, handler);
-    exec();
-    return stop;
 }
 
 export function mutatedStatic<T, U>(states: State<T>[], mutator: (...values: T[]) => U) {
     const st = state() as MutatedState<U>;
-    const [exec, stop] = staticEffect(states, mutator, st);
-    st.stop = stop;
-    exec();
+    st.stop = handleStaticEffect(states, mutator, st);
     return st;
 }

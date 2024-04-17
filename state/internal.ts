@@ -6,6 +6,10 @@ import { State } from './index.js';
  * any state from having duplicate dependency or parent dependency
  */
 export const __ROOT_SET = new WeakMap<State, Map<State, Unsubscribe>>();
+/**
+ * Weak Set that stores any states that is created using mutated
+ */
+export const __DYNAMICS = new WeakSet<State>();
 export const __MUTATED_DATA = {
     _isExecuting: false,
     /**
