@@ -68,7 +68,6 @@ export function watchify<K, V>(Watchable: any) {
             }
         };
     };
-    Watchable.toString = () => 'Watchable {}';
     return trigger;
 }
 

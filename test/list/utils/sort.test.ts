@@ -17,14 +17,33 @@ describe('list-util sort', () => {
     });
 
     test('sort properly after mutation', () => {
-        const l = list(randomList(100));
+        const l = list([1, 9, 2, 8, 3, 4, 6, 5]);
         const sortl = sort(l);
 
-        const index = randomNumber(10);
-        l(index, l(index) + 1);
-        l.push(randomNumber(100));
-        l.shift();
-        l.splice(index, 1, randomNumber(10));
+        /**
+         * inplace update
+         * from [1, 2, 3, 4, 5, 6, 8, 9]
+         * into [1, 2, 3, 4, 5, 6, 8, 10]
+         */
+        l(1, 10);
+        /**
+         * reposition update
+         * from [1, 2, 3, 4, 5, 6, 8, 9]
+         * into [1, 3, 4, 5, 6, 7, 8, 9]
+         */
+        l(2, 7);
+        /**
+         * insertion and positioning
+         * from [1, 2, 4, 5, 6, 7, 8, 9]
+         * into [1, 2, 3, 4, 5, 6, 7, 8, 9]
+         */
+        l.push(3);
+        /**
+         * delete in position
+         * from [1, 2, 3, 4, 5, 6, 7, 8, 9]
+         * into [1, 2, 3, 4, 6, 7, 8, 9]
+         */
+        l.pop();
 
         expect(sortl()).toEqual(sortList(l()));
     });

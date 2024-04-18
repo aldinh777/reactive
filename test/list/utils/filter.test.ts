@@ -13,14 +13,39 @@ describe('list-util filter', () => {
     });
 
     test('filter properly after mutation', () => {
-        const l = list(randomList(100));
+        const l = list([2, 3, 4, 6, 7, 9]);
         const filterl = filter(l, (item) => item % 2 === 0);
 
-        const index = randomNumber(10);
-        l(index, l(index) + 1);
-        l.push(randomNumber(100));
+        /**
+         * inplace update
+         * from [2, 4, 6]
+         * into [10, 4, 6]
+         */
+        l(0, 10);
+        /**
+         * removed from filter by update
+         * from [10, 4, 6]
+         * into [10, 6]
+         */
+        l(2, 5);
+        /**
+         * inserted into filter by update
+         * from [10, 6]
+         * into [10, 6, 8]
+         */
+        l(4, 8);
+        /**
+         * inserted into filter
+         * from [10, 6, 8]
+         * into [10, 6, 8, 12]
+         */
+        l.push(12);
+        /**
+         * deleted from filter
+         * from [10, 6, 8, 12]
+         * into [6, 8, 12]
+         */
         l.shift();
-        l.splice(index, 1, randomNumber(10));
 
         expect(filterl()).toEqual(l().filter((i) => i % 2 === 0));
     });
