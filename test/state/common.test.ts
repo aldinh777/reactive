@@ -46,7 +46,7 @@ describe('common state', () => {
         const initialValue = randomString(8);
         const newItem = stateLocalStorage('item', initialValue);
         expect(newItem()).toBe(initialValue);
-        const newValue = randomString(8);
+        const newValue = initialValue + randomString();
         newItem(newValue);
 
         const existingItem = stateLocalStorage('item', initialValue);

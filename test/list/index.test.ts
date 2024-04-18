@@ -1,6 +1,5 @@
 import { describe, test, expect } from 'bun:test';
 import { list } from '../../list';
-import { createArray } from '@aldinh777/toolbox/array-creation';
 import { randomNumber } from '@aldinh777/toolbox/random';
 
 const randomList = (length: number) => {
@@ -23,7 +22,7 @@ describe('reactive list', () => {
             const items = randomList(5);
             const oldItems = [...items];
             const l = list(items);
-            items.splice(2, 1, randomNumber(100));
+            items.splice(2, 2, randomNumber(100));
             expect(items).not.toEqual(oldItems);
             expect(l()).toEqual(oldItems);
         });
