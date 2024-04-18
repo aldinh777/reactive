@@ -24,6 +24,7 @@ function filterDeps(states: Set<State>) {
 
 function handleEffect<T>(effectHandler: () => T, state?: MutatedState<T>): Unsubscribe {
     if (__MUTATED_DATA._isExecuting) {
+        __MUTATED_DATA._isExecuting = false;
         throw Error('nested mutated or effect are not allowed');
     }
     const rootDepsMap = new Map<State, Unsubscribe>();
@@ -35,6 +36,9 @@ function handleEffect<T>(effectHandler: () => T, state?: MutatedState<T>): Unsub
         __MUTATED_DATA._isExecuting = true;
         const result = effectHandler();
         const newDeps = filterDeps(__MUTATED_DATA._dependencies);
+        if (newDeps.size === 0) {
+            throw Error('mutated or effect has zero dependency');
+        }
         __MUTATED_DATA._isExecuting = false;
         __MUTATED_DATA._dependencies.clear();
         for (const [oldDep, unsub] of rootDepsMap) {
@@ -74,6 +78,9 @@ function handleStaticEffect<T, U>(states: State<T>[], handler: (...values: T[]) 
         __ROOT_SET.set(state, rootDepsMap);
     }
     const deps = filterDeps(new Set(states));
+    if (deps.size === 0) {
+        throw Error('static effect or mutated must have at least one dependency');
+    }
     const exec = () => {
         const result = handler(...states.map((s) => s()));
         state?.(result);
