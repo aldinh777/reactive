@@ -1,6 +1,6 @@
 import { ObservedList, WatchableList, stopify, watchify } from '../watchable.js';
 
-export function map<S, T>(list: WatchableList<S>, map: (item: S) => T, remap?: (item: S, elem: T) => T) {
+export function map<S, T>(list: WatchableList<S>, map: (item: S) => T, remap?: (item: S, elem: T) => any) {
     let om: WeakMap<object, T> = new WeakMap();
     const raw: T[] = [];
     const mapItem = (item: S, replace: boolean = true): T => {
@@ -21,14 +21,14 @@ export function map<S, T>(list: WatchableList<S>, map: (item: S) => T, remap?: (
     }
     const MappedList = (index?: number) => {
         if (index === undefined) {
-            return raw;
+            return [...raw];
         }
         return raw[index];
     };
     const trigger = watchify(MappedList);
     MappedList.stop = stopify([
-        list.onUpdate((index, value, prev) => {
-            const mapped = mapItem(value, prev === value);
+        list.onUpdate((index, value) => {
+            const mapped = mapItem(value, false);
             const before = raw[index];
             if (mapped !== before) {
                 raw[index] = mapped;

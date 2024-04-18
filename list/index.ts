@@ -14,7 +14,7 @@ export function list<T>(initial: T[] = []) {
     const raw = [...initial];
     const ReactiveList = (...arg: [number?, T?]) => {
         if (!arg.length) {
-            return raw;
+            return [...raw];
         }
         const [key, value] = arg;
         if (arg.length === 1) {

@@ -35,7 +35,7 @@ export function filter<T>(list: WatchableList<T>, filter: (item: T) => boolean) 
     };
     const FilteredList = (index?: number) => {
         if (index === undefined) {
-            return raw;
+            return [...raw];
         }
         return raw[index];
     };
