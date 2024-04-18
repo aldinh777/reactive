@@ -21,7 +21,7 @@ export function sort<T>(list: WatchableList<T>, sorter: (item: T, elem: T) => bo
     }
     const SortedList = (index?: number) => {
         if (index === undefined) {
-            return raw;
+            return [...raw];
         }
         return raw[index];
     };
