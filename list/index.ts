@@ -11,7 +11,7 @@ export interface ReactiveList<T> extends WatchableList<T> {
 }
 
 export function list<T>(initial: T[] = []) {
-    const raw = initial;
+    const raw = [...initial];
     const ReactiveList = (...arg: [number?, T?]) => {
         if (!arg.length) {
             return raw;
