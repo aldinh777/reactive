@@ -9,14 +9,14 @@ describe('utils', () => {
         const b = state(randomNumber(100));
         const x = mutated(() => a() + b());
 
-        a(a() * 2);
-        b(b() * 2);
+        a(a() + 1);
+        b(b() + 1);
 
         expect(x()).toBe(a() + b());
 
         x.stop();
-        a(a() * 2);
-        b(b() * 2);
+        a(a() + 1);
+        b(b() + 1);
 
         expect(x()).not.toBe(a() + b());
     });
@@ -30,11 +30,11 @@ describe('utils', () => {
             effectCounter++;
         });
 
-        a(a() * 2);
+        a(a() + 1);
         expect(effectCounter).toBe(2);
 
         unsub();
-        a(a() * 2);
+        a(a() + 1);
         expect(effectCounter).toBe(2);
     });
 
@@ -43,14 +43,14 @@ describe('utils', () => {
         const b = state(randomNumber(100));
         const x = mutatedStatic([a, b], (a, b) => a + b);
 
-        a(a() * 2);
-        b(b() * 2);
+        a(a() + 1);
+        b(b() + 1);
 
         expect(x()).toBe(a() + b());
 
         x.stop();
-        a(a() * 2);
-        b(b() * 2);
+        a(a() + 1);
+        b(b() + 1);
 
         expect(x()).not.toBe(a() + b());
     });
@@ -61,11 +61,11 @@ describe('utils', () => {
 
         const unsub = setEffectStatic([a], (a) => effectCounter++);
 
-        a(a() * 2);
+        a(a() + 1);
         expect(effectCounter).toBe(2);
 
         unsub();
-        a(a() * 2);
+        a(a() + 1);
         expect(effectCounter).toBe(2);
     });
 
@@ -85,7 +85,7 @@ describe('utils', () => {
 
         c.onChange(() => updateCounter++);
         staticC.onChange(() => staticUpdateCounter++);
-        x(x() * 2);
+        x(x() + 1);
 
         expect(updateCounter).toBe(1);
         expect(staticUpdateCounter).toBe(1);
@@ -105,14 +105,14 @@ describe('utils', () => {
 
         expect(calculationCalls).toBe(1);
 
-        x(x() * 2); // won't count since a currently not depends on x
-        y(y() * 2);
+        x(x() + 1); // won't count since a currently not depends on x
+        y(y() + 1);
 
         expect(calculationCalls).toBe(2);
 
         isUsingX(true);
-        x(x() * 2); // will count because a now depends on x
-        y(y() * 2); // won't count since now a didn't depends on y
+        x(x() + 1); // will count because a now depends on x
+        y(y() + 1); // won't count since now a didn't depends on y
 
         expect(calculationCalls).toBe(4);
     });
