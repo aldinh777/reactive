@@ -1,14 +1,7 @@
 import { describe, test, expect } from 'bun:test';
 import { list } from '../../list';
 import { randomNumber } from '@aldinh777/toolbox/random';
-
-const randomList = (length: number) => {
-    const list: number[] = [];
-    for (let i = 0; i < length; i++) {
-        list.push(randomNumber(100));
-    }
-    return list;
-};
+import { randomList } from '../test-util';
 
 describe('reactive list', () => {
     describe('core', () => {
@@ -25,6 +18,15 @@ describe('reactive list', () => {
             items.splice(2, 2, randomNumber(100));
             expect(items).not.toEqual(oldItems);
             expect(l()).toEqual(oldItems);
+        });
+
+        test('outputed array have no side effect towards list', () => {
+            const l = list(randomList(5));
+            const array = l();
+            const index = randomNumber(5);
+            array[index] = array[index] + 1;
+
+            expect(l()).not.toEqual(array)
         });
 
         test('update data', () => {
