@@ -97,14 +97,14 @@ export const setEffect = (effectHandler: () => any) => handleEffect(effectHandle
 export const setEffectStatic = <T>(states: State<T>[], handler: (...values: T[]) => any) =>
     handleStaticEffect(states, handler);
 
-export function mutated<T>(mutator: () => T) {
+export const mutated = <T>(mutator: () => T) => {
     const st = state() as MutatedState<T>;
     st.stop = handleEffect(mutator, st);
     return st;
-}
+};
 
-export function mutatedStatic<T, U>(states: State<T>[], mutator: (...values: T[]) => U) {
+export const mutatedStatic = <T, U>(states: State<T>[], mutator: (...values: T[]) => U) => {
     const st = state() as MutatedState<U>;
     st.stop = handleStaticEffect(states, mutator, st);
     return st;
-}
+};
