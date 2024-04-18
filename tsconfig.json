@@ -6,6 +6,6 @@
         "moduleResolution": "NodeNext",
         "types": []
     },
-    "include": ["state", "list", "utils", "test/state/index.test.ts"],
+    "include": ["state", "list", "utils"],
     "exclude": ["test"]
 }
