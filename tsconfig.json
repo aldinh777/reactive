@@ -3,7 +3,9 @@
         "declaration": true,
         "module": "NodeNext",
         "target": "ESNext",
-        "moduleResolution": "NodeNext"
+        "moduleResolution": "NodeNext",
+        "types": []
     },
-    "include": ["state", "list", "utils"]
+    "include": ["state", "list", "utils", "test/state/index.test.ts"],
+    "exclude": ["test"]
 }
