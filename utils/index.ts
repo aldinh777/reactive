@@ -3,7 +3,7 @@ import type { Unsubscribe } from './subscription.js';
 import { __ROOT_SET, __MUTATED_DATA, __DYNAMICS } from '../state/internal.js';
 import { state } from '../state/index.js';
 
-export interface MutatedState<T> extends State<T> {
+export interface Computed<T> extends State<T> {
     stop: Unsubscribe;
 }
 
@@ -22,7 +22,7 @@ function filterDeps(states: Set<State>) {
     return deps;
 }
 
-function handleEffect<T>(effectHandler: () => T, state?: MutatedState<T>): Unsubscribe {
+function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscribe {
     if (__MUTATED_DATA._isExecuting) {
         __MUTATED_DATA._isExecuting = false;
         throw Error('nested mutated or effect are not allowed');
@@ -105,13 +105,13 @@ export const setEffectStatic = <T>(states: State<T>[], handler: (...values: T[])
     handleStaticEffect(states, handler);
 
 export const computed = <T>(computer: () => T) => {
-    const st = state() as MutatedState<T>;
+    const st = state() as Computed<T>;
     st.stop = handleEffect(computer, st);
     return st;
 };
 
 export const computedStatic = <T, U>(states: State<T>[], computer: (...values: T[]) => U) => {
-    const st = state() as MutatedState<U>;
+    const st = state() as Computed<U>;
     st.stop = handleStaticEffect(states, computer, st);
     return st;
 };

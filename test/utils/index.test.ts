@@ -1,13 +1,13 @@
 import { describe, test, expect } from 'bun:test';
-import { mutated, mutatedStatic, setEffect, setEffectStatic } from '../../utils';
+import { computed, computedStatic, setEffect, setEffectStatic } from '../../utils';
 import { state } from '../../state';
 import { randomNumber } from '@aldinh777/toolbox/random';
 
 describe('utils', () => {
-    test('basic mutated', () => {
+    test('basic computed', () => {
         const a = state(randomNumber(100));
         const b = state(randomNumber(100));
-        const x = mutated(() => a() + b());
+        const x = computed(() => a() + b());
 
         a(a() + 1);
         b(b() + 1);
@@ -38,10 +38,10 @@ describe('utils', () => {
         expect(effectCounter).toBe(2);
     });
 
-    test('static mutated', () => {
+    test('static computed', () => {
         const a = state(randomNumber(100));
         const b = state(randomNumber(100));
-        const x = mutatedStatic([a, b], (a, b) => a + b);
+        const x = computedStatic([a, b], (a, b) => a + b);
 
         a(a() + 1);
         b(b() + 1);
@@ -72,13 +72,13 @@ describe('utils', () => {
     test('diamond structure dependency', () => {
         const x = state(randomNumber(100));
 
-        const a = mutated(() => x());
-        const b = mutated(() => x());
-        const c = mutated(() => a() + b());
+        const a = computed(() => x());
+        const b = computed(() => x());
+        const c = computed(() => a() + b());
 
-        const staticA = mutatedStatic([x], (x) => x);
-        const staticB = mutatedStatic([x], (x) => x);
-        const staticC = mutatedStatic([staticA, staticB], (a, b) => a + b);
+        const staticA = computedStatic([x], (x) => x);
+        const staticB = computedStatic([x], (x) => x);
+        const staticC = computedStatic([staticA, staticB], (a, b) => a + b);
 
         let updateCounter = 0;
         let staticUpdateCounter = 0;
@@ -98,7 +98,7 @@ describe('utils', () => {
 
         let calculationCalls = 0;
 
-        const a = mutated(() => {
+        const a = computed(() => {
             calculationCalls++;
             return isUsingX() ? x() : y();
         });
@@ -119,19 +119,19 @@ describe('utils', () => {
 
     test('error when nested effect', () => {
         const x = state(0);
-        expect(() => setEffect(() => mutated(() => x() + 1))).toThrow();
+        expect(() => setEffect(() => computed(() => x() + 1))).toThrow();
     });
 
     test('error when using non-static to create static effect', () => {
         const x = state(0);
-        const y = mutated(() => x());
+        const y = computed(() => x());
         expect(() => setEffectStatic([y], (y) => y + 1)).toThrow();
     });
 
     test('error when effect have no dependency', () => {
-        expect(() => mutated(() => null)).toThrow();
+        expect(() => computed(() => null)).toThrow();
         expect(() => setEffect(() => null)).toThrow();
-        expect(() => mutatedStatic([], () => null)).toThrow();
+        expect(() => computedStatic([], () => null)).toThrow();
         expect(() => setEffectStatic([], () => null)).toThrow();
     });
 
