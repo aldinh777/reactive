@@ -1,5 +1,5 @@
 import type { Unsubscribe } from '../utils/subscription.js';
-import { __MUTATED_DATA } from './internal.js';
+import { __EFFECT } from './internal.js';
 import { subscribe } from '../utils/subscription.js';
 
 export type UpdateListener<T> = (value: T) => any;
@@ -29,8 +29,8 @@ export function state<T = any>(initial?: T): State<T> {
     let hlock = false;
     const State = (...arg: [T?]) => {
         if (!arg.length) {
-            if (__MUTATED_DATA._isExecuting) {
-                __MUTATED_DATA._dependencies.add(State);
+            if (__EFFECT._tracking) {
+                __EFFECT._dependencies.add(State);
             }
             return val;
         }

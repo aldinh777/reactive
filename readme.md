@@ -67,10 +67,10 @@ This is how we acquire the same effect using this library
 
 ```js
 import { state } from '@aldinh777/reactive';
-import { mutated } from '@aldinh777/reactive/utils';
+import { computed } from '@aldinh777/reactive/utils';
 
 const a = state(5);
-const b = mutated((a) => a * 2);
+const b = computed((a) => a * 2);
 
 console.log('current value = ', b());
 // output: current value = 10

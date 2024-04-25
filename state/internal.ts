@@ -7,13 +7,13 @@ import { State } from './index.js';
  */
 export const __ROOT_SET = new WeakMap<State, Map<State, Unsubscribe>>();
 /**
- * Weak Set that stores any states that is created using mutated
+ * Weak Set that stores any states that is created using computed
  */
 export const __DYNAMICS = new WeakSet<State>();
-export const __MUTATED_DATA = {
-    _isExecuting: false,
+export const __EFFECT = {
+    _tracking: false,
     /**
-     * The set of states that is being used while `mutated` or `effect` method is being executing
+     * The set of states that is being used while `computed` or `effect` method is being executing
      */
     _dependencies: new Set<State>()
 };
