@@ -1,11 +1,9 @@
 import type { State } from '../state/index.js';
-import type { Unsubscribe } from './subscription.js';
+import type { Stoppable, Unsubscribe } from './subscription.js';
 import { __ROOT_SET, __EFFECT, __DYNAMICS } from '../state/internal.js';
 import { state } from '../state/index.js';
 
-export interface Computed<T = any> extends State<T> {
-    stop: Unsubscribe;
-}
+export type Computed<T = any> = State<T> & Stoppable;
 
 function filterDeps(states: Set<State>) {
     const deps = new Set<State>();

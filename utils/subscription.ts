@@ -2,6 +2,10 @@ import { pushNonExists, removeFromArray } from '@aldinh777/toolbox/array-operati
 
 export type Unsubscribe = () => void;
 
+export interface Stoppable {
+    stop: Unsubscribe;
+}
+
 /**
  * insert listener into array and return a callback that remove the item from array
  */
