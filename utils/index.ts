@@ -3,7 +3,7 @@ import type { Unsubscribe } from './subscription.js';
 import { __ROOT_SET, __EFFECT, __DYNAMICS } from '../state/internal.js';
 import { state } from '../state/index.js';
 
-export interface Computed<T> extends State<T> {
+export interface Computed<T = any> extends State<T> {
     stop: Unsubscribe;
 }
 
