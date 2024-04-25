@@ -1,6 +1,6 @@
 import type { State } from '../state/index.js';
 import type { Unsubscribe } from './subscription.js';
-import { __ROOT_SET, __MUTATED_DATA, __DYNAMICS } from '../state/internal.js';
+import { __ROOT_SET, __EFFECT, __DYNAMICS } from '../state/internal.js';
 import { state } from '../state/index.js';
 
 export interface Computed<T> extends State<T> {
@@ -23,9 +23,9 @@ function filterDeps(states: Set<State>) {
 }
 
 function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscribe {
-    if (__MUTATED_DATA._isExecuting) {
-        __MUTATED_DATA._isExecuting = false;
-        throw Error('nested mutated or effect are not allowed');
+    if (__EFFECT._tracking) {
+        __EFFECT._tracking = false;
+        throw Error('nested computed or effect are not allowed');
     }
     const rootDepsMap = new Map<State, Unsubscribe>();
     if (state) {
@@ -33,14 +33,14 @@ function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscri
         __ROOT_SET.set(state, rootDepsMap);
     }
     const exec = () => {
-        __MUTATED_DATA._isExecuting = true;
+        __EFFECT._tracking = true;
         const result = effectHandler();
-        const newDeps = filterDeps(__MUTATED_DATA._dependencies);
+        const newDeps = filterDeps(__EFFECT._dependencies);
         if (newDeps.size === 0) {
-            throw Error('mutated or effect has zero dependency');
+            throw Error('computed or effect has zero dependency');
         }
-        __MUTATED_DATA._isExecuting = false;
-        __MUTATED_DATA._dependencies.clear();
+        __EFFECT._tracking = false;
+        __EFFECT._dependencies.clear();
         for (const [oldDep, unsub] of rootDepsMap) {
             unsub();
             if (newDeps.has(oldDep)) {
@@ -70,7 +70,7 @@ function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscri
 function handleStaticEffect<T, U>(states: State<T>[], handler: (...values: T[]) => U, state?: State<U>) {
     if (states.some((st) => __DYNAMICS.has(st))) {
         throw Error(
-            'creating static effect or mutated using some states that may have dynamic dependency is forbidden'
+            'creating static effect or computed using some states that may have dynamic dependency is forbidden'
         );
     }
     const rootDepsMap = new Map<State, Unsubscribe>();
@@ -79,7 +79,7 @@ function handleStaticEffect<T, U>(states: State<T>[], handler: (...values: T[]) 
     }
     const deps = filterDeps(new Set(states));
     if (deps.size === 0) {
-        throw Error('static effect or mutated must have at least one dependency');
+        throw Error('static effect or computed must have at least one dependency');
     }
     const exec = () => {
         const result = handler(...states.map((s) => s()));
