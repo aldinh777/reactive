@@ -1,4 +1,4 @@
-import type { Unsubscribe } from '../utils/subscription.js';
+import type { Stoppable, Unsubscribe } from '../utils/subscription.js';
 import { subscribe } from '../utils/subscription.js';
 
 export type Operation = '+' | '-' | '=';
@@ -6,6 +6,8 @@ export type OperationHandler<K, V> = (key: K, value: V, prev: V) => any;
 export type OperationListeners<K, V> = {
     [op in Operation]: OperationHandler<K, V>[];
 };
+
+export type ObservedList<T> = WatchableList<T> & Stoppable;
 
 interface BulkWatcher<K, V> {
     update?: OperationHandler<K, V>;
@@ -23,10 +25,6 @@ export interface Watchable<K, V> {
 export interface WatchableList<T> extends Watchable<number, T> {
     (): T[];
     (key: number): T;
-}
-
-export interface ObservedList<T> extends WatchableList<T> {
-    stop(): void;
 }
 
 export function watchify<K, V>(Watchable: any) {
