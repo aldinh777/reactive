@@ -91,6 +91,43 @@ describe('core state functionality', () => {
         expect(thirdCounter).toBe(3);
     });
 
+    test('last called listener', () => {
+        let firstCounter = 0;
+        let lastCounter = 0;
+        const x = state(0);
+        const disallowEvenNumber = (current: number) => {
+            if (current % 2 === 0) {
+                x(current + 1);
+            }
+            firstCounter++;
+        };
+        const unsubFirst = x.onChange(disallowEvenNumber);
+        // isLast optional parameter set to true
+        x.onChange(() => lastCounter++, true);
+
+        // 1st change, increase firstCounter to 1 and lastCounter to 1
+        x(1);
+        // 2nd change, updating x to 3, firstCounter increased to 2
+        // 3rd change, increase firstCounter to 3 and lastCounter to 2
+        x(2);
+
+        expect(firstCounter).toBe(3);
+        expect(lastCounter).toBe(2);
+
+        firstCounter = 0;
+        lastCounter = 0;
+        // remove and reattach disallowEvenNumber listener
+        unsubFirst();
+        x.onChange(disallowEvenNumber);
+
+        x(1);
+        x(2);
+
+        // it should execute in the same order
+        expect(firstCounter).toBe(3);
+        expect(lastCounter).toBe(2);
+    });
+
     test('properly stringified', () => {
         const num = randomNumber(10);
         const x = state(num);
