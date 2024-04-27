@@ -8,12 +8,14 @@ export type ChangeHandler<T> = (next: T, previous: T) => any;
 export interface State<T = any> {
     (): T;
     (value: T): void;
-    onChange(handler: ChangeHandler<T>): Unsubscribe;
+    onChange(handler: ChangeHandler<T>, last?: boolean): Unsubscribe;
 }
 
 export function state<T = any>(initial?: T): State<T> {
     /** List of active update listeners */
     const upd: UpdateListener<T>[] = [];
+    /** Listeners that will be executed last */
+    const updl: UpdateListener<T>[] = [];
     /** The actual value being stored */
     let val: T = initial;
     /**
@@ -38,7 +40,7 @@ export function state<T = any>(initial?: T): State<T> {
         hlock = ulock;
         while (!ulock) {
             ulock = true;
-            for (const listener of [...upd]) {
+            for (const listener of upd.concat(updl)) {
                 listener(val);
                 if (hlock) {
                     break;
@@ -49,9 +51,9 @@ export function state<T = any>(initial?: T): State<T> {
         }
         ulock = hlock;
     };
-    State.onChange = (handler: ChangeHandler<T>) => {
+    State.onChange = (handler: ChangeHandler<T>, last = false) => {
         let oldValue = val;
-        return subscribe(upd, (value: T) => {
+        return subscribe(last ? updl : upd, (value: T) => {
             if (value !== oldValue) {
                 handler(value, oldValue);
                 oldValue = value;
