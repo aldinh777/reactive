@@ -12,7 +12,7 @@ There is many ways to implement this behaviour, ReactiveX like to call this beha
 
 a `State` always have a value, and its value can and will changes overtime to be observed later throughout the changes. In another word, it just a value wrapper with the ability to be observable
 
-Lets start simple, this is how you create a state, simple and straighforward
+Lets start simple, this is how to create a `State`
 
 ```js
 import { state } from '@aldinh777/reactive';
@@ -54,7 +54,7 @@ In the classical world Procedural Programming, changing the value of `a` won't a
 ```py
 # Reactive Simulation
 a = 5
-b <- a * 2  # the value of b will be whatever the value of a at the moment times 2
+b <- a * 2  # the value of b will become whatever the value of a at the moment times 2
 print(a)    # 5
 print(b)    # 10
 
@@ -70,7 +70,7 @@ import { state } from '@aldinh777/reactive';
 import { computed } from '@aldinh777/reactive/utils';
 
 const a = state(5);
-const b = computed((a) => a * 2);
+const b = computed(() => a() * 2);
 
 console.log('current value = ', b());
 // output: current value = 10
@@ -130,16 +130,16 @@ a(9); // (nothing happened...)
 a(15); // A is currently GREATER THAN 10
 ```
 
-if there is multiple state to be observed, you can use the `effect`
+if there is multiple state to be observed, use the `setEffect`
 
 ```js
 import { state } from '@aldinh777/reactive';
-import { effect } from '@aldinh777/reactive/utils';
+import { setEffect } from '@aldinh777/reactive/utils';
 
 const a = state(2);
 const b = state(3);
 
-effect(() => {
+setEffect(() => {
     if (a() + b() > 10) {
         console.log(`A and B combined which is ${a() + b()} is GREATER THAN 10`);
     }
