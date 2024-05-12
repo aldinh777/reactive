@@ -4,7 +4,7 @@ import { subscribe } from '../utils/subscription.js';
 export type Operation = '+' | '-' | '=';
 export type OperationHandler<K, V> = (key: K, value: V, prev: V) => any;
 export type OperationListeners<K, V> = {
-    [op in Operation]: OperationHandler<K, V>[];
+    [op in Operation]: Set<OperationHandler<K, V>>;
 };
 
 export type ObservedList<T> = WatchableList<T> & Stoppable;
@@ -28,7 +28,7 @@ export interface WatchableList<T> extends Watchable<number, T> {
 }
 
 export function watchify<K, V>(Watchable: any) {
-    const upd: OperationListeners<K, V> = { '+': [], '-': [], '=': [] };
+    const upd: OperationListeners<K, V> = { '+': new Set(), '-': new Set(), '=': new Set() };
     const trigger = (op: Operation, key: K, value: V, updated?: V) => {
         const handlers = upd[op];
         for (const handle of handlers || []) {
