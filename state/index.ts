@@ -4,12 +4,11 @@ import { subscribe } from '../utils/subscription.js';
 
 export type UpdateListener<T> = (value: T) => any;
 export type ChangeHandler<T> = (next: T, previous: T) => any;
-
-export interface State<T = any> {
+export type State<T = any> = {
     (): T;
     (value: T): void;
     onChange(handler: ChangeHandler<T>, last?: boolean): Unsubscribe;
-}
+};
 
 export function state<T = any>(initial?: T): State<T> {
     /** List of active update listeners */

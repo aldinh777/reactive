@@ -4,6 +4,14 @@ import { __ROOT_SET, __EFFECT, __DYNAMICS } from '../state/internal.js';
 import { state } from '../state/index.js';
 
 export type Computed<T = any> = State<T> & Stoppable;
+export type ComputedBuilder<T, U> = {
+    (computer: () => T): Computed<T>;
+    (states: State<T>[], computer: (...values: T[]) => U): Computed<U>;
+};
+export type EffectBuilder<T> = {
+    (handler: () => any): Unsubscribe;
+    (states: State<T>[], handler: (...values: T[]) => any): Unsubscribe;
+};
 
 function filterDeps(states: Set<State>) {
     const deps = new Set<State>();
@@ -23,6 +31,7 @@ function filterDeps(states: Set<State>) {
 function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscribe {
     if (__EFFECT._tracking) {
         __EFFECT._tracking = false;
+        __EFFECT._dependencies.clear();
         throw Error('nested computed or effect are not allowed');
     }
     const rootDepsMap = new Map<State, Unsubscribe>();
@@ -34,11 +43,11 @@ function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscri
         __EFFECT._tracking = true;
         const result = effectHandler();
         const newDeps = filterDeps(__EFFECT._dependencies);
+        __EFFECT._tracking = false;
+        __EFFECT._dependencies.clear();
         if (newDeps.size === 0) {
             throw Error('computed or effect has zero dependency');
         }
-        __EFFECT._tracking = false;
-        __EFFECT._dependencies.clear();
         for (const [oldDep, unsub] of rootDepsMap) {
             unsub();
             if (newDeps.has(oldDep)) {
@@ -67,9 +76,7 @@ function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscri
 
 function handleStaticEffect<T, U>(states: State<T>[], handler: (...values: T[]) => U, state?: State<U>) {
     if (states.some((st) => __DYNAMICS.has(st))) {
-        throw Error(
-            'creating static effect or computed using some states that may have dynamic dependency is forbidden'
-        );
+        throw Error('attempting to create static effect or computed using some non-static states');
     }
     const rootDepsMap = new Map<State, Unsubscribe>();
     if (state) {
@@ -97,19 +104,14 @@ function handleStaticEffect<T, U>(states: State<T>[], handler: (...values: T[]) 
     };
 }
 
-export const setEffect = (effectHandler: () => any) => handleEffect(effectHandler);
+export const setEffect = <T>(handler: (...values: T[]) => any, dependencies?: State<T>[]) =>
+    dependencies instanceof Array ? handleStaticEffect(dependencies, handler) : handleEffect(handler);
 
-export const setEffectStatic = <T>(states: State<T>[], handler: (...values: T[]) => any) =>
-    handleStaticEffect(states, handler);
-
-export const computed = <T>(computer: () => T) => {
-    const st = state() as Computed<T>;
-    st.stop = handleEffect(computer, st);
-    return st;
-};
-
-export const computedStatic = <T, U>(states: State<T>[], computer: (...values: T[]) => U) => {
-    const st = state() as Computed<U>;
-    st.stop = handleStaticEffect(states, computer, st);
-    return st;
+export const computed = <T, U>(computer: (...values: T[]) => U, dependencies?: State<T>[]) => {
+    const computed = state() as Computed<U>;
+    computed.stop =
+        dependencies instanceof Array
+            ? handleStaticEffect(dependencies, computer, computed)
+            : handleEffect(computer, computed);
+    return computed;
 };

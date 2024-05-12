@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { computed, computedStatic, setEffect, setEffectStatic } from '../../utils';
+import { computed, setEffect } from '../../utils';
 import { state } from '../../state';
 import { randomNumber } from '../test-util';
 
@@ -41,7 +41,7 @@ describe('utils', () => {
     test('static computed', () => {
         const a = state(randomNumber(100));
         const b = state(randomNumber(100));
-        const x = computedStatic([a, b], (a, b) => a + b);
+        const x = computed((a, b) => a + b, [a, b]);
 
         a(a() + 1);
         b(b() + 1);
@@ -59,7 +59,7 @@ describe('utils', () => {
         const a = state(randomNumber(100));
         let effectCounter = 0;
 
-        const unsub = setEffectStatic([a], (a) => effectCounter++);
+        const unsub = setEffect((_) => effectCounter++, [a]);
 
         a(a() + 1);
         expect(effectCounter).toBe(2);
@@ -76,9 +76,9 @@ describe('utils', () => {
         const b = computed(() => x());
         const c = computed(() => a() + b());
 
-        const staticA = computedStatic([x], (x) => x);
-        const staticB = computedStatic([x], (x) => x);
-        const staticC = computedStatic([staticA, staticB], (a, b) => a + b);
+        const staticA = computed((x) => x, [x]);
+        const staticB = computed((x) => x, [x]);
+        const staticC = computed((a, b) => a + b, [staticA, staticB]);
 
         let updateCounter = 0;
         let staticUpdateCounter = 0;
@@ -125,16 +125,16 @@ describe('utils', () => {
     test('error when using non-static to create static effect', () => {
         const x = state(0);
         const y = computed(() => x());
-        expect(() => setEffectStatic([y], (y) => y + 1)).toThrow();
+        expect(() => setEffect((y) => y + 1, [y])).toThrow();
     });
 
     test('error when effect have no dependency', () => {
         expect(() => computed(() => null)).toThrow();
         expect(() => setEffect(() => null)).toThrow();
-        expect(() => computedStatic([], () => null)).toThrow();
-        expect(() => setEffectStatic([], () => null)).toThrow();
+        expect(() => computed(() => null, [])).toThrow();
+        expect(() => setEffect(() => null, [])).toThrow();
     });
-
+    
     test('error when effect has suddenly lost it all dependencies', () => {
         const x = state(0);
         let usingX = true;
