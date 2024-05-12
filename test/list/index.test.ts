@@ -1,7 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 import { list } from '../../list';
-import { randomNumber } from '@aldinh777/toolbox/random';
-import { randomList } from '../test-util';
+import { randomList, randomNumber } from '../test-util';
 
 describe('reactive list', () => {
     describe('core', () => {

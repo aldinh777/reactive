@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'bun:test';
 import { computed, computedStatic, setEffect, setEffectStatic } from '../../utils';
 import { state } from '../../state';
-import { randomNumber } from '@aldinh777/toolbox/random';
+import { randomNumber } from '../test-util';
 
 describe('utils', () => {
     test('basic computed', () => {
