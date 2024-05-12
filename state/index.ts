@@ -1,5 +1,6 @@
 import type { Unsubscribe } from '../utils/subscription.js';
 import { __EFFECT } from './internal.js';
+import { subscribe } from '../utils/subscription.js';
 
 export type UpdateListener<T> = (value: T) => any;
 export type ChangeHandler<T> = (next: T, previous: T) => any;
@@ -52,15 +53,12 @@ export function state<T = any>(initial?: T): State<T> {
     };
     State.onChange = (handler: ChangeHandler<T>, last = false) => {
         let oldValue = val;
-        const ulistener = (value: T) => {
+        return subscribe(last ? updl : upd, (value: T) => {
             if (value !== oldValue) {
                 handler(value, oldValue);
                 oldValue = value;
             }
-        }
-        const uset = last ? updl : upd;
-        uset.add(ulistener)
-        return () => uset.delete(ulistener)
+        });
     };
     State.toString = () => `State { value: ${val} }`;
     return State;
