@@ -1,20 +1,17 @@
 {
   "name": "@aldinh777/reactive",
   "version": "0.35.5",
-  "description": "another attempt to Reactive programming",
-  "main": "state/index.js",
-  "types": "state/index.d.ts",
-  "type": "module",
-  "scripts": {
-    "build": "tsc"
-  },
   "author": "aldinh777",
-  "license": "MIT",
+  "main": "state/index.js",
   "devDependencies": {
     "@types/bun": "^1.1.0",
     "typescript": "^5.4.3"
   },
-  "dependencies": {
-    "@aldinh777/toolbox": "^1.4.1"
-  }
+  "description": "another attempt to Reactive programming",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc"
+  },
+  "type": "module",
+  "types": "state/index.d.ts"
 }
