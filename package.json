@@ -1,6 +1,6 @@
 {
   "name": "@aldinh777/reactive",
-  "version": "0.35.5",
+  "version": "0.35.6",
   "author": "aldinh777",
   "main": "state/index.js",
   "devDependencies": {
