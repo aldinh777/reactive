@@ -1,8 +1,7 @@
 import { describe, test, expect } from 'bun:test';
 import { list } from '../../../list';
 import { map } from '../../../list/utils/map';
-import { randomNumber } from '@aldinh777/toolbox/random';
-import { randomList } from '../../test-util';
+import { randomList, randomNumber } from '../../test-util';
 
 describe('list-util map', () => {
     test('initialize properly', () => {

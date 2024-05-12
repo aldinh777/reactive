@@ -1,8 +1,7 @@
 import { describe, test, expect } from 'bun:test';
 import { list } from '../../../list';
 import { sort } from '../../../list/utils/sort';
-import { randomNumber } from '@aldinh777/toolbox/random';
-import { randomList } from '../../test-util';
+import { randomList, randomNumber } from '../../test-util';
 
 function sortList(list: number[]) {
     return list.toSorted((a, b) => a - b);

@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 import { stateLocalStorage, stateToggle } from '../../state/common';
-import { randomString } from '@aldinh777/toolbox/random';
+import { randomString } from '../test-util';
 
 class LocalStorageMock {
     store: any;
@@ -46,7 +46,7 @@ describe('common state', () => {
         const initialValue = randomString(8);
         const newItem = stateLocalStorage('item', initialValue);
         expect(newItem()).toBe(initialValue);
-        const newValue = initialValue + randomString();
+        const newValue = initialValue + randomString(4);
         newItem(newValue);
 
         const existingItem = stateLocalStorage('item', initialValue);
