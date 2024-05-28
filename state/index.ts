@@ -1,5 +1,5 @@
 import type { Unsubscribe } from '../utils/subscription.js';
-import { __EFFECT } from './internal.js';
+import { __EFFECTS_STACK } from './internal.js';
 import { subscribe } from '../utils/subscription.js';
 
 export type UpdateListener<T> = (value: T) => any;
@@ -30,8 +30,8 @@ export function state<T = any>(initial?: T): State<T> {
     let hlock = false;
     const State = (...arg: [T?]) => {
         if (!arg.length) {
-            if (__EFFECT._tracking) {
-                __EFFECT._dependencies.add(State);
+            if (__EFFECTS_STACK.length) {
+                __EFFECTS_STACK[__EFFECTS_STACK.length - 1].add(State);
             }
             return val;
         }

@@ -1,6 +1,6 @@
 import type { State } from '../state/index.js';
 import type { Stoppable, Unsubscribe } from './subscription.js';
-import { __ROOT_SET, __EFFECT, __DYNAMICS } from '../state/internal.js';
+import { __ROOT_SET, __EFFECTS_STACK, __DYNAMICS } from '../state/internal.js';
 import { state } from '../state/index.js';
 
 export type Computed<T = any> = State<T> & Stoppable;
@@ -29,25 +29,15 @@ function filterDeps(states: Set<State>) {
 }
 
 function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscribe {
-    if (__EFFECT._tracking) {
-        __EFFECT._tracking = false;
-        __EFFECT._dependencies.clear();
-        throw Error('nested computed or effect are not allowed');
-    }
     const rootDepsMap = new Map<State, Unsubscribe>();
     if (state) {
         __DYNAMICS.add(state);
         __ROOT_SET.set(state, rootDepsMap);
     }
     const exec = () => {
-        __EFFECT._tracking = true;
+        __EFFECTS_STACK.push(new Set());
         const result = effectHandler();
-        const newDeps = filterDeps(__EFFECT._dependencies);
-        __EFFECT._tracking = false;
-        __EFFECT._dependencies.clear();
-        if (newDeps.size === 0) {
-            throw Error('computed or effect has zero dependency');
-        }
+        const newDeps = filterDeps(__EFFECTS_STACK.pop());
         for (const [oldDep, unsub] of rootDepsMap) {
             unsub();
             if (newDeps.has(oldDep)) {
@@ -74,18 +64,15 @@ function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscri
     };
 }
 
-function handleStaticEffect<T, U>(states: State<T>[], handler: (...values: T[]) => U, state?: State<U>) {
+function handleStaticEffect<T, U>(states: State<T>[], handler: (...values: T[]) => U, state?: Computed<U>) {
     if (states.some((st) => __DYNAMICS.has(st))) {
-        throw Error('attempting to create static effect or computed using some non-static states');
+        return handleEffect(() => handler(...states.map((s) => s())), state);
     }
     const rootDepsMap = new Map<State, Unsubscribe>();
     if (state) {
         __ROOT_SET.set(state, rootDepsMap);
     }
     const deps = filterDeps(new Set(states));
-    if (deps.size === 0) {
-        throw Error('static effect or computed must have at least one dependency');
-    }
     const exec = () => {
         const result = handler(...states.map((s) => s()));
         state?.(result);
