@@ -117,29 +117,83 @@ describe('utils', () => {
         expect(calculationCalls).toBe(4);
     });
 
-    test('error when nested effect', () => {
-        const x = state(0);
-        expect(() => setEffect(() => computed(() => x() + 1))).toThrow();
+    test('when nested effect', () => {
+        const x = state(randomNumber(100));
+        const y = state(randomNumber(100));
+        let counterX = 0;
+        let counterY = 0;
+        setEffect(() => {
+            x(); // used as dependency
+            counterX++;
+            setEffect(() => {
+                y(); // used as dependency
+                counterY++;
+            });
+        });
+
+        y(y() + 1);
+        expect(counterX).toBe(1); // x is having different effect stack
+        expect(counterY).toBe(2); // y is used as dependency
+
+        x(x() + 1);
+        expect(counterX).toBe(2); // x is used as dependency
+        expect(counterY).toBe(3); // y isnt used, but the effect from x create another effect affecting y
+
+        y(y() + 1);
+        expect(counterX).toBe(2); // like before, x is having different stack
+        expect(counterY).toBe(5); // update from the first effect and the second newly created effect from x effect
+
+        // if you're confused, then you probably shouldn't create any nested effect
     });
 
-    test('error when using non-static to create static effect', () => {
-        const x = state(0);
-        const y = computed(() => x());
-        expect(() => setEffect((y) => y + 1, [y])).toThrow();
+    test('using dynamic dependency to create static effect', () => {
+        const a = state(randomNumber(100));
+        const b = state(randomNumber(100));
+        const c = computed(() => a() + 1); // c are dynamically dependent on a
+
+        /**
+         * no dynamic dependency detected from dependency list,
+         * making x depends only on b even when c is also being called inside computed
+         */
+        const x = computed((b) => b + c(), [b]);
+        let counterX = 0;
+        x.onChange(() => counterX++);
+        a(a() + 1); // counterX = 0, x did not depends on a
+        b(b() + 1); // counterX = 1
+        expect(counterX).toBe(1);
+
+        /**
+         * in this case, c has dynamic dependency which is a,
+         * making y depends on whatever being used inside computed, including b
+         */
+        const y = computed((c) => b() + c, [c]);
+        let counterY = 0;
+        y.onChange(() => counterY++);
+        a(a() + 1); // counterY = 1, y dynamically depends on c which also dynamically depends on a
+        b(b() + 1); // counterY = 2, y also dynamically depends on b
+        expect(counterY).toBe(2);
     });
 
-    test('error when effect have no dependency', () => {
-        expect(() => computed(() => null)).toThrow();
-        expect(() => setEffect(() => null)).toThrow();
-        expect(() => computed(() => null, [])).toThrow();
-        expect(() => setEffect(() => null, [])).toThrow();
+    test('when effect have no dependency', () => {
+        // literally nothing to watch
+        const x = computed(() => null);
+        const y = computed(() => null, []);
+        setEffect(() => null);
+        setEffect(() => null, []);
+
+        // what else to expect...
+        expect(x()).toBeNull();
+        expect(y()).toBeNull();
     });
-    
-    test('error when effect has suddenly lost it all dependencies', () => {
-        const x = state(0);
+
+    test('when effect has suddenly lost it all dependencies', () => {
+        const x = state(randomNumber(100));
+        let counter = 0;
         let usingX = true;
-        setEffect(() => usingX && x());
+        setEffect(() => ++counter && usingX && x()); // counter = 1
         usingX = false;
-        expect(() => x(1)).toThrow();
+        x(x() + 1); // counter = 2, after running, effect lost its dependencies
+        x(x() + 1); // counter = 2, effect no longer running
+        expect(counter).toBe(2);
     });
 });
