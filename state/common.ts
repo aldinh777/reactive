@@ -10,7 +10,7 @@ export const stateToggle = (initial: boolean): ToggleOutput => {
     return [st, open, close, toggle];
 };
 
-export const stateLocalStorage = (key: string, initial: string) => {
+export const stateLocalStorage = (key: string, initial: string): State<string> => {
     const st = state(initial);
     const local = localStorage.getItem(key);
     if (local) {
