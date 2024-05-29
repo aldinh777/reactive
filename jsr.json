@@ -1,5 +1,16 @@
 {
   "name": "@aldinh777/reactive",
   "version": "0.36.1",
-  "exports": "./state/index.ts"
+  "exports": {
+    ".": "./state/index.ts",
+    "./utils": "./utils/index.ts",
+    "./list": "./list/index.ts",
+    "./list/utils": "./list/utils/index.ts",
+    "./common": "./state/common.ts"
+  },
+  "publish": {
+    "exclude": [
+      "test"
+    ]
+  }
 }
