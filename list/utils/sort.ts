@@ -2,7 +2,10 @@ import { ObservedList, WatchableList, stopify, watchify } from '../watchable.js'
 
 const defaultSorter = (item: any, elem: any) => item < elem;
 
-export function sort<T>(list: WatchableList<T>, sorter: (item: T, elem: T) => boolean = defaultSorter) {
+export function sort<T>(
+    list: WatchableList<T>,
+    sorter: (item: T, elem: T) => boolean = defaultSorter
+): ObservedList<T> {
     const raw: T[] = [];
     const insertItem = (array: T[], item: T): number => {
         let insertIndex = array.length;

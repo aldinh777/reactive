@@ -10,7 +10,7 @@ export interface ReactiveList<T> extends WatchableList<T> {
     splice(start: number, deleteCount?: number, ...items: T[]): T[];
 }
 
-export function list<T>(initial: T[] = []) {
+export function list<T>(initial: T[] = []): ReactiveList<T> {
     const raw = [...initial];
     const ReactiveList = (...arg: [number?, T?]) => {
         if (!arg.length) {

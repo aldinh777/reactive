@@ -1,6 +1,10 @@
 import { ObservedList, WatchableList, stopify, watchify } from '../watchable.js';
 
-export function map<S, T>(list: WatchableList<S>, map: (item: S) => T, remap?: (item: S, elem: T) => any) {
+export function map<S, T>(
+    list: WatchableList<S>,
+    map: (item: S) => T,
+    remap?: (item: S, elem: T) => any
+): ObservedList<T> {
     let om: WeakMap<object, T> = new WeakMap();
     const raw: T[] = [];
     const mapItem = (item: S, replace: boolean = true): T => {

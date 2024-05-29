@@ -64,7 +64,11 @@ function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscri
     };
 }
 
-function handleStaticEffect<T, U>(states: State<T>[], handler: (...values: T[]) => U, state?: Computed<U>) {
+function handleStaticEffect<T, U>(
+    states: State<T>[],
+    handler: (...values: T[]) => U,
+    state?: Computed<U>
+): Unsubscribe {
     if (states.some((st) => __DYNAMICS.has(st))) {
         return handleEffect(() => handler(...states.map((s) => s())), state);
     }
@@ -91,10 +95,10 @@ function handleStaticEffect<T, U>(states: State<T>[], handler: (...values: T[]) 
     };
 }
 
-export const setEffect = <T>(handler: (...values: T[]) => any, dependencies?: State<T>[]) =>
+export const setEffect = <T>(handler: (...values: T[]) => any, dependencies?: State<T>[]): Unsubscribe =>
     dependencies instanceof Array ? handleStaticEffect(dependencies, handler) : handleEffect(handler);
 
-export const computed = <T, U>(computer: (...values: T[]) => U, dependencies?: State<T>[]) => {
+export const computed = <T, U>(computer: (...values: T[]) => U, dependencies?: State<T>[]): Computed<U> => {
     const computed = state() as Computed<U>;
     computed.stop =
         dependencies instanceof Array

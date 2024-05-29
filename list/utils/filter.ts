@@ -1,6 +1,6 @@
 import { ObservedList, WatchableList, stopify, watchify } from '../watchable.js';
 
-export function filter<T>(list: WatchableList<T>, filter: (item: T) => boolean) {
+export function filter<T>(list: WatchableList<T>, filter: (item: T) => boolean): ObservedList<T> {
     const raw: T[] = [];
     const _f: boolean[] = list().map(filter);
     for (let i = 0; i < _f.length; i++) {
