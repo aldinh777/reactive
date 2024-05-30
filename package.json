@@ -1,17 +1,21 @@
 {
   "name": "@aldinh777/reactive",
-  "version": "0.36.2",
+  "description": "another attempt to Reactive programming",
+  "version": "0.36.3",
   "author": "aldinh777",
-  "main": "state/index.js",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./state/index.js",
+    "./utils": "./utils/index.js",
+    "./utils/subscription": "./utils/subscription.js",
+    "./list": "./list/index.js",
+    "./list/watchable": "./list/watchable.js",
+    "./list/utils": "./list/utils/index.js",
+    "./common": "./state/common.js"
+  },
   "devDependencies": {
     "@types/bun": "^1.1.1",
     "typescript": "^5.4.5"
-  },
-  "description": "another attempt to Reactive programming",
-  "license": "MIT",
-  "scripts": {
-    "build": "tsc"
-  },
-  "type": "module",
-  "types": "state/index.d.ts"
+  }
 }
