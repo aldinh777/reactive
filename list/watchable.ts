@@ -58,7 +58,7 @@ export interface WatchableList<T> extends Watchable<number, T> {
 /**
  * Converts an object into Watchable and return a trigger function to trigger the updates.
  */
-export function watchify<K, V>(Watchable: any) {
+export function watchify<K, V>(Watchable: any): (op: Operation, key: K, value: V, updated?: V) => void {
     const upd: OperationListeners<K, V> = { '+': new Set(), '-': new Set(), '=': new Set() };
     const trigger = (op: Operation, key: K, value: V, updated?: V) => {
         const handlers = upd[op];
@@ -103,7 +103,7 @@ export function watchify<K, V>(Watchable: any) {
 /**
  * Creates a function that stops multiple subscriptions when called.
  */
-export const stopify = (stoppers: Unsubscribe[]) => () => {
+export const stopify = (stoppers: Unsubscribe[]) => (): void => {
     for (const stop of stoppers) {
         stop();
     }
