@@ -10,4 +10,7 @@ export const __ROOT_SET = new WeakMap<State, Map<State, Unsubscribe>>();
  * Weak Set that stores any states that is created using computed
  */
 export const __DYNAMICS = new WeakSet<State>();
+/**
+ * This thing store the dependencies set for each stack of effects
+ */
 export const __EFFECTS_STACK: Set<State>[] = [];

@@ -1,5 +1,8 @@
 import { ObservedList, WatchableList, stopify, watchify } from '../watchable.js';
 
+/**
+ * create a reactive list that is filtered based on the specified list input
+ */
 export function filter<T>(list: WatchableList<T>, filter: (item: T) => boolean): ObservedList<T> {
     const raw: T[] = [];
     const _f: boolean[] = list().map(filter);

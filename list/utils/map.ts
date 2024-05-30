@@ -1,5 +1,8 @@
 import { ObservedList, WatchableList, stopify, watchify } from '../watchable.js';
 
+/**
+ * create a reactive list that is mapped based on the specified list input 
+ */
 export function map<S, T>(
     list: WatchableList<S>,
     map: (item: S) => T,

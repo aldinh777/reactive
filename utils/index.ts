@@ -3,17 +3,16 @@ import type { Stoppable, Unsubscribe } from './subscription.js';
 import { __ROOT_SET, __EFFECTS_STACK, __DYNAMICS } from '../state/internal.js';
 import { state } from '../state/index.js';
 
-export type Computed<T = any> = State<T> & Stoppable;
-export type ComputedBuilder<T, U> = {
-    (computer: () => T): Computed<T>;
-    (states: State<T>[], computer: (...values: T[]) => U): Computed<U>;
-};
-export type EffectBuilder<T> = {
-    (handler: () => any): Unsubscribe;
-    (states: State<T>[], handler: (...values: T[]) => any): Unsubscribe;
-};
+/**
+ * A reactive interface derived from State and Stoppable
+ */
+export interface Computed<T = any> extends State<T>, Stoppable {}
 
-function filterDeps(states: Set<State>) {
+/**
+ * Filters a set of states, if there is any stored dependencies from the state, use those
+ * dependencies instead, if there is none, then use the state
+ */
+function filterDeps(states: Set<State>): Set<State> {
     const deps = new Set<State>();
     for (const dep of states) {
         if (__ROOT_SET.has(dep)) {
@@ -28,6 +27,9 @@ function filterDeps(states: Set<State>) {
     return deps;
 }
 
+/**
+ * Handles the execution of an effect handler and manages dependencies.
+ */
 function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscribe {
     const rootDepsMap = new Map<State, Unsubscribe>();
     if (state) {
@@ -64,6 +66,9 @@ function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscri
     };
 }
 
+/**
+ * Handles the execution of a handler with fixed dependencies.
+ */
 function handleFixed<T, U>(states: State<T>[], handler: (...args: T[]) => U, state?: Computed<U>): Unsubscribe {
     if (states.some((st) => __DYNAMICS.has(st))) {
         return handleEffect(() => handler(...states.map((s) => s())), state);
@@ -91,12 +96,20 @@ function handleFixed<T, U>(states: State<T>[], handler: (...args: T[]) => U, sta
     };
 }
 
-// Magic Typing
+/**
+ * Magic type that allows effect arguments to be sync with the value of input dependencies
+ */
 type Dependencies<T extends any[]> = { [K in keyof T]: State<T[K]> };
 
+/**
+ * Sets an effect to be executed with the specified dependencies.
+ */
 export const setEffect = <T extends any[]>(effect: (...args: T) => any, states?: Dependencies<T>): Unsubscribe =>
     states instanceof Array ? handleFixed(states, effect) : handleEffect(effect);
 
+/**
+ * Creates a computed state based on an effect and its dependencies.
+ */
 export const computed = <T extends any[], U>(effect: (...args: T) => U, states?: Dependencies<T>): Computed<U> => {
     const computed = state() as Computed<U>;
     computed.stop = states instanceof Array ? handleFixed(states, effect, computed) : handleEffect(effect, computed);
