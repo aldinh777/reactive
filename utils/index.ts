@@ -64,11 +64,7 @@ function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscri
     };
 }
 
-function handleStaticEffect<T, U>(
-    states: State<T>[],
-    handler: (...values: T[]) => U,
-    state?: Computed<U>
-): Unsubscribe {
+function handleFixed<T, U>(states: State<T>[], handler: (...args: T[]) => U, state?: Computed<U>): Unsubscribe {
     if (states.some((st) => __DYNAMICS.has(st))) {
         return handleEffect(() => handler(...states.map((s) => s())), state);
     }
@@ -95,14 +91,14 @@ function handleStaticEffect<T, U>(
     };
 }
 
-export const setEffect = <T>(handler: (...values: T[]) => any, dependencies?: State<T>[]): Unsubscribe =>
-    dependencies instanceof Array ? handleStaticEffect(dependencies, handler) : handleEffect(handler);
+// Magic Typing
+type Dependencies<T extends any[]> = { [K in keyof T]: State<T[K]> };
 
-export const computed = <T, U>(computer: (...values: T[]) => U, dependencies?: State<T>[]): Computed<U> => {
+export const setEffect = <T extends any[]>(effect: (...args: T) => any, states?: Dependencies<T>): Unsubscribe =>
+    states instanceof Array ? handleFixed(states, effect) : handleEffect(effect);
+
+export const computed = <T extends any[], U>(effect: (...args: T) => U, states?: Dependencies<T>): Computed<U> => {
     const computed = state() as Computed<U>;
-    computed.stop =
-        dependencies instanceof Array
-            ? handleStaticEffect(dependencies, computer, computed)
-            : handleEffect(computer, computed);
+    computed.stop = states instanceof Array ? handleFixed(states, effect, computed) : handleEffect(effect, computed);
     return computed;
 };
