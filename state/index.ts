@@ -2,14 +2,30 @@ import type { Unsubscribe } from '../utils/subscription.js';
 import { __EFFECTS_STACK } from './internal.js';
 import { subscribe } from '../utils/subscription.js';
 
-export type UpdateListener<T> = (value: T) => any;
-export type ChangeHandler<T> = (next: T, previous: T) => any;
-export type State<T = any> = {
-    (): T;
-    (value: T): void;
-    onChange(handler: ChangeHandler<T>, last?: boolean): Unsubscribe;
-};
+type UpdateListener<T> = (value: T) => any;
+type ChangeHandler<T> = (next: T, previous: T) => any;
 
+/**
+ * A reactive state interface that provides methods to get, set, and listen to state changes.
+ */
+export interface State<T = any> {
+    /**
+     * Retrieves the current state value.
+     */
+    (): T;
+    /**
+     * Updates the state with a new value.
+     */
+    (value: T): void;
+    /**
+     * Registers a handler that will be called whenever the state changes.
+     */
+    onChange(handler: ChangeHandler<T>, isLast?: boolean): Unsubscribe;
+}
+
+/**
+ * function to create and initialize state
+ */
 export function state<T = any>(initial?: T): State<T> {
     /** List of active update listeners */
     const upd: Set<UpdateListener<T>> = new Set();
@@ -50,9 +66,9 @@ export function state<T = any>(initial?: T): State<T> {
         }
         ulock = hlock;
     };
-    State.onChange = (handler: ChangeHandler<T>, last = false) => {
+    State.onChange = (handler: ChangeHandler<T>, isLast = false) => {
         let oldValue = val;
-        return subscribe(last ? updl : upd, (value: T) => {
+        return subscribe(isLast ? updl : upd, (value: T) => {
             if (value !== oldValue) {
                 handler(value, oldValue);
                 oldValue = value;

@@ -2,6 +2,9 @@ import { ObservedList, WatchableList, stopify, watchify } from '../watchable.js'
 
 const defaultSorter = (item: any, elem: any) => item < elem;
 
+/**
+ * create a reactive list that is sorted based on the specified list input 
+ */
 export function sort<T>(
     list: WatchableList<T>,
     sorter: (item: T, elem: T) => boolean = defaultSorter

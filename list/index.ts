@@ -1,6 +1,9 @@
 import type { WatchableList } from './watchable.js';
 import { watchify } from './watchable.js';
 
+/**
+ * An interface to mimic the basic functionality of insertion and deletion of an array
+ */
 export interface ReactiveList<T> extends WatchableList<T> {
     (key: number, value: T): ReactiveList<T>;
     push(...items: T[]): number;
@@ -10,6 +13,12 @@ export interface ReactiveList<T> extends WatchableList<T> {
     splice(start: number, deleteCount?: number, ...items: T[]): T[];
 }
 
+/**
+ * Create a Reactive List that mimic the basic functionality of an array
+ * and is capable of watching any updates from it.
+ * 
+ * operation includes: insertion, deletion, and updates
+ */
 export function list<T>(initial: T[] = []): ReactiveList<T> {
     const raw = [...initial];
     const ReactiveList = (...arg: [number?, T?]) => {
