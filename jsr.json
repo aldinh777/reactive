@@ -1,12 +1,14 @@
 {
   "name": "@aldinh777/reactive",
-  "version": "0.36.2",
+  "version": "0.36.3",
   "exports": {
-    ".": "./state/index.ts",
-    "./utils": "./utils/index.ts",
-    "./list": "./list/index.ts",
-    "./list/utils": "./list/utils/index.ts",
-    "./common": "./state/common.ts"
+    ".": "./state/index.js",
+    "./utils": "./utils/index.js",
+    "./utils/subscription": "./utils/subscription.js",
+    "./list": "./list/index.js",
+    "./list/watchable": "./list/watchable.js",
+    "./list/utils": "./list/utils/index.js",
+    "./common": "./state/common.js"
   },
   "publish": {
     "exclude": [
