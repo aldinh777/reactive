@@ -33,7 +33,7 @@ x(4); // set the current value to 4
 console.log(x()); // 4
 ```
 
-### Data Binding
+### Binding
 
 Imagine two variable, one depends on the other one
 
@@ -49,7 +49,7 @@ print(a)    # 6
 print(b)    # 10
 ```
 
-In the classical world Procedural Programming, changing the value of `a` won't affect the value of `b`. But in Reactive Programming, any change of `a` would directly affect the value of `b`, this ability is usually called `binding`. For the sake of clarity, lets just assume we have our own operator which is (`<-`) to bind any states
+In the classical world Procedural Programming, changing the value of `a` won't affect the value of `b`. But in Reactive Programming, any change of `a` would directly affect the value of `b`, this ability is usually called `binding`. For the sake of clarity, lets just assume we have our own operator called (`<-`) to bind any states
 
 ```py
 # Reactive Simulation
@@ -70,7 +70,7 @@ import { state } from '@aldinh777/reactive';
 import { computed } from '@aldinh777/reactive/utils';
 
 const a = state(5);
-const b = computed(() => a() * 2);
+const b = computed((a) => a * 2, [a]); // mark `a` as dependency
 
 console.log('current value = ', b());
 // output: current value = 10
@@ -81,6 +81,13 @@ console.log('current value = ', b());
 // output: current value = 12
 ```
 
+The dependency could also be infered by usage without explicitly specifying the dependency array
+
+```js
+const a = state(5);
+const b = computed(() => a() * 2); // will automatically mark `a` as dependency
+```
+
 ### Observable
 
 Let say we want to check if some data is greater than 10
@@ -89,7 +96,7 @@ Let say we want to check if some data is greater than 10
 # Procedural Simulation
 a = 5
 if (a > 10) {
-    print('A is CHANGED')
+    print('A is currently GREATER THAN 10')
 }
 
 a = 11  # (nothing happened...)
@@ -97,7 +104,7 @@ a = 9   # (nothing happened...)
 a = 15  # (nothing happened...)
 ```
 
-In Procedural Programming, this will only check once. Changing the value of `a` won't do the check anymore. in Reactive, there is a way to always check the value of `a` whenever it changes. But to make it easier to understand, let assume we have a new keyword called `when`
+In Procedural Programming, this if condition will only check once. Changing the value of `a` won't do the check anymore. in Reactive, there is a way to always check the value of `a` whenever it changes. To make it easier to understand, let assume we have a new keyword called `when`
 
 ```py
 # Reactive Simulation
@@ -125,12 +132,12 @@ a.onChange((val) => {
     }
 });
 
-a(10); // A is currently GREATER THAN 10
+a(11); // A is currently GREATER THAN 10
 a(9); // (nothing happened...)
 a(15); // A is currently GREATER THAN 10
 ```
 
-if there is multiple state to be observed, use the `setEffect`
+if there is multiple state to be observed, use the `setEffect` method
 
 ```js
 import { state } from '@aldinh777/reactive';
@@ -139,13 +146,29 @@ import { setEffect } from '@aldinh777/reactive/utils';
 const a = state(2);
 const b = state(3);
 
-setEffect(() => {
-    if (a() + b() > 10) {
-        console.log(`A and B combined which is ${a() + b()} is GREATER THAN 10`);
-    }
-});
+setEffect(
+    (a, b) => {
+        if (a + b > 10) {
+            console.log(`A and B combined which is ${a + b} is GREATER THAN 10`);
+        }
+    },
+    [a, b]
+); // mark `a` and `b` as dependencies
 
 a(8); // A and B combined which is 11 is GREATER THAN 10
 a(5); // (nothing happened...)
 b(7); // A and B combined which is 12 is GREATER THAN 10
+```
+
+just as how `computed` works, `setEffect` could also infer its dependencies by usage
+
+```js
+const a = state(2);
+const b = state(3);
+
+setEffect(() => {
+    if (a() + b() > 10) {
+        console.log(`A and B combined which is ${a() + b()} is GREATER THAN 10`);
+    }
+}); // automatically infer `a` and `b` as dependencies
 ```
