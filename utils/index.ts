@@ -1,3 +1,8 @@
+/**
+ * @module
+ * Common State utilities to handle state changes
+ */
+
 import type { State } from '../state/index.js';
 import type { Stoppable, Unsubscribe } from './subscription.js';
 import { __ROOT_SET, __EFFECTS_STACK, __DYNAMICS } from '../state/internal.js';

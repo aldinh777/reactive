@@ -1,3 +1,8 @@
+/**
+ * @module
+ * Common reusable function to create state
+ */
+
 import type { State } from './index.js';
 import { state } from './index.js';
 
