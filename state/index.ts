@@ -1,3 +1,8 @@
+/**
+ * @module
+ * Base module that expose definition and function to create State
+ */
+
 import type { Unsubscribe } from '../utils/subscription.js';
 import { __EFFECTS_STACK } from './internal.js';
 import { subscribe } from '../utils/subscription.js';
@@ -6,7 +11,7 @@ type UpdateListener<T> = (value: T) => any;
 type ChangeHandler<T> = (next: T, previous: T) => any;
 
 /**
- * A reactive state interface that provides methods to get, set, and listen to state changes.
+ * A reactive state interface that provides methods to get, set, and listen to value changes.
  */
 export interface State<T = any> {
     /**

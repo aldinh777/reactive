@@ -1,3 +1,8 @@
+/**
+ * @module
+ * Shared module for types and function related to watchability
+ */
+
 import type { Stoppable, Unsubscribe } from '../utils/subscription.js';
 import { subscribe } from '../utils/subscription.js';
 

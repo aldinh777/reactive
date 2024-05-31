@@ -1,3 +1,8 @@
+/**
+ * @module
+ * Base module that expose definition and function to create Reactive List
+ */
+
 import type { WatchableList } from './watchable.js';
 import { watchify } from './watchable.js';
 

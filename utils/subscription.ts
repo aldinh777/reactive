@@ -1,4 +1,9 @@
 /**
+ * @module
+ * Shared module for types and function related to subscription
+ */
+
+/**
  * a function that is returned from another function that supposed to do some unsubscribtion shennanigan
  */
 export type Unsubscribe = () => void;

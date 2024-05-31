@@ -1,3 +1,8 @@
+/**
+ * @module
+ * Shared module of internal variables to handles dependencies and effects
+ */
+
 import { Unsubscribe } from '../utils/subscription.js';
 import { State } from './index.js';
 
