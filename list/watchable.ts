@@ -13,6 +13,7 @@ type OperationListeners<K, V> = {
 };
 
 interface BulkWatcher<K, V> {
+    nonUniqueUpdate?: boolean;
     update?: OperationHandler<K, V>;
     insert?: OperationHandler<K, V>;
     delete?: OperationHandler<K, V>;
@@ -31,7 +32,7 @@ export interface Watchable<K, V> {
     /**
      * Registers a listener to be called whenever an update operation occurs.
      */
-    onUpdate(listener: OperationHandler<K, V>): Unsubscribe;
+    onUpdate(listener: OperationHandler<K, V>, nonUnique?: boolean): Unsubscribe;
     /**
      * Registers a listener to be called whenever an insert operation occurs.
      */
@@ -71,35 +72,22 @@ export function watchify<K, V>(Watchable: any): (op: Operation, key: K, value: V
             handle(key, value, updated);
         }
     };
-    Watchable.onUpdate = (listener: OperationHandler<K, V>) =>
+    Watchable.onUpdate = (listener: OperationHandler<K, V>, nonUnique = false) =>
         subscribe(upd['='], (key, value, prev) => {
-            if (value !== prev) {
+            if (nonUnique || value !== prev) {
                 listener(key, value, prev);
             }
         });
     Watchable.onInsert = (listener: OperationHandler<K, V>) => subscribe(upd['+'], listener);
     Watchable.onDelete = (listener: OperationHandler<K, V>) => subscribe(upd['-'], listener);
     Watchable.watch = (operations: BulkWatcher<K, V>) => {
-        const unsubs: Unsubscribe[] = [];
-        if (operations.update) {
-            unsubs.push(
-                subscribe(upd['='], (key, value, prev) => {
-                    if (value !== prev) {
-                        operations.update(key, value, prev);
-                    }
-                })
-            );
-        }
-        if (operations.insert) {
-            unsubs.push(subscribe(upd['+'], operations.insert));
-        }
-        if (operations.delete) {
-            unsubs.push(subscribe(upd['-'], operations.delete));
-        }
+        const unsubUpdate = operations.update && Watchable.onUpdate(operations.update, operations.nonUniqueUpdate);
+        const unsubInsert = operations.insert && Watchable.onInsert(operations.insert);
+        const unsubDelete = operations.delete && Watchable.onDelete(operations.delete);
         return () => {
-            for (const unsub of unsubs) {
-                unsub();
-            }
+            unsubUpdate?.();
+            unsubInsert?.();
+            unsubDelete?.();
         };
     };
     return trigger;
