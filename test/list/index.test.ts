@@ -25,7 +25,7 @@ describe('reactive list', () => {
             const index = randomNumber(5);
             array[index] = array[index] + 1;
 
-            expect(l()).not.toEqual(array)
+            expect(l()).not.toEqual(array);
         });
 
         test('update data', () => {
@@ -92,6 +92,19 @@ describe('reactive list', () => {
                 l(index, value);
             }
             expect(updateCounter + nonUpdateCounter).toBe(100);
+        });
+
+        test('watch non unique update', () => {
+            const l = list(randomList(100));
+            let updateCounter = 0;
+
+            l.onUpdate(() => updateCounter++, true);
+            for (let i = 0; i < 100; i++) {
+                const index = randomNumber(100);
+                const value = l(index);
+                l(index, value);
+            }
+            expect(updateCounter).toBe(100);
         });
 
         test('watch list insert', () => {
