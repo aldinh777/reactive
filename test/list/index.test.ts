@@ -79,26 +79,22 @@ describe('reactive list', () => {
     describe('watchability', () => {
         test('watch list update', () => {
             const l = list(randomList(100));
-            let nonUpdateCounter = 0;
             let updateCounter = 0;
 
             l.onUpdate(() => updateCounter++);
             for (let i = 0; i < 100; i++) {
                 const index = randomNumber(100);
-                const value = randomNumber(100);
-                if (l(index) === value) {
-                    nonUpdateCounter++;
-                }
+                const value = l(index) + 1;
                 l(index, value);
             }
-            expect(updateCounter + nonUpdateCounter).toBe(100);
+            expect(updateCounter).toBe(100);
         });
 
         test('watch non unique update', () => {
-            const l = list(randomList(100));
+            const l = list(randomList(100), false);
             let updateCounter = 0;
 
-            l.onUpdate(() => updateCounter++, true);
+            l.onUpdate(() => updateCounter++);
             for (let i = 0; i < 100; i++) {
                 const index = randomNumber(100);
                 const value = l(index);
