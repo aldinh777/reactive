@@ -21,10 +21,10 @@ export interface ReactiveList<T> extends WatchableList<T> {
 /**
  * Create a Reactive List that mimic the basic functionality of an array
  * and is capable of watching any updates from it.
- * 
+ *
  * operation includes: insertion, deletion, and updates
  */
-export function list<T>(initial: T[] = []): ReactiveList<T> {
+export function list<T>(initial: T[] = [], unique: boolean = true): ReactiveList<T> {
     const raw = [...initial];
     const ReactiveList = (...arg: [number?, T?]) => {
         if (!arg.length) {
@@ -39,7 +39,7 @@ export function list<T>(initial: T[] = []): ReactiveList<T> {
         trigger('=', key, value, prev);
         return ReactiveList;
     };
-    const trigger = watchify(ReactiveList);
+    const trigger = watchify(ReactiveList, unique);
     ReactiveList.push = (...items: T[]): number => {
         ReactiveList.splice(raw.length, 0, ...items);
         return raw.length;
