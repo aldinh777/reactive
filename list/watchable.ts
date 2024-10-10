@@ -58,8 +58,19 @@ export interface WatchableList<T> extends Watchable<number, T> {
      * Retrieves the element at the specified index of the list.
      */
     (key: number): T;
+    /**
+     * Creates a new observed list that filters out the elements of the list based on the given function.
+     */
     filter(fn: (item: T) => boolean): ObservedList<T>;
+
+    /**
+     * Creates a new observed list that maps the elements of the list based on the given function.
+     */
     map<U>(fn: (item: T) => U): ObservedList<U>;
+
+    /**
+     * Creates a new observed list that sorts the elements of the list based on the given function.
+     */
     sort(fn?: (item: T, elem: T) => boolean): ObservedList<T>;
 }
 
