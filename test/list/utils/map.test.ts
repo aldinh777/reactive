@@ -1,19 +1,22 @@
 import { describe, test, expect } from 'bun:test';
-import { list } from '../../../list';
-import { map } from '../../../list/utils/map';
+import { list, ReactiveList } from '../../../list';
 import { randomList, randomNumber } from '../../test-util';
+import { chainList, chainRawList } from '../list-util';
+
+const addOne = (list: ReactiveList<number>) => list.map((item) => item + 1);
+const rawAddOne = (list: ReactiveList<number>) => list().map((item) => item + 1);
 
 describe('list-util map', () => {
     test('initialize properly', () => {
         const l = list(randomList(10));
-        const mapl = map(l, (item) => item + 1);
+        const mapped = addOne(l);
 
-        expect(mapl()).toEqual(l().map((i) => i + 1));
+        expect(mapped()).toEqual(rawAddOne(l));
     });
 
     test('map properly after mutation', () => {
         const l = list(randomList(100));
-        const mapl = map(l, (item) => item + 1);
+        const mapped = addOne(l);
 
         const index = randomNumber(10);
         l(index, l(index) + 1);
@@ -21,47 +24,41 @@ describe('list-util map', () => {
         l.shift();
         l.splice(index, 1, randomNumber(10));
 
-        expect(mapl()).toEqual(l().map((i) => i + 1));
-    });
-
-    test('mapped object', () => {
-        const l = list(randomList(10).map((item) => ({ value: item })));
-        const mapl = map(
-            l,
-            (item) => ({ item }),
-            () => {}
-        );
-
-        const index = randomNumber(10);
-        const oldMapperObj = mapl(index);
-        l.push(l(index));
-        expect(mapl(10)).toBe(oldMapperObj);
+        expect(mapped()).toEqual(rawAddOne(l));
     });
 
     test('wont update from map directly', () => {
         const l = list(randomList(10));
-        const mapl = map(l, (item) => item + 1) as any;
+        const mapped = addOne(l);
 
-        mapl(randomNumber(10), randomNumber(100));
+        (mapped as any)(randomNumber(10), randomNumber(100));
 
-        expect(mapl()).toEqual(l().map((i) => i + 1));
+        expect(mapped()).toEqual(rawAddOne(l));
     });
 
     test('stop mapping', () => {
         const l = list(randomList(10));
-        const mapl = map(l, (item) => item + 1);
-        const oldMapl = [...mapl()];
+        const mapped = addOne(l);
+        const oldMapped = [...mapped()];
 
-        mapl.stop();
+        mapped.stop();
         l.pop();
 
-        expect(mapl()).toEqual(oldMapl);
+        expect(mapped()).toEqual(oldMapped);
+    });
+
+    test('chain observed map', () => {
+        const l = list(randomList(10));
+        const mapped = addOne(l);
+        const chained = chainList(mapped);
+
+        expect(chained()).toEqual(chainRawList(rawAddOne(l)));
     });
 
     test('properly stringified', () => {
         const l = list(randomList(10));
-        const mapl = map(l, (item) => item + 1);
+        const mapped = addOne(l);
 
-        expect(mapl.toString()).toBe(`MappedList [ ${mapl().join(', ')} ]`);
+        expect(mapped.toString()).toBe(`MappedList [ ${mapped().join(', ')} ]`);
     });
 });

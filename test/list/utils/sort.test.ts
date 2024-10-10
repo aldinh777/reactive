@@ -1,23 +1,21 @@
 import { describe, test, expect } from 'bun:test';
-import { list } from '../../../list';
-import { sort } from '../../../list/utils/sort';
+import { list, ReactiveList } from '../../../list';
 import { randomList, randomNumber } from '../../test-util';
+import { chainList, chainRawList } from '../list-util';
 
-function sortList(list: number[]) {
-    return list.toSorted((a, b) => a - b);
-}
+const rawSort = (list: ReactiveList<number>) => list().sort((a, b) => a - b);
 
 describe('list-util sort', () => {
     test('initialize properly', () => {
         const l = list(randomList(10));
-        const sortl = sort(l);
+        const sorted = l.sort();
 
-        expect(sortl()).toEqual(sortList(l()));
+        expect(sorted()).toEqual(rawSort(l));
     });
 
     test('sort properly after mutation', () => {
         const l = list([1, 9, 2, 8, 3, 4, 6, 5]);
-        const sortl = sort(l);
+        const sorted = l.sort();
 
         /**
          * inplace update
@@ -44,34 +42,42 @@ describe('list-util sort', () => {
          */
         l.pop();
 
-        expect(sortl()).toEqual(sortList(l()));
+        expect(sorted()).toEqual(rawSort(l));
     });
 
     test('wont update from sort directly', () => {
         const l = list(randomList(10));
-        const sortl: any = sort(l);
+        const sorted = l.sort();
 
-        sortl(randomNumber(10), randomNumber(100));
+        (sorted as any)(randomNumber(10), randomNumber(100));
 
-        expect(sortl()).toEqual(sortList(l()));
+        expect(sorted()).toEqual(rawSort(l));
     });
 
     test('stop sorting', () => {
         const l = list(randomList(10));
-        const sortl = sort(l);
-        const oldSort = [...sortl()];
+        const sorted = l.sort();
+        const oldSort = [...sorted()];
 
-        sortl.stop();
+        sorted.stop();
         const index = randomNumber(10);
         l(index, l(index) + 1);
 
-        expect(sortl()).toEqual(oldSort);
+        expect(sorted()).toEqual(oldSort);
+    });
+
+    test('chain observed filter', () => {
+        const l = list(randomList(10));
+        const sorted = l.sort();
+        const chained = chainList(sorted);
+
+        expect(chained()).toEqual(chainRawList(rawSort(l)));
     });
 
     test('properly stringified', () => {
         const l = list(randomList(10));
-        const sortl = sort(l);
+        const sorted = l.sort();
 
-        expect(sortl.toString()).toBe(`SortedList [ ${sortl().join(', ')} ]`);
+        expect(sorted.toString()).toBe(`SortedList [ ${sorted().join(', ')} ]`);
     });
 });

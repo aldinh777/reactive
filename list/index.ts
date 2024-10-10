@@ -5,6 +5,7 @@
 
 import type { WatchableList } from './watchable.js';
 import { watchify } from './watchable.js';
+import { filter, map, sort, lt } from './utils.js';
 
 /**
  * An interface to mimic the basic functionality of insertion and deletion of an array
@@ -64,6 +65,9 @@ export function list<T>(initial: T[] = [], unique: boolean = true): ReactiveList
         }
         return deletedItems;
     };
+    ReactiveList.filter = (fn: (item: T) => boolean) => filter(ReactiveList as any as WatchableList<T>, fn);
+    ReactiveList.map = (fn: (item: T) => boolean) => map(ReactiveList as any as WatchableList<T>, fn);
+    ReactiveList.sort = (fn: (item: T, elem: T) => boolean = lt) => sort(ReactiveList as any as WatchableList<T>, fn);
     ReactiveList.toString = () => `ReactiveList [ ${raw.join(', ')} ]`;
     return ReactiveList as ReactiveList<T>;
 }
