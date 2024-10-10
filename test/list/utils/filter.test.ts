@@ -1,19 +1,22 @@
 import { describe, test, expect } from 'bun:test';
-import { list } from '../../../list';
-import { filter } from '../../../list/utils/filter';
+import { list, ReactiveList } from '../../../list';
 import { randomList, randomNumber } from '../../test-util';
+import { chainList, chainRawList } from '../list-util';
+
+const evens = (list: ReactiveList<number>) => list.filter((item) => item % 2 === 0);
+const rawEvens = (list: ReactiveList<number>) => list().filter((item) => item % 2 === 0);
 
 describe('list-util filter', () => {
     test('initialize properly', () => {
         const l = list(randomList(10));
-        const filterl = filter(l, (item) => item % 2 === 0);
+        const filtered = evens(l);
 
-        expect(filterl()).toEqual(l().filter((i) => i % 2 === 0));
+        expect(filtered()).toEqual(rawEvens(l));
     });
 
     test('filter properly after mutation', () => {
         const l = list([2, 3, 4, 6, 7, 9]);
-        const filterl = filter(l, (item) => item % 2 === 0);
+        const filtered = evens(l);
 
         /**
          * inplace update
@@ -46,34 +49,42 @@ describe('list-util filter', () => {
          */
         l.shift();
 
-        expect(filterl()).toEqual(l().filter((i) => i % 2 === 0));
+        expect(filtered()).toEqual(rawEvens(l));
     });
 
     test('wont update from filter directly', () => {
         const l = list(randomList(10));
-        const filterl: any = filter(l, (item) => item % 2 === 0);
+        const filtered = evens(l);
 
-        filterl(randomNumber(10), randomNumber(100));
+        (filtered as any)(randomNumber(10), randomNumber(100));
 
-        expect(filterl()).toEqual(l().filter((i) => i % 2 === 0));
+        expect(filtered()).toEqual(rawEvens(l));
     });
 
     test('stop filtering', () => {
         const l = list(randomList(10));
-        const filterl = filter(l, (item) => item % 2 === 0);
-        const oldFilter = [...filterl()];
+        const filtered = evens(l);
+        const oldFilter = [...filtered()];
 
-        filterl.stop();
+        filtered.stop();
         const index = randomNumber(10);
         l(index, l(index) + 1);
 
-        expect(filterl()).toEqual(oldFilter);
+        expect(filtered()).toEqual(oldFilter);
+    });
+
+    test('chain observed filter', () => {
+        const l = list(randomList(10));
+        const filtered = evens(l);
+        const chained = chainList(filtered);
+
+        expect(chained()).toEqual(chainRawList(rawEvens(l)));
     });
 
     test('properly stringified', () => {
         const l = list(randomList(10));
-        const filterl = filter(l, (item) => item % 2 === 0);
+        const filtered = evens(l);
 
-        expect(filterl.toString()).toBe(`FilteredList [ ${filterl().join(', ')} ]`);
+        expect(filtered.toString()).toBe(`FilteredList [ ${filtered().join(', ')} ]`);
     });
 });

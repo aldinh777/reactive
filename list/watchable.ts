@@ -58,12 +58,15 @@ export interface WatchableList<T> extends Watchable<number, T> {
      * Retrieves the element at the specified index of the list.
      */
     (key: number): T;
+    filter(fn: (item: T) => boolean): ObservedList<T>;
+    map<U>(fn: (item: T) => U): ObservedList<U>;
+    sort(fn?: (item: T, elem: T) => boolean): ObservedList<T>;
 }
 
 /**
  * Converts an object into Watchable and return a trigger function to trigger the updates.
  */
-export function watchify<K, V>(list: any, unique: boolean): (op: Operation, key: K, value: V, updated?: V) => void {
+export function watchify<K, V>(list: any, unique: boolean = true): (op: Operation, key: K, value: V, prev?: V) => void {
     const upd: OperationListeners<K, V> = { '+': new Set(), '-': new Set(), '=': new Set() };
     const trigger = (op: Operation, key: K, value: V, updated?: V) => {
         const handlers = upd[op];

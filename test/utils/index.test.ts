@@ -1,7 +1,9 @@
 import { describe, test, expect } from 'bun:test';
 import { computed, setEffect } from '../../utils';
-import { state } from '../../state';
+import { State, state } from '../../state';
 import { randomNumber } from '../test-util';
+
+const add = (x: State, n = 1) => x(x() + n);
 
 describe('utils', () => {
     test('basic computed', () => {
@@ -9,14 +11,14 @@ describe('utils', () => {
         const b = state(randomNumber(100));
         const x = computed(() => a() + b());
 
-        a(a() + 1);
-        b(b() + 1);
+        add(a);
+        add(b);
 
         expect(x()).toBe(a() + b());
 
         x.stop();
-        a(a() + 1);
-        b(b() + 1);
+        add(a);
+        add(b);
 
         expect(x()).not.toBe(a() + b());
     });
@@ -30,11 +32,11 @@ describe('utils', () => {
             effectCounter++;
         });
 
-        a(a() + 1);
+        add(a);
         expect(effectCounter).toBe(2);
 
         unsub();
-        a(a() + 1);
+        add(a);
         expect(effectCounter).toBe(2);
     });
 
@@ -43,14 +45,14 @@ describe('utils', () => {
         const b = state(randomNumber(100));
         const x = computed((a, b) => a + b, [a, b]);
 
-        a(a() + 1);
-        b(b() + 1);
+        add(a);
+        add(b);
 
         expect(x()).toBe(a() + b());
 
         x.stop();
-        a(a() + 1);
-        b(b() + 1);
+        add(a);
+        add(b);
 
         expect(x()).not.toBe(a() + b());
     });
@@ -61,11 +63,11 @@ describe('utils', () => {
 
         const unsub = setEffect((_) => effectCounter++, [a]);
 
-        a(a() + 1);
+        add(a);
         expect(effectCounter).toBe(2);
 
         unsub();
-        a(a() + 1);
+        add(a);
         expect(effectCounter).toBe(2);
     });
 
@@ -85,7 +87,7 @@ describe('utils', () => {
 
         c.onChange(() => updateCounter++);
         staticC.onChange(() => staticUpdateCounter++);
-        x(x() + 1);
+        add(x);
 
         expect(updateCounter).toBe(1);
         expect(staticUpdateCounter).toBe(1);
@@ -105,14 +107,14 @@ describe('utils', () => {
 
         expect(calculationCalls).toBe(1);
 
-        x(x() + 1); // won't count since a currently not depends on x
-        y(y() + 1);
+        add(x); // won't count since a currently not depends on x
+        add(y);
 
         expect(calculationCalls).toBe(2);
 
         isUsingX(true);
-        x(x() + 1); // will count because a now depends on x
-        y(y() + 1); // won't count since now a didn't depends on y
+        add(x); // will count because a now depends on x
+        add(y); // won't count since now a didn't depends on y
 
         expect(calculationCalls).toBe(4);
     });
@@ -131,15 +133,15 @@ describe('utils', () => {
             });
         });
 
-        y(y() + 1);
+        add(y);
         expect(counterX).toBe(1); // x is having different effect stack
         expect(counterY).toBe(2); // y is used as dependency
 
-        x(x() + 1);
+        add(x);
         expect(counterX).toBe(2); // x is used as dependency
         expect(counterY).toBe(3); // y isnt used, but the effect from x create another effect affecting y
 
-        y(y() + 1);
+        add(y);
         expect(counterX).toBe(2); // like before, x is having different stack
         expect(counterY).toBe(5); // update from the first effect and the second newly created effect from x effect
 
@@ -158,8 +160,8 @@ describe('utils', () => {
         const x = computed((b) => b + c(), [b]);
         let counterX = 0;
         x.onChange(() => counterX++);
-        a(a() + 1); // counterX = 0, x did not depends on a
-        b(b() + 1); // counterX = 1
+        add(a); // counterX = 0, x did not depends on a
+        add(b); // counterX = 1
         expect(counterX).toBe(1);
 
         /**
@@ -169,8 +171,8 @@ describe('utils', () => {
         const y = computed((c) => b() + c, [c]);
         let counterY = 0;
         y.onChange(() => counterY++);
-        a(a() + 1); // counterY = 1, y dynamically depends on c which also dynamically depends on a
-        b(b() + 1); // counterY = 2, y also dynamically depends on b
+        add(a); // counterY = 1, y dynamically depends on c which also dynamically depends on a
+        add(b); // counterY = 2, y also dynamically depends on b
         expect(counterY).toBe(2);
     });
 
@@ -192,8 +194,8 @@ describe('utils', () => {
         let usingX = true;
         setEffect(() => ++counter && usingX && x()); // counter = 1
         usingX = false;
-        x(x() + 1); // counter = 2, after running, effect lost its dependencies
-        x(x() + 1); // counter = 2, effect no longer running
+        add(x); // counter = 2, after running, effect lost its dependencies
+        add(x); // counter = 2, effect no longer running
         expect(counter).toBe(2);
     });
 });
