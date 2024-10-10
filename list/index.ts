@@ -24,6 +24,10 @@ export interface ReactiveList<T> extends WatchableList<T> {
  * and is capable of watching any updates from it.
  *
  * operation includes: insertion, deletion, and updates
+ *
+ * @param initial - The initial list of elements to be used
+ * @param unique - Trigger update listener only if value changed (default=true)
+ * @returns A reactive list that is capable of watching any updates from it
  */
 export function list<T>(initial: T[] = [], unique: boolean = true): ReactiveList<T> {
     const raw = [...initial];

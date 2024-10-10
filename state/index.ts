@@ -1,14 +1,11 @@
 /**
  * @module
- * Base module that expose definition and function to create State
+ * Base module that exposes definition and function to create State
  */
 
 import type { Unsubscribe } from '../utils/subscription.js';
 import { __EFFECTS_STACK } from './internal.js';
 import { subscribe } from '../utils/subscription.js';
-
-type UpdateListener<T> = (value: T) => any;
-type ChangeHandler<T> = (next: T, previous: T) => any;
 
 /**
  * A reactive state interface that provides methods to get, set, and listen to value changes.
@@ -24,18 +21,23 @@ export interface State<T = any> {
     (value: T): void;
     /**
      * Registers a handler that will be called whenever the state changes.
+     * @param handler The function to be called when the state changes.
+     * @param isLast If true, the handler will be called last after all other handlers have been called.
+     * @returns An unsubscribe function to remove the handler from the list of active handlers.
      */
-    onChange(handler: ChangeHandler<T>, isLast?: boolean): Unsubscribe;
+    onChange(handler: (next: T, previous: T) => any, isLast?: boolean): Unsubscribe;
 }
 
 /**
- * function to create and initialize state
+ * Creates and initializes a state.
+ * @param initial The initial value of the state.
+ * @returns The reactive state.
  */
 export function state<T = any>(initial?: T): State<T> {
     /** List of active update listeners */
-    const upd: Set<UpdateListener<T>> = new Set();
+    const upd: Set<(value: T) => any> = new Set();
     /** Listeners that will be executed last */
-    const updl: Set<UpdateListener<T>> = new Set();
+    const updl: Set<(value: T) => any> = new Set();
     /** The actual value being stored */
     let val: T = initial;
     /**
@@ -71,7 +73,7 @@ export function state<T = any>(initial?: T): State<T> {
         }
         ulock = hlock;
     };
-    State.onChange = (handler: ChangeHandler<T>, isLast = false) => {
+    State.onChange = (handler: (next: T, previous: T) => any, isLast = false) => {
         let oldValue = val;
         return subscribe(isLast ? updl : upd, (value: T) => {
             if (value !== oldValue) {

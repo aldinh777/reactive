@@ -1,21 +1,24 @@
 /**
- * @module
- * Shared module of internal variables to handles dependencies and effects
+ * Internal module containing shared variables and functions to manage
+ * dependencies and effects.
  */
 
 import { Unsubscribe } from '../utils/subscription.js';
 import { State } from './index.js';
 
 /**
- * Weak Map that stores the root dependencies of each state to prevent
- * any state from having duplicate dependency or parent dependency
+ * A WeakMap that maps each state to its root dependencies. This is used
+ * to prevent any state from having duplicate dependencies or parent
+ * dependencies.
  */
-export const __ROOT_SET = new WeakMap<State, Map<State, Unsubscribe>>();
+export const __ROOT_SET: WeakMap<State, Map<State, Unsubscribe>> = new WeakMap();
+
 /**
- * Weak Set that stores any states that is created using computed
+ * A WeakSet that stores all states created using the `computed` function.
  */
-export const __DYNAMICS = new WeakSet<State>();
+export const __DYNAMICS: WeakSet<State> = new WeakSet();
+
 /**
- * This thing store the dependencies set for each stack of effects
+ * An array of Sets that stores the dependencies of each stack of effects.
  */
 export const __EFFECTS_STACK: Set<State>[] = [];

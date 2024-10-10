@@ -1,25 +1,26 @@
 /**
- * @module
- * Shared module for types and function related to subscription
+ * @module subscription
+ * Shared module for types and functions related to subscription
  */
 
 /**
- * a function that is returned from another function that supposed to do some unsubscribtion shennanigan
+ * A function that is returned from a function that is responsible for subscribing
+ * to certain event, and is supposed to be used to unsubscribe from the event.
  */
 export type Unsubscribe = () => void;
 
 /**
- * whatever implement this, then it can be stopped
+ * An interface that implement this, then it can be stopped.
  */
 export interface Stoppable {
     /**
-     * the stop method to stop the stoppable
+     * The stop method to stop the stoppable.
      */
     stop: Unsubscribe;
 }
 
 /**
- * insert listener into set and return a callback that remove the item from array
+ * Insert listener into set and return a callback that remove the item from array.
  */
 export function subscribe<L>(set: Set<L>, listener: L): Unsubscribe {
     set.add(listener);
