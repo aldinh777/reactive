@@ -6,15 +6,40 @@
 import type { Stoppable, Unsubscribe } from '../utils/subscription.js';
 import { subscribe } from '../utils/subscription.js';
 
-type Operation = '+' | '-' | '=';
-type OperationHandler<K, V> = (key: K, value: V, prev: V) => any;
-type OperationListeners<K, V> = {
+/**
+ * Represents the operation type of a watchable list.
+ */
+export type Operation = '+' | '-' | '=';
+
+/**
+ * Represents the handler function for a watchable list operation.
+ */
+export type OperationHandler<K, V> = (key: K, value: V, prev: V) => any;
+
+/**
+ * Represents the map of operation listeners.
+ */
+export type OperationListeners<K, V> = {
     [op in Operation]: Set<OperationHandler<K, V>>;
 };
 
-interface BulkWatcher<K, V> {
+/**
+ * Represents the bulk watcher interface.
+ */
+export interface BulkWatcher<K, V> {
+    /**
+     * Registers a listener to be called whenever an update operation occurs.
+     */
     update?: OperationHandler<K, V>;
+
+    /**
+     * Registers a listener to be called whenever an insert operation occurs.
+     */
     insert?: OperationHandler<K, V>;
+
+    /**
+     * Registers a listener to be called whenever a delete operation occurs.
+     */
     delete?: OperationHandler<K, V>;
 }
 
@@ -32,14 +57,17 @@ export interface Watchable<K, V> {
      * Registers a listener to be called whenever an update operation occurs.
      */
     onUpdate(listener: OperationHandler<K, V>): Unsubscribe;
+
     /**
      * Registers a listener to be called whenever an insert operation occurs.
      */
     onInsert(listener: OperationHandler<K, V>): Unsubscribe;
+
     /**
      * Registers a listener to be called whenever a delete operation occurs.
      */
     onDelete(listener: OperationHandler<K, V>): Unsubscribe;
+
     /**
      * Registers necessary listeners to observe multiple types of operations.
      */
@@ -54,10 +82,12 @@ export interface WatchableList<T> extends Watchable<number, T> {
      * Retrieves the current elements as array.
      */
     (): T[];
+
     /**
      * Retrieves the element at the specified index of the list.
      */
     (key: number): T;
+
     /**
      * Creates a new observed list that filters out the elements of the list based on the given function.
      */

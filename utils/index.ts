@@ -34,6 +34,10 @@ function filterDeps(states: Set<State>): Set<State> {
 
 /**
  * Handles the execution of an effect handler and manages dependencies.
+ *
+ * @param effectHandler - The effect handler function to be executed.
+ * @param state - The state to be updated with the result of the effect handler.
+ * @returns An unsubscribe function to stop the effect.
  */
 function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscribe {
     const rootDepsMap = new Map<State, Unsubscribe>();
@@ -73,6 +77,11 @@ function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscri
 
 /**
  * Handles the execution of a handler with fixed dependencies.
+ *
+ * @param states - The states to be used as dependencies.
+ * @param handler - The handler function to be executed.
+ * @param state - The state to be updated with the result of the handler.
+ * @returns An unsubscribe function to stop the effect.
  */
 function handleFixed<T, U>(states: State<T>[], handler: (...args: T[]) => U, state?: Computed<U>): Unsubscribe {
     if (states.some((st) => __DYNAMICS.has(st))) {
@@ -108,12 +117,20 @@ type Dependencies<T extends any[]> = { [K in keyof T]: State<T[K]> };
 
 /**
  * Sets an effect to be executed with the specified dependencies.
+ *
+ * @param effect - The effect handler function to be executed.
+ * @param states - The states to be used as dependencies.
+ * @returns An unsubscribe function to stop the effect.
  */
 export const setEffect = <T extends any[]>(effect: (...args: T) => any, states?: Dependencies<T>): Unsubscribe =>
     states instanceof Array ? handleFixed(states, effect) : handleEffect(effect);
 
 /**
  * Creates a computed state based on an effect and its dependencies.
+ *
+ * @param effect - The effect handler function to be executed.
+ * @param states - The states to be used as dependencies.
+ * @returns A computed state that will be updated with the result of the effect.
  */
 export const computed = <T extends any[], U>(effect: (...args: T) => U, states?: Dependencies<T>): Computed<U> => {
     const computed = state() as Computed<U>;

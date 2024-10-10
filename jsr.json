@@ -8,7 +8,7 @@
     "./utils/subscription": "./utils/subscription.ts",
     "./list": "./list/index.ts",
     "./list/watchable": "./list/watchable.ts",
-    "./list/utils": "./list/utils/index.ts",
+    "./list/utils": "./list/utils.ts",
     "./common": "./state/common.ts"
   },
   "publish": {

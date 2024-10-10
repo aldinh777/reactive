@@ -3,7 +3,10 @@ import { ObservedList, WatchableList, stopify, watchify } from './watchable.js';
 export const lt = (item: any, elem: any) => item < elem;
 
 /**
- * create a reactive list that is filtered based on the specified list input
+ * Creates a reactive list that is filtered based on the specified list input.
+ * @param {WatchableList<T>} list The reactive list to be filtered.
+ * @param {Function} fn The function to filter the items.
+ * @returns {ObservedList<T>} A new reactive list that is filtered based on the specified list input.
  */
 export function filter<T>(list: WatchableList<T>, fn: (item: T) => boolean): ObservedList<T> {
     const raw: T[] = [];
@@ -81,7 +84,10 @@ export function filter<T>(list: WatchableList<T>, fn: (item: T) => boolean): Obs
 }
 
 /**
- * create a reactive list that is mapped based on the specified list input
+ * Creates a reactive list that is mapped based on the specified list input.
+ * @param {WatchableList<S>} list The reactive list to be mapped.
+ * @param {Function} fn The function to map the items.
+ * @returns {ObservedList<T>} A new reactive list that is mapped based on the specified list input.
  */
 export function map<S, T>(list: WatchableList<S>, fn: (item: S) => T): ObservedList<T> {
     const raw: T[] = [];
@@ -123,7 +129,10 @@ export function map<S, T>(list: WatchableList<S>, fn: (item: S) => T): ObservedL
 }
 
 /**
- * create a reactive list that is sorted based on the specified list input
+ * Creates a reactive list that is sorted based on the specified list input.
+ * @param {WatchableList<T>} list The reactive list to be sorted.
+ * @param {Function} fn The function to sort the items.
+ * @returns {ObservedList<T>} A new reactive list that is sorted based on the specified list input.
  */
 export function sort<T>(list: WatchableList<T>, fn: (item: T, elem: T) => boolean): ObservedList<T> {
     const raw: T[] = [];
