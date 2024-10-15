@@ -9,13 +9,16 @@ describe('list-util sort', () => {
     test('initialize properly', () => {
         const l = list(randomList(10));
         const sorted = l.sort();
+        const reversed = l.sort((a, b) => a > b);
 
         expect(sorted()).toEqual(rawSort(l));
+        expect(reversed()).toEqual(rawSort(l).reverse());
     });
 
     test('sort properly after mutation', () => {
         const l = list([1, 9, 2, 8, 3, 4, 6, 5]);
         const sorted = l.sort();
+        const reversed = l.sort((a, b) => a > b);
 
         /**
          * inplace update
@@ -43,6 +46,7 @@ describe('list-util sort', () => {
         l.pop();
 
         expect(sorted()).toEqual(rawSort(l));
+        expect(reversed()).toEqual(rawSort(l).reverse());
     });
 
     test('wont update from sort directly', () => {
