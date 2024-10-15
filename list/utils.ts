@@ -1,4 +1,4 @@
-import { ObservedList, WatchableList, stopify, watchify } from './watchable.js';
+import { ObservedList, WatchableList, stopify, watchify } from './watchable.ts';
 
 export const lt = (item: any, elem: any) => item < elem;
 

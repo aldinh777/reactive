@@ -3,8 +3,8 @@
  * Common reusable function to create state
  */
 
-import type { State } from './index.js';
-import { state } from './index.js';
+import type { State } from './index.ts';
+import { state } from './index.ts';
 
 /**
  * A tuple containing the state, open, close, and toggle function.

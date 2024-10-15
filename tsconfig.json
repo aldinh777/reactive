@@ -4,6 +4,8 @@
         "module": "NodeNext",
         "target": "ESNext",
         "moduleResolution": "NodeNext",
+        "noEmit": true,
+        "allowImportingTsExtensions": true,
         "types": []
     },
     "include": ["state", "list", "utils"],

@@ -3,9 +3,9 @@
  * Base module that exposes definition and function to create State
  */
 
-import type { Unsubscribe } from '../utils/subscription.js';
-import { __EFFECTS_STACK } from './internal.js';
-import { subscribe } from '../utils/subscription.js';
+import type { Unsubscribe } from '../utils/subscription.ts';
+import { __EFFECTS_STACK } from './internal.ts';
+import { subscribe } from '../utils/subscription.ts';
 
 /**
  * A reactive state interface that provides methods to get, set, and listen to value changes.

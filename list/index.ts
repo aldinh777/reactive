@@ -3,9 +3,9 @@
  * Base module that expose definition and function to create Reactive List
  */
 
-import type { WatchableList } from './watchable.js';
-import { watchify } from './watchable.js';
-import { filter, map, sort, lt } from './utils.js';
+import type { WatchableList } from './watchable.ts';
+import { watchify } from './watchable.ts';
+import { filter, map, sort, lt } from './utils.ts';
 
 /**
  * An interface to mimic the basic functionality of insertion and deletion of an array
