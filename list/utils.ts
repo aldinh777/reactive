@@ -1,6 +1,8 @@
+/**
+ * @module
+ * List utilities to manipulate reactive list
+ */
 import { ObservedList, WatchableList, stopify, watchify } from './watchable.ts';
-
-export const lt = (item: any, elem: any) => item < elem;
 
 /**
  * Creates a reactive list that is filtered based on the specified list input.
@@ -78,7 +80,7 @@ export function filter<T>(list: WatchableList<T>, fn: (item: T) => boolean): Obs
     ]);
     FilteredList.filter = (fn: (item: T) => boolean) => filter(FilteredList as any as WatchableList<T>, fn);
     FilteredList.map = <U>(fn: (item: T) => U) => map(FilteredList as any as WatchableList<T>, fn);
-    FilteredList.sort = (fn: (item: T, elem: T) => boolean = lt) => sort(FilteredList as any as WatchableList<T>, fn);
+    FilteredList.sort = (fn?: (item: T, elem: T) => boolean) => sort(FilteredList as any as WatchableList<T>, fn);
     FilteredList.toString = () => `FilteredList [ ${raw.join(', ')} ]`;
     return FilteredList as ObservedList<T>;
 }
@@ -123,10 +125,12 @@ export function map<S, T>(list: WatchableList<S>, fn: (item: S) => T): ObservedL
     ]);
     MappedList.filter = (fn: (item: T) => boolean) => filter(MappedList as any as WatchableList<T>, fn);
     MappedList.map = <U>(fn: (item: T) => U) => map(MappedList as any as WatchableList<T>, fn);
-    MappedList.sort = (fn: (item: T, elem: T) => boolean = lt) => sort(MappedList as any as WatchableList<T>, fn);
+    MappedList.sort = (fn?: (item: T, elem: T) => boolean) => sort(MappedList as any as WatchableList<T>, fn);
     MappedList.toString = () => `MappedList [ ${raw.join(', ')} ]`;
     return MappedList as ObservedList<T>;
 }
+
+const asc = (item: any, elem: any) => item < elem;
 
 /**
  * Creates a reactive list that is sorted based on the specified list input.
@@ -134,7 +138,7 @@ export function map<S, T>(list: WatchableList<S>, fn: (item: S) => T): ObservedL
  * @param {Function} fn The function to sort the items.
  * @returns {ObservedList<T>} A new reactive list that is sorted based on the specified list input.
  */
-export function sort<T>(list: WatchableList<T>, fn: (item: T, elem: T) => boolean): ObservedList<T> {
+export function sort<T>(list: WatchableList<T>, fn: (item: T, elem: T) => boolean = asc): ObservedList<T> {
     const raw: T[] = [];
     const insertItem = (array: T[], item: T): number => {
         let insertIndex = array.length;
@@ -186,7 +190,7 @@ export function sort<T>(list: WatchableList<T>, fn: (item: T, elem: T) => boolea
     ]);
     SortedList.filter = (fn: (item: T) => boolean) => filter(SortedList as any as WatchableList<T>, fn);
     SortedList.map = <U>(fn: (item: T) => U) => map(SortedList as any as WatchableList<T>, fn);
-    SortedList.sort = (fn: (item: T, elem: T) => boolean = lt) => sort(SortedList as any as WatchableList<T>, fn);
+    SortedList.sort = (fn?: (item: T, elem: T) => boolean) => sort(SortedList as any as WatchableList<T>, fn);
     SortedList.toString = () => `SortedList [ ${raw.join(', ')} ]`;
     return SortedList as ObservedList<T>;
 }
