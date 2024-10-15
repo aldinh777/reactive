@@ -3,8 +3,8 @@
  * dependencies and effects.
  */
 
-import { Unsubscribe } from '../utils/subscription.js';
-import { State } from './index.js';
+import { Unsubscribe } from '../utils/subscription.ts';
+import { State } from './index.ts';
 
 /**
  * A WeakMap that maps each state to its root dependencies. This is used

@@ -3,8 +3,8 @@
  * Shared module for types and function related to watchability
  */
 
-import type { Stoppable, Unsubscribe } from '../utils/subscription.js';
-import { subscribe } from '../utils/subscription.js';
+import type { Stoppable, Unsubscribe } from '../utils/subscription.ts';
+import { subscribe } from '../utils/subscription.ts';
 
 /**
  * Represents the operation type of a watchable list.

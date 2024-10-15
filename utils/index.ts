@@ -3,10 +3,10 @@
  * Common State utilities to handle state changes
  */
 
-import type { State } from '../state/index.js';
-import type { Stoppable, Unsubscribe } from './subscription.js';
-import { __ROOT_SET, __EFFECTS_STACK, __DYNAMICS } from '../state/internal.js';
-import { state } from '../state/index.js';
+import type { State } from '../state/index.ts';
+import type { Stoppable, Unsubscribe } from './subscription.ts';
+import { __ROOT_SET, __EFFECTS_STACK, __DYNAMICS } from '../state/internal.ts';
+import { state } from '../state/index.ts';
 
 /**
  * A reactive interface derived from State and Stoppable
