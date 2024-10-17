@@ -8,8 +8,8 @@
     "./list/utils": "./list/utils.ts",
     "./list/reduce": "./list/reduce.ts",
     "./common": "./state/common.ts",
-    "./subscription": "./utils/subscription.ts",
-    "./watchable": "./list/watchable.ts"
+    "./subscription": "./common/subscription.ts",
+    "./watchable": "./common/watchable.ts"
   },
   "publish": {
     "exclude": [
