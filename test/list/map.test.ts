@@ -1,7 +1,8 @@
+import type { ReactiveList } from '../../list/index.ts';
 import { describe, test, expect } from 'bun:test';
-import { list, ReactiveList } from '../../../list';
-import { randomList, randomNumber } from '../../test-util';
-import { chainList, chainRawList } from '../list-util';
+import { list } from '../../list/index.ts';
+import { randomList, randomNumber } from '../test-util.ts';
+import { chainList, chainRawList } from '../list-util.ts';
 
 const addOne = (list: ReactiveList<number>) => list.map((item) => item + 1);
 const rawAddOne = (list: ReactiveList<number>) => list().map((item) => item + 1);

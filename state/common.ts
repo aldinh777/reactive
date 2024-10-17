@@ -1,6 +1,6 @@
 /**
- * @module state/common
- * Common reusable function to create state
+ * @module
+ * Common function to create frequently used state
  */
 
 import type { State } from './index.ts';
@@ -9,7 +9,7 @@ import { state } from './index.ts';
 /**
  * A tuple containing the state, open, close, and toggle function.
  */
-export type ToggleOutput<T> = [State<T>, () => void, () => void, () => void];
+type ToggleOutput<T> = [State<T>, () => void, () => void, () => void];
 
 /**
  * Creates a toggleable state with initial value and functions to open, close, and toggle the state.

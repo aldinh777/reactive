@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
-import { stateLocalStorage, stateToggle } from '../../state/common';
-import { randomString } from '../test-util';
+import { stateLocalStorage, stateToggle } from '../../state/common.ts';
+import { randomString } from '../test-util.ts';
 
 class LocalStorageMock {
     store: any;
