@@ -96,12 +96,13 @@ export function count(list: WatchableList<any>): Computed<number> {
  * @returns a state that is the total product of every number in the list
  */
 export function product(list: WatchableList<number>): Computed<number> {
+    const prodList = () => list().reduce((a, b) => a * b, 1);
     return reduce(
         list,
         {
             onInsert: (acc, item) => acc * item,
-            onDelete: (acc, item) => acc / item,
-            onUpdate: (acc, item, prev) => acc * (item / prev)
+            onDelete: (acc, item) => (item === 0 ? prodList() : acc / item),
+            onUpdate: (acc, item, prev) => (prev === 0 ? prodList() : acc * (item / prev))
         },
         1
     );
@@ -115,7 +116,7 @@ export function product(list: WatchableList<number>): Computed<number> {
  */
 export function avg(list: WatchableList<number>): Computed<number> {
     const sumList = sum(list);
-    const avgList = computed((sum) => sum / list().length, [sum(list)]);
+    const avgList = computed((sum) => (list().length === 0 ? 0 : sum / list().length), [sumList]);
     const avgUnsub = avgList.stop;
     avgList.stop = () => {
         sumList.stop();
