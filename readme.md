@@ -66,8 +66,7 @@ print(b)    # 12
 This is how we acquire the same effect using this library
 
 ```js
-import { state } from '@aldinh777/reactive';
-import { computed } from '@aldinh777/reactive/utils';
+import { state, computed } from '@aldinh777/reactive';
 
 const a = state(5);
 const b = computed((a) => a * 2, [a]); // mark `a` as dependency
@@ -140,8 +139,7 @@ a(15); // A is currently GREATER THAN 10
 if there is multiple state to be observed, use the `setEffect` method
 
 ```js
-import { state } from '@aldinh777/reactive';
-import { setEffect } from '@aldinh777/reactive/utils';
+import { state, setEffect } from '@aldinh777/reactive';
 
 const a = state(2);
 const b = state(3);
