@@ -4,7 +4,8 @@
  */
 
 import type { WatchableList } from '../common/watchable';
-import type { State } from '../state';
+import type { Computed } from '../state';
+import { stopify } from '../common/watchable';
 import { computed, state } from '../state';
 
 /**
@@ -38,21 +39,23 @@ export function reduce<T, U>(
     list: WatchableList<T>,
     handler: ReduceHandler<T, U> | ReduceOptions<T, U>,
     initial: U
-): State<U> {
+): Computed<U> {
     let reduce: ReduceOptions<T, U>;
     if (typeof handler === 'function') {
         reduce = { onInsert: handler };
     } else {
         reduce = handler;
     }
-    const result = state(list().reduce((acc, item) => reduce.onInsert(acc, item), initial));
-    list.onInsert((_, value) => result(reduce.onInsert(result(), value)));
+    const result = state(list().reduce((acc, item) => reduce.onInsert(acc, item), initial)) as Computed<U>;
+    const unsubs = [];
+    unsubs.push(list.onInsert((_, value) => result(reduce.onInsert(result(), value))));
     if (reduce.onDelete) {
-        list.onDelete((_, value) => result(reduce.onDelete!(result(), value)));
+        unsubs.push(list.onDelete((_, value) => result(reduce.onDelete!(result(), value))));
     }
     if (reduce.onUpdate) {
-        list.onUpdate((_, value, prev) => result(reduce.onUpdate!(result(), value, prev)));
+        unsubs.push(list.onUpdate((_, value, prev) => result(reduce.onUpdate!(result(), value, prev))));
     }
+    result.stop = stopify(unsubs);
     return result;
 }
 
@@ -62,7 +65,7 @@ export function reduce<T, U>(
  * @param list list to calculate
  * @returns a state that is the total sum of every number in the list
  */
-export function sum(list: WatchableList<number>): State<number> {
+export function sum(list: WatchableList<number>): Computed<number> {
     return reduce(
         list,
         {
@@ -80,15 +83,10 @@ export function sum(list: WatchableList<number>): State<number> {
  * @param list list to calculate
  * @returns a state that store the length of a list
  */
-export function count(list: WatchableList<any>): State<number> {
-    return reduce(
-        list,
-        {
-            onInsert: (acc) => acc + 1,
-            onDelete: (acc) => acc - 1
-        },
-        0
-    );
+export function count(list: WatchableList<any>): Computed<number> {
+    const length = state(list().length) as Computed<number>;
+    length.stop = stopify([list.onInsert(() => length(length() + 1)), list.onDelete(() => length(length() - 1))]);
+    return length;
 }
 
 /**
@@ -97,7 +95,7 @@ export function count(list: WatchableList<any>): State<number> {
  * @param list list to calculate
  * @returns a state that is the total product of every number in the list
  */
-export function product(list: WatchableList<number>): State<number> {
+export function product(list: WatchableList<number>): Computed<number> {
     return reduce(
         list,
         {
@@ -115,6 +113,13 @@ export function product(list: WatchableList<number>): State<number> {
  * @param list list to calculate
  * @returns a state that is the average of each number in the list
  */
-export function avg(list: WatchableList<number>): State<number> {
-    return computed((sum) => sum / list().length, [sum(list)]);
+export function avg(list: WatchableList<number>): Computed<number> {
+    const sumList = sum(list);
+    const avgList = computed((sum) => sum / list().length, [sum(list)]);
+    const avgUnsub = avgList.stop;
+    avgList.stop = () => {
+        sumList.stop();
+        avgUnsub();
+    };
+    return avgList;
 }
