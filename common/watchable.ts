@@ -35,7 +35,7 @@ interface BulkWatcher<K, V> {
     /**
      * Registers a listener to be called whenever an update operation occurs.
      */
-    update?: OperationHandler<K, V>;
+    update?: OperationUpdateHandler<K, V>;
 
     /**
      * Registers a listener to be called whenever an insert operation occurs.
