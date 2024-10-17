@@ -58,6 +58,7 @@ export interface State<T = any> {
 
 /**
  * Creates and initializes a state.
+ *
  * @param initial The initial value of the state.
  * @returns The reactive state.
  */
@@ -147,8 +148,8 @@ function filterDeps(states: Set<State>): Set<State> {
 /**
  * Handles the execution of an effect handler and manages dependencies.
  *
- * @param effectHandler - The effect handler function to be executed.
- * @param state - The state to be updated with the result of the effect handler.
+ * @param effectHandler The effect handler function to be executed.
+ * @param state The state to be updated with the result of the effect handler.
  * @returns An unsubscribe function to stop the effect.
  */
 function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscribe {

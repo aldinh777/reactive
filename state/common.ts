@@ -26,6 +26,7 @@ export const stateToggle = <T>(initial: T): ToggleOutput<T> => {
 
 /**
  * Creates a state that is synchronized with browser localStorage, suppose to be used in browser environment
+ *
  * @param key The key to store the state in localStorage.
  * @param initial The initial value of the state.
  * @returns The reactive state.

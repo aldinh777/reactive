@@ -23,7 +23,10 @@ export interface ReactiveList<T> extends WatchableList<T> {
  * Create a Reactive List that mimic the basic functionality of an array
  * and is capable of watching any updates from it.
  *
- * operation includes: insertion, deletion, and updates
+ * operation includes:
+ * - insertion
+ * - deletion
+ * - updates
  *
  * @param initial - The initial list of elements to be used
  * @param unique - Trigger update listener only if value changed (default=true)
