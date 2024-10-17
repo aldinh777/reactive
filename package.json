@@ -11,8 +11,8 @@
     "./list/utils": "./list/utils.js",
     "./list/reduce": "./list/reduce.js",
     "./common": "./state/common.js",
-    "./subscription": "./utils/subscription.js",
-    "./watchable": "./list/watchable.js"
+    "./subscription": "./common/subscription.js",
+    "./watchable": "./common/watchable.js"
   },
   "devDependencies": {
     "@types/bun": "^1.1.1",
