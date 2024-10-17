@@ -3,30 +3,35 @@
  * Shared module for types and function related to watchability
  */
 
-import type { Stoppable, Unsubscribe } from '../utils/subscription.ts';
-import { subscribe } from '../utils/subscription.ts';
+import type { Stoppable, Unsubscribe } from './subscription.ts';
+import { subscribe } from './subscription.ts';
 
 /**
  * Represents the operation type of a watchable list.
  */
-export type Operation = '+' | '-' | '=';
+type Operation = '+' | '-' | '=';
 
 /**
  * Represents the handler function for a watchable list operation.
  */
-export type OperationHandler<K, V> = (key: K, value: V, prev: V) => any;
+type OperationHandler<K, V> = (key: K, value: V, prev?: V) => any;
+
+/**
+ * Represents the handler function for a list update operation.
+ */
+type OperationUpdateHandler<K, V> = (key: K, value: V, prev: V) => any;
 
 /**
  * Represents the map of operation listeners.
  */
-export type OperationListeners<K, V> = {
+type OperationListeners<K, V> = {
     [op in Operation]: Set<OperationHandler<K, V>>;
 };
 
 /**
  * Represents the bulk watcher interface.
  */
-export interface BulkWatcher<K, V> {
+interface BulkWatcher<K, V> {
     /**
      * Registers a listener to be called whenever an update operation occurs.
      */
@@ -56,7 +61,7 @@ export interface Watchable<K, V> {
     /**
      * Registers a listener to be called whenever an update operation occurs.
      */
-    onUpdate(listener: OperationHandler<K, V>): Unsubscribe;
+    onUpdate(listener: OperationUpdateHandler<K, V>): Unsubscribe;
 
     /**
      * Registers a listener to be called whenever an insert operation occurs.

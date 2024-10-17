@@ -2,7 +2,8 @@
  * @module
  * List utilities to manipulate reactive list
  */
-import { ObservedList, WatchableList, stopify, watchify } from './watchable.ts';
+import type { ObservedList, WatchableList } from '../common/watchable.ts';
+import { stopify, watchify } from '../common/watchable.ts';
 
 /**
  * Creates a reactive list that is filtered based on the specified list input.

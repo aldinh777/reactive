@@ -1,7 +1,8 @@
+import type { ReactiveList } from '../../list/index.ts';
 import { describe, test, expect } from 'bun:test';
-import { list, ReactiveList } from '../../../list';
-import { randomList, randomNumber } from '../../test-util';
-import { chainList, chainRawList } from '../list-util';
+import { list } from '../../list/index.ts';
+import { randomList, randomNumber } from '../test-util.ts';
+import { chainList, chainRawList } from '../list-util.ts';
 
 const rawSort = (list: ReactiveList<number>) => list().sort((a, b) => a - b);
 

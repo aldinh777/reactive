@@ -4,12 +4,10 @@
   "license": "MIT",
   "exports": {
     ".": "./state/index.ts",
-    "./utils": "./utils/index.ts",
-    "./utils/subscription": "./utils/subscription.ts",
     "./list": "./list/index.ts",
-    "./list/watchable": "./list/watchable.ts",
-    "./list/utils": "./list/utils.ts",
-    "./common": "./state/common.ts"
+    "./common": "./state/common.ts",
+    "./subscription": "./utils/subscription.ts",
+    "./watchable": "./list/watchable.ts"
   },
   "publish": {
     "exclude": [

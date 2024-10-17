@@ -1,7 +1,8 @@
+import type { ReactiveList } from '../../list/index.ts';
 import { describe, test, expect } from 'bun:test';
-import { list, ReactiveList } from '../../../list';
-import { randomList, randomNumber } from '../../test-util';
-import { chainList, chainRawList } from '../list-util';
+import { list } from '../../list/index.ts';
+import { randomList, randomNumber } from '../test-util.ts';
+import { chainList, chainRawList } from '../list-util.ts';
 
 const evens = (list: ReactiveList<number>) => list.filter((item) => item % 2 === 0);
 const rawEvens = (list: ReactiveList<number>) => list().filter((item) => item % 2 === 0);

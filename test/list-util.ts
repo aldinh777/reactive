@@ -1,4 +1,4 @@
-import { ObservedList } from '../../list/watchable';
+import type { ObservedList } from '../common/watchable.ts';
 
 export function chainList(list: ObservedList<number>): ObservedList<number> {
     return list

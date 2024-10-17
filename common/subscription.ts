@@ -1,5 +1,5 @@
 /**
- * @module subscription
+ * @module
  * Shared module for types and functions related to subscription
  */
 

@@ -3,8 +3,8 @@
  * Base module that expose definition and function to create Reactive List
  */
 
-import type { WatchableList } from './watchable.ts';
-import { watchify } from './watchable.ts';
+import type { WatchableList } from '../common/watchable.ts';
+import { watchify } from '../common/watchable.ts';
 import { filter, map, sort } from './utils.ts';
 
 /**
@@ -37,10 +37,10 @@ export function list<T>(initial: T[] = [], unique: boolean = true): ReactiveList
         }
         const [key, value] = arg;
         if (arg.length === 1) {
-            return raw[key];
+            return raw[key!];
         }
-        const prev = raw[key];
-        raw[key] = value;
+        const prev = raw[key!];
+        raw[key!] = value!;
         trigger('=', key, value, prev);
         return ReactiveList;
     };

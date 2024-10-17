@@ -7,12 +7,10 @@
   "type": "module",
   "exports": {
     ".": "./state/index.js",
-    "./utils": "./utils/index.js",
-    "./utils/subscription": "./utils/subscription.js",
     "./list": "./list/index.js",
-    "./list/watchable": "./list/watchable.js",
-    "./list/utils": "./list/utils/index.js",
-    "./common": "./state/common.js"
+    "./common": "./state/common.js",
+    "./subscription": "./utils/subscription.js",
+    "./watchable": "./list/watchable.js"
   },
   "devDependencies": {
     "@types/bun": "^1.1.1",
