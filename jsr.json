@@ -1,6 +1,6 @@
 {
   "name": "@aldinh777/reactive",
-  "version": "0.38.1",
+  "version": "0.38.2",
   "license": "MIT",
   "exports": {
     ".": "./state/index.ts",
