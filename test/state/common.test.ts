@@ -8,12 +8,6 @@ class LocalStorageMock {
     constructor() {
         this.store = {};
     }
-    key(index: number) {
-        return Number.toString();
-    }
-    clear() {
-        this.store = {};
-    }
     getItem(key: string) {
         return this.store[key] || null;
     }
@@ -25,6 +19,7 @@ class LocalStorageMock {
     }
 }
 
+// @ts-ignore
 global.localStorage = new LocalStorageMock();
 
 describe('common state', () => {
