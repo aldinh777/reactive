@@ -1,13 +1,15 @@
 {
   "name": "@aldinh777/reactive",
   "description": "another attempt to Reactive programming",
-  "version": "0.37.1",
+  "version": "0.38.0",
   "author": "aldinh777",
   "license": "MIT",
   "type": "module",
   "exports": {
     ".": "./state/index.js",
     "./list": "./list/index.js",
+    "./list/utils": "./list/utils.js",
+    "./list/reduce": "./list/reduce.js",
     "./common": "./state/common.js",
     "./subscription": "./utils/subscription.js",
     "./watchable": "./list/watchable.js"

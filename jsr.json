@@ -1,10 +1,12 @@
 {
   "name": "@aldinh777/reactive",
-  "version": "0.37.1",
+  "version": "0.38.0",
   "license": "MIT",
   "exports": {
     ".": "./state/index.ts",
     "./list": "./list/index.ts",
+    "./list/utils": "./list/utils.ts",
+    "./list/reduce": "./list/reduce.ts",
     "./common": "./state/common.ts",
     "./subscription": "./utils/subscription.ts",
     "./watchable": "./list/watchable.ts"
