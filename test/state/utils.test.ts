@@ -11,16 +11,12 @@ describe('utils', () => {
         const b = state(randomNumber(100));
         const x = computed(() => a() + b());
 
+        expect(x()).toBe(a() + b());
+
         add(a);
         add(b);
 
         expect(x()).toBe(a() + b());
-
-        x.stop();
-        add(a);
-        add(b);
-
-        expect(x()).not.toBe(a() + b());
     });
 
     test('basic effect', () => {
@@ -45,16 +41,12 @@ describe('utils', () => {
         const b = state(randomNumber(100));
         const x = computed((a, b) => a + b, [a, b]);
 
+        expect(x()).toBe(a() + b());
+
         add(a);
         add(b);
 
         expect(x()).toBe(a() + b());
-
-        x.stop();
-        add(a);
-        add(b);
-
-        expect(x()).not.toBe(a() + b());
     });
 
     test('static effect', () => {
@@ -85,6 +77,17 @@ describe('utils', () => {
         let updateCounter = 0;
         let staticUpdateCounter = 0;
 
+        // call onChange to make them push based, so they all internally depend on x
+        // if they were not, they would be treated as no dependency and become pull based
+        a.onChange(() => {});
+        b.onChange(() => {});
+        staticA.onChange(() => {});
+        staticB.onChange(() => {});
+        // it shouldn't have to be this way, i will try to make it automatically watch its dependencies
+        // the logic should be when c.onChanges is called, it first takes the dependencies, which is a and b
+        // it takes the root dependency, which is x, then call a.onChange and b.onChange to make them push based state
+        // then when the unsub is called from c.onChange, it will also unsub from a.onChange and b.onChange
+
         c.onChange(() => updateCounter++);
         staticC.onChange(() => staticUpdateCounter++);
         add(x);
@@ -104,6 +107,9 @@ describe('utils', () => {
             calculationCalls++;
             return isUsingX() ? x() : y();
         });
+
+        // make them push based so it actually depends on x or y dynamically
+        a.onChange(() => {});
 
         expect(calculationCalls).toBe(1);
 
@@ -152,6 +158,9 @@ describe('utils', () => {
         const a = state(randomNumber(100));
         const b = state(randomNumber(100));
         const c = computed(() => a() + 1); // c are dynamically dependent on a
+
+        // make it push based, so it actually depends on a
+        c.onChange(() => {});
 
         /**
          * no dynamic dependency detected from dependency list,

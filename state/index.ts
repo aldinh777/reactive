@@ -3,7 +3,7 @@
  * Base module that exposes definition and function to create State
  */
 
-import type { Unsubscribe, Stoppable } from '../common/subscription.ts';
+import type { Unsubscribe } from '../common/subscription.ts';
 import { subscribe } from '../common/subscription.ts';
 
 /**
@@ -47,6 +47,7 @@ export interface State<T = any> {
      * Updates the state with a new value.
      */
     (value: T): void;
+    getValue(): T;
     /**
      * Registers a handler that will be called whenever the state changes.
      * @param handler The function to be called when the state changes.
@@ -85,7 +86,7 @@ export function state<T = any>(initial?: T): State<T> {
             if (__EFFECTS_STACK.length) {
                 __EFFECTS_STACK[__EFFECTS_STACK.length - 1].add(State);
             }
-            return val;
+            return State.getValue();
         }
         val = arg[0]!;
         hlock = ulock;
@@ -102,6 +103,7 @@ export function state<T = any>(initial?: T): State<T> {
         }
         ulock = hlock;
     };
+    State.getValue = () => val;
     State.onChange = (handler: (next: T, previous: T) => any, isLast = false) => {
         let oldValue = val;
         return subscribe(isLast ? updl : upd, (value: T) => {
@@ -122,9 +124,9 @@ export function state<T = any>(initial?: T): State<T> {
  */
 
 /**
- * A reactive interface derived from State and Stoppable
+ * A reactive interface derived from State
  */
-export interface Computed<T = any> extends State<T>, Stoppable {}
+export interface Computed<T = any> extends State<T> {}
 
 /**
  * Filters a set of states, if there is any stored dependencies from the state, use those
@@ -154,11 +156,25 @@ function filterDeps(states: Set<State>): Set<State> {
  */
 function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscribe {
     const rootDepsMap = new Map<State, Unsubscribe>();
-    if (state) {
-        __DYNAMICS.add(state);
-        __ROOT_SET.set(state, rootDepsMap);
-    }
+    let totalObservers = 0;
     const exec = () => {
+        if (!state) {
+            replaceDeps();
+        } else if (totalObservers > 0) {
+            state(replaceDeps());
+        }
+    };
+    const removeEffect = () => {
+        for (const unsub of rootDepsMap.values()) {
+            unsub();
+        }
+        rootDepsMap.clear();
+        if (state) {
+            __DYNAMICS.delete(state);
+            __ROOT_SET.delete(state);
+        }
+    };
+    const replaceDeps = () => {
         __EFFECTS_STACK.push(new Set());
         const result = effectHandler();
         const newDeps = filterDeps(__EFFECTS_STACK.pop()!);
@@ -174,53 +190,106 @@ function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscri
         for (const newDep of newDeps) {
             rootDepsMap.set(newDep, newDep.onChange(exec));
         }
-        state?.(result);
+        return result;
     };
+    if (state) {
+        const nativeGetValue = state.getValue;
+        const nativeOnChange = state.onChange;
+        state.getValue = () => (totalObservers > 0 ? nativeGetValue() : effectHandler());
+        state.onChange = (handler: (next: T, previous: T) => any, isLast?: boolean) => {
+            if (totalObservers === 0) {
+                __DYNAMICS.add(state);
+                __ROOT_SET.set(state, rootDepsMap);
+            }
+            totalObservers++;
+            if (totalObservers === 1) {
+                exec();
+            }
+            const unsub = nativeOnChange(handler, isLast);
+            let unsubbed = false;
+            return () => {
+                if (!unsubbed) {
+                    unsubbed = true;
+                    totalObservers--;
+                    if (totalObservers === 0) {
+                        removeEffect();
+                    }
+                }
+                unsub();
+            };
+        };
+    }
     exec();
-    return () => {
-        for (const unsub of rootDepsMap.values()) {
-            unsub();
-        }
-        if (state) {
-            __DYNAMICS.delete(state);
-            __ROOT_SET.delete(state);
-        }
-    };
+    return removeEffect;
 }
 
 /**
  * Handles the execution of a handler with fixed dependencies.
  *
  * @param states - The states to be used as dependencies.
- * @param handler - The handler function to be executed.
+ * @param effectHandler - The handler function to be executed.
  * @param state - The state to be updated with the result of the handler.
  * @returns An unsubscribe function to stop the effect.
  */
-function handleFixed<T, U>(states: State<T>[], handler: (...args: T[]) => U, state?: Computed<U>): Unsubscribe {
+function handleFixed<T, U>(states: State<T>[], effectHandler: (...args: T[]) => U, state?: Computed<U>): Unsubscribe {
     if (states.some((st) => __DYNAMICS.has(st))) {
-        return handleEffect(() => handler(...states.map((s) => s())), state);
+        return handleEffect(() => effectHandler(...states.map((s) => s())), state);
     }
     const rootDepsMap = new Map<State, Unsubscribe>();
-    if (state) {
-        __ROOT_SET.set(state, rootDepsMap);
-    }
-    const deps = filterDeps(new Set(states));
+    let totalObservers = 0;
     const exec = () => {
-        const result = handler(...states.map((s) => s()));
-        state?.(result);
+        if (!state) {
+            effectHandler(...states.map((s) => s()));
+        } else if (totalObservers > 0) {
+            state(effectHandler(...states.map((s) => s())));
+        }
     };
-    for (const dep of deps) {
-        rootDepsMap.set(dep, dep.onChange(exec));
-    }
-    exec();
-    return () => {
+    const removeEffect = () => {
         for (const unsub of rootDepsMap.values()) {
             unsub();
         }
+        rootDepsMap.clear();
         if (state) {
             __ROOT_SET.delete(state);
         }
     };
+    const watchDeps = () => {
+        const deps = filterDeps(new Set(states));
+        for (const dep of deps) {
+            rootDepsMap.set(dep, dep.onChange(exec));
+        }
+    };
+    if (state) {
+        const nativeGetValue = state.getValue;
+        const nativeOnChange = state.onChange;
+        state.getValue = () => (totalObservers > 0 ? nativeGetValue() : effectHandler(...states.map((s) => s())));
+        state.onChange = (handler: (next: U, previous: U) => any, isLast?: boolean) => {
+            if (totalObservers === 0) {
+                __ROOT_SET.set(state, rootDepsMap);
+            }
+            totalObservers++;
+            if (totalObservers === 1) {
+                watchDeps();
+                exec();
+            }
+            const unsub = nativeOnChange(handler, isLast);
+            let unsubbed = false;
+            return () => {
+                if (!unsubbed) {
+                    unsubbed = true;
+                    totalObservers--;
+                    if (totalObservers === 0) {
+                        removeEffect();
+                    }
+                }
+                unsub();
+            };
+        };
+    } else {
+        watchDeps();
+    }
+    exec();
+    return removeEffect;
 }
 
 /**
@@ -235,8 +304,9 @@ type Dependencies<T extends any[]> = { [K in keyof T]: State<T[K]> };
  * @param states - The states to be used as dependencies.
  * @returns An unsubscribe function to stop the effect.
  */
-export const setEffect = <T extends any[]>(effect: (...args: T) => any, states?: Dependencies<T>): Unsubscribe =>
-    states instanceof Array ? handleFixed(states, effect) : handleEffect(effect);
+export function setEffect<T extends any[]>(effect: (...args: T) => any, states?: Dependencies<T>): Unsubscribe {
+    return states instanceof Array ? handleFixed(states, effect) : handleEffect(effect);
+}
 
 /**
  * Creates a computed state based on an effect and its dependencies.
@@ -245,8 +315,8 @@ export const setEffect = <T extends any[]>(effect: (...args: T) => any, states?:
  * @param states - The states to be used as dependencies.
  * @returns A computed state that will be updated with the result of the effect.
  */
-export const computed = <T extends any[], U>(effect: (...args: T) => U, states?: Dependencies<T>): Computed<U> => {
+export function computed<T extends any[], U>(effect: (...args: T) => U, states?: Dependencies<T>): Computed<U> {
     const computed = state() as Computed<U>;
-    computed.stop = states instanceof Array ? handleFixed(states, effect, computed) : handleEffect(effect, computed);
+    states instanceof Array ? handleFixed(states, effect, computed) : handleEffect(effect, computed);
     return computed;
-};
+}
