@@ -162,10 +162,7 @@ describe('reactive list', () => {
 
             for (let i = 0; i < watchSize; i++) {
                 const index = randomNumber(100);
-                let value = randomNumber(100);
-                while (l(index) === value) {
-                    value = randomNumber(100);
-                }
+                let value = l(index) + 1;
                 l(index, value);
                 l.push(randomNumber(100));
                 l.shift();
