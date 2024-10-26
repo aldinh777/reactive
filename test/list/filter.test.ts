@@ -15,6 +15,48 @@ describe('list-util filter', () => {
         expect(filtered()).toEqual(rawEvens(l));
     });
 
+    test('watch update', () => {
+        const l = list([2, 3, 4, 5]);
+        const filtered = evens(l);
+
+        let updateCounter = 0;
+        const unsubUpdate = filtered.onUpdate(() => updateCounter++);
+        l(0, 4); // updateCounter = 1
+        l(1, 5); // updateCounter still 1, l[1] is 3 which is odd
+        expect(updateCounter).toBe(1);
+
+        let insertCounter = 0;
+        const unsubInsert = filtered.onInsert(() => insertCounter++);
+        l(1, 6); // 5 to 6 which is even, added to the filter
+        l.push(6); // push 6, another even added to the filter
+        expect(insertCounter).toBe(2);
+
+        let deleteCounter = 0;
+        const unsubDelete = filtered.onDelete(() => deleteCounter++);
+        l(1, 5); // 6 to 5 which is odd, removed from the filter
+        l.pop(); // delete 6, another odd removed from the filter
+        expect(deleteCounter).toBe(2);
+
+        // ensure filtered still up to date with l, also to fulfill coverage
+        expect(filtered()).toEqual(rawEvens(l));
+        expect(filtered(0)).toBe(l(0));
+
+        unsubUpdate();
+        l(0, 2);
+        l(1, 3);
+        expect(updateCounter).toBe(1);
+
+        unsubInsert();
+        l(1, 6);
+        l.push(6);
+        expect(insertCounter).toBe(2);
+
+        unsubDelete();
+        l(1, 5);
+        l.pop();
+        expect(deleteCounter).toBe(2);
+    });
+
     test('filter properly after mutation', () => {
         const l = list([2, 3, 4, 6, 7, 9]);
         const filtered = evens(l);

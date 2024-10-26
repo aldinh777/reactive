@@ -47,6 +47,18 @@ describe('utils', () => {
         add(b);
 
         expect(x()).toBe(a() + b());
+
+        let computedCounter = 0;
+        const unsub = x.onChange(() => computedCounter++);
+
+        add(a);
+
+        expect(computedCounter).toBe(1);
+
+        unsub();
+        add(a);
+
+        expect(computedCounter).toBe(1);
     });
 
     test('static effect', () => {

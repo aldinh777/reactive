@@ -14,9 +14,6 @@ class LocalStorageMock {
     setItem(key: string, value: string) {
         this.store[key] = String(value);
     }
-    removeItem(key: string) {
-        delete this.store[key];
-    }
 }
 
 // @ts-ignore
