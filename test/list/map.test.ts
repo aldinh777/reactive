@@ -1,11 +1,11 @@
-import type { ReactiveList } from '../../list/index.ts';
+import type { WatchableList } from '../../common/watchable.ts';
 import { describe, test, expect } from 'bun:test';
 import { list } from '../../list/index.ts';
 import { randomList, randomNumber } from '../test-util.ts';
 import { chainList, chainRawList } from '../list-util.ts';
 
-const addOne = (list: ReactiveList<number>) => list.map((item) => item + 1);
-const rawAddOne = (list: ReactiveList<number>) => list().map((item) => item + 1);
+const addOne = (list: WatchableList<number>) => list.map((item) => item + 1);
+const rawAddOne = (list: WatchableList<number>) => list().map((item) => item + 1);
 
 describe('list-util map', () => {
     test('initialize properly', () => {

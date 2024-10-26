@@ -3,7 +3,6 @@
  * Shared module for types and function related to watchability
  */
 
-import type { Unsubscribe } from './subscription.ts';
 import { subscribe } from './subscription.ts';
 
 /**
@@ -49,33 +48,28 @@ interface BulkWatcher<K, V> {
 }
 
 /**
- * Represents a reactive list that is derived from another reactive list
- */
-export interface ObservedList<T> extends WatchableList<T> {}
-
-/**
  * Represents a watchable object with operations to observe changes.
  */
 export interface Watchable<K, V> {
     /**
      * Registers a listener to be called whenever an update operation occurs.
      */
-    onUpdate(listener: OperationUpdateHandler<K, V>): Unsubscribe;
+    onUpdate(listener: OperationUpdateHandler<K, V>): () => void;
 
     /**
      * Registers a listener to be called whenever an insert operation occurs.
      */
-    onInsert(listener: OperationHandler<K, V>): Unsubscribe;
+    onInsert(listener: OperationHandler<K, V>): () => void;
 
     /**
      * Registers a listener to be called whenever a delete operation occurs.
      */
-    onDelete(listener: OperationHandler<K, V>): Unsubscribe;
+    onDelete(listener: OperationHandler<K, V>): () => void;
 
     /**
      * Registers necessary listeners to observe multiple types of operations.
      */
-    watch(operations: BulkWatcher<K, V>): Unsubscribe;
+    watch(operations: BulkWatcher<K, V>): () => void;
 }
 
 /**
@@ -95,17 +89,17 @@ export interface WatchableList<T> extends Watchable<number, T> {
     /**
      * Creates a new observed list that filters out the elements of the list based on the given function.
      */
-    filter(fn: (item: T) => boolean): ObservedList<T>;
+    filter(fn: (item: T) => boolean): WatchableList<T>;
 
     /**
      * Creates a new observed list that maps the elements of the list based on the given function.
      */
-    map<U>(fn: (item: T) => U): ObservedList<U>;
+    map<U>(fn: (item: T) => U): WatchableList<U>;
 
     /**
      * Creates a new observed list that sorts the elements of the list based on the given function.
      */
-    sort(fn?: (item: T, elem: T) => boolean): ObservedList<T>;
+    sort(fn?: (item: T, elem: T) => boolean): WatchableList<T>;
 }
 
 /**

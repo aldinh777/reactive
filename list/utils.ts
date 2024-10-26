@@ -2,12 +2,11 @@
  * @module
  * List utilities to manipulate reactive list
  */
-import type { Unsubscribe } from '../common/subscription.ts';
-import type { ObservedList, WatchableList } from '../common/watchable.ts';
+import type { WatchableList } from '../common/watchable.ts';
 import { watchify } from '../common/watchable.ts';
 
-function observy<T>(list: ObservedList<T>, subscribe: () => Unsubscribe) {
-    let unsubscribe: Unsubscribe | undefined;
+function observy<T>(list: WatchableList<T>, subscribe: () => () => void) {
+    let unsubscribe: () => void | undefined;
     let totalObservers = 0;
     const nativeOnUpdate = list.onUpdate;
     const nativeOnInsert = list.onInsert;
@@ -42,7 +41,7 @@ function observy<T>(list: ObservedList<T>, subscribe: () => Unsubscribe) {
  * @param fn The function to filter the items.
  * @returns - A new reactive list that is filtered based on the specified list input.
  */
-export function filter<T>(list: WatchableList<T>, fn: (item: T) => boolean): ObservedList<T> {
+export function filter<T>(list: WatchableList<T>, fn: (item: T) => boolean): WatchableList<T> {
     let raw: T[] = [];
     let _f: boolean[] = [];
     const updateFiltered = (index: number, value: T, prev: T): void => {
@@ -86,7 +85,7 @@ export function filter<T>(list: WatchableList<T>, fn: (item: T) => boolean): Obs
         }
     };
     const trigger = watchify(FilteredList);
-    const getTotalObserver = observy(FilteredList as ObservedList<T>, () => {
+    const getTotalObserver = observy(FilteredList as WatchableList<T>, () => {
         raw = [];
         _f = list().map(fn);
         for (let i = 0; i < _f.length; i++) {
@@ -127,7 +126,7 @@ export function filter<T>(list: WatchableList<T>, fn: (item: T) => boolean): Obs
     FilteredList.map = <U>(fn: (item: T) => U) => map(FilteredList as WatchableList<T>, fn);
     FilteredList.sort = (fn?: (item: T, elem: T) => boolean) => sort(FilteredList as WatchableList<T>, fn);
     FilteredList.toString = () => `FilteredList [ ${(FilteredList() as T[]).join(', ')} ]`;
-    return FilteredList as ObservedList<T>;
+    return FilteredList as WatchableList<T>;
 }
 
 /**
@@ -136,7 +135,7 @@ export function filter<T>(list: WatchableList<T>, fn: (item: T) => boolean): Obs
  * @param fn The function to map the items.
  * @returns A new reactive list that is mapped based on the specified list input.
  */
-export function map<S, T>(list: WatchableList<S>, fn: (item: S) => T): ObservedList<T> {
+export function map<S, T>(list: WatchableList<S>, fn: (item: S) => T): WatchableList<T> {
     let raw: T[] = [];
     for (const item of list()) {
         raw.push(fn(item));
@@ -157,7 +156,7 @@ export function map<S, T>(list: WatchableList<S>, fn: (item: S) => T): ObservedL
         }
     };
     const trigger = watchify(MappedList);
-    const getTotalObserver = observy(MappedList as ObservedList<T>, () => {
+    const getTotalObserver = observy(MappedList as WatchableList<T>, () => {
         raw = [];
         for (const item of list()) {
             raw.push(fn(item));
@@ -187,7 +186,7 @@ export function map<S, T>(list: WatchableList<S>, fn: (item: S) => T): ObservedL
     MappedList.map = <U>(fn: (item: T) => U) => map(MappedList as WatchableList<T>, fn);
     MappedList.sort = (fn?: (item: T, elem: T) => boolean) => sort(MappedList as WatchableList<T>, fn);
     MappedList.toString = () => `MappedList [ ${(MappedList() as T[]).join(', ')} ]`;
-    return MappedList as ObservedList<T>;
+    return MappedList as WatchableList<T>;
 }
 
 const asc = (item: any, elem: any) => item < elem;
@@ -199,7 +198,7 @@ const asc = (item: any, elem: any) => item < elem;
  * @param fn The function to sort the items.
  * @returns A new reactive list that is sorted based on the specified list input.
  */
-export function sort<T>(list: WatchableList<T>, fn: (item: T, elem: T) => boolean = asc): ObservedList<T> {
+export function sort<T>(list: WatchableList<T>, fn: (item: T, elem: T) => boolean = asc): WatchableList<T> {
     let raw: T[] = [];
     const insertItem = (array: T[], item: T): number => {
         let insertIndex = array.length;
@@ -237,7 +236,7 @@ export function sort<T>(list: WatchableList<T>, fn: (item: T, elem: T) => boolea
         }
     };
     const trigger = watchify(SortedList);
-    const getTotalObserver = observy(SortedList as ObservedList<T>, () => {
+    const getTotalObserver = observy(SortedList as WatchableList<T>, () => {
         raw = [];
         for (const item of list()) {
             insertItem(raw, item);
@@ -273,5 +272,5 @@ export function sort<T>(list: WatchableList<T>, fn: (item: T, elem: T) => boolea
     SortedList.map = <U>(fn: (item: T) => U) => map(SortedList as any as WatchableList<T>, fn);
     SortedList.sort = (fn?: (item: T, elem: T) => boolean) => sort(SortedList as any as WatchableList<T>, fn);
     SortedList.toString = () => `SortedList [ ${(SortedList() as T[]).join(', ')} ]`;
-    return SortedList as ObservedList<T>;
+    return SortedList as WatchableList<T>;
 }
