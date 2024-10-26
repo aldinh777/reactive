@@ -17,7 +17,7 @@ import { subscribe } from '../common/subscription.ts';
  * to prevent any state from having duplicate dependencies or parent
  * dependencies.
  */
-const __ROOT_SET: WeakMap<State, Map<State, Unsubscribe>> = new WeakMap();
+const __ROOT_SET: WeakMap<State, Map<State, Unsubscribe | undefined>> = new WeakMap();
 
 /**
  * A WeakSet that stores all states created using the `computed` function.
@@ -113,7 +113,7 @@ export function state<T = any>(initial?: T): State<T> {
             }
         });
     };
-    State.toString = () => `State { value: ${val} }`;
+    State.toString = () => `State { ${val} }`;
     return State as State<T>;
 }
 
@@ -159,50 +159,54 @@ function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscri
     let totalObservers = 0;
     const exec = () => {
         if (!state) {
-            replaceDeps();
+            updateDependencies();
         } else if (totalObservers > 0) {
-            state(replaceDeps());
+            state(updateDependencies());
         }
     };
-    const removeEffect = () => {
+    const unsubscribe = () => {
         for (const unsub of rootDepsMap.values()) {
             unsub();
         }
         rootDepsMap.clear();
         if (state) {
-            __DYNAMICS.delete(state);
             __ROOT_SET.delete(state);
         }
     };
-    const replaceDeps = () => {
+    const updateDependencies = () => {
         __EFFECTS_STACK.push(new Set());
         const result = effectHandler();
-        const newDeps = filterDeps(__EFFECTS_STACK.pop()!);
+        const deps = __EFFECTS_STACK.pop()!;
+        for (const newDep of deps) {
+            if (rootDepsMap.has(newDep)) {
+                const unsub = rootDepsMap.get(newDep);
+                unsub?.();
+            }
+            rootDepsMap.set(newDep, newDep.onChange(exec));
+        }
+        const rootDeps = filterDeps(deps);
         for (const [oldDep, unsub] of rootDepsMap) {
-            unsub();
-            if (newDeps.has(oldDep)) {
-                newDeps.delete(oldDep);
-                rootDepsMap.set(oldDep, oldDep.onChange(exec));
-            } else {
+            if (!rootDeps.has(oldDep)) {
+                unsub();
                 rootDepsMap.delete(oldDep);
             }
         }
-        for (const newDep of newDeps) {
-            rootDepsMap.set(newDep, newDep.onChange(exec));
+        for (const newDep of rootDeps) {
+            if (!rootDepsMap.has(newDep)) {
+                rootDepsMap.set(newDep, newDep.onChange(exec));
+            }
         }
         return result;
     };
     if (state) {
+        __DYNAMICS.add(state);
         const nativeGetValue = state.getValue;
         const nativeOnChange = state.onChange;
         state.getValue = () => (totalObservers > 0 ? nativeGetValue() : effectHandler());
         state.onChange = (handler: (next: T, previous: T) => any, isLast?: boolean) => {
-            if (totalObservers === 0) {
-                __DYNAMICS.add(state);
-                __ROOT_SET.set(state, rootDepsMap);
-            }
             totalObservers++;
             if (totalObservers === 1) {
+                __ROOT_SET.set(state, rootDepsMap);
                 exec();
             }
             const unsub = nativeOnChange(handler, isLast);
@@ -212,7 +216,7 @@ function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscri
                     unsubbed = true;
                     totalObservers--;
                     if (totalObservers === 0) {
-                        removeEffect();
+                        unsubscribe();
                     }
                 }
                 unsub();
@@ -220,7 +224,7 @@ function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscri
         };
     }
     exec();
-    return removeEffect;
+    return unsubscribe;
 }
 
 /**
@@ -232,44 +236,42 @@ function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscri
  * @returns An unsubscribe function to stop the effect.
  */
 function handleFixed<T, U>(states: State<T>[], effectHandler: (...args: T[]) => U, state?: Computed<U>): Unsubscribe {
+    const executeEffect = () => effectHandler(...states.map((s) => s()));
     if (states.some((st) => __DYNAMICS.has(st))) {
-        return handleEffect(() => effectHandler(...states.map((s) => s())), state);
+        return handleEffect(executeEffect, state);
     }
-    const rootDepsMap = new Map<State, Unsubscribe>();
+    const rootDepsMap = new Map<State, Unsubscribe | undefined>();
+    const rootDeps = filterDeps(new Set(states));
+    for (const dep of rootDeps) {
+        rootDepsMap.set(dep, undefined);
+    }
     let totalObservers = 0;
     const exec = () => {
         if (!state) {
-            effectHandler(...states.map((s) => s()));
+            executeEffect();
         } else if (totalObservers > 0) {
-            state(effectHandler(...states.map((s) => s())));
+            state(executeEffect());
         }
     };
-    const removeEffect = () => {
+    const unsubscribe = () => {
         for (const unsub of rootDepsMap.values()) {
-            unsub();
-        }
-        rootDepsMap.clear();
-        if (state) {
-            __ROOT_SET.delete(state);
+            unsub?.();
         }
     };
-    const watchDeps = () => {
-        const deps = filterDeps(new Set(states));
-        for (const dep of deps) {
+    const subscribe = () => {
+        for (const dep of rootDeps) {
             rootDepsMap.set(dep, dep.onChange(exec));
         }
     };
     if (state) {
+        __ROOT_SET.set(state, rootDepsMap);
         const nativeGetValue = state.getValue;
         const nativeOnChange = state.onChange;
         state.getValue = () => (totalObservers > 0 ? nativeGetValue() : effectHandler(...states.map((s) => s())));
         state.onChange = (handler: (next: U, previous: U) => any, isLast?: boolean) => {
-            if (totalObservers === 0) {
-                __ROOT_SET.set(state, rootDepsMap);
-            }
             totalObservers++;
             if (totalObservers === 1) {
-                watchDeps();
+                subscribe();
                 exec();
             }
             const unsub = nativeOnChange(handler, isLast);
@@ -279,17 +281,17 @@ function handleFixed<T, U>(states: State<T>[], effectHandler: (...args: T[]) => 
                     unsubbed = true;
                     totalObservers--;
                     if (totalObservers === 0) {
-                        removeEffect();
+                        unsubscribe();
                     }
                 }
                 unsub();
             };
         };
     } else {
-        watchDeps();
+        subscribe();
     }
     exec();
-    return removeEffect;
+    return unsubscribe;
 }
 
 /**
