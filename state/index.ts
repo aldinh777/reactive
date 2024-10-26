@@ -3,7 +3,6 @@
  * Base module that exposes definition and function to create State
  */
 
-import type { Unsubscribe } from '../common/subscription.ts';
 import { subscribe } from '../common/subscription.ts';
 
 /**
@@ -17,7 +16,7 @@ import { subscribe } from '../common/subscription.ts';
  * to prevent any state from having duplicate dependencies or parent
  * dependencies.
  */
-const __ROOT_SET: WeakMap<State, Map<State, Unsubscribe | undefined>> = new WeakMap();
+const __ROOT_SET: WeakMap<State, Map<State, (() => void) | undefined>> = new WeakMap();
 
 /**
  * A WeakSet that stores all states created using the `computed` function.
@@ -54,7 +53,7 @@ export interface State<T = any> {
      * @param isLast If true, the handler will be called last after all other handlers have been called.
      * @returns An unsubscribe function to remove the handler from the list of active handlers.
      */
-    onChange(handler: (next: T, previous: T) => any, isLast?: boolean): Unsubscribe;
+    onChange(handler: (next: T, previous: T) => any, isLast?: boolean): () => void;
 }
 
 /**
@@ -124,11 +123,6 @@ export function state<T = any>(initial?: T): State<T> {
  */
 
 /**
- * A reactive interface derived from State
- */
-export interface Computed<T = any> extends State<T> {}
-
-/**
  * Filters a set of states, if there is any stored dependencies from the state, use those
  * dependencies instead, if there is none, then use the state
  */
@@ -154,8 +148,8 @@ function filterDeps(states: Set<State>): Set<State> {
  * @param state The state to be updated with the result of the effect handler.
  * @returns An unsubscribe function to stop the effect.
  */
-function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscribe {
-    const rootDepsMap = new Map<State, Unsubscribe>();
+function handleEffect<T>(effectHandler: () => T, state?: State<T>): () => void {
+    const rootDepsMap = new Map<State, () => void>();
     let totalObservers = 0;
     const exec = () => {
         if (!state) {
@@ -235,12 +229,12 @@ function handleEffect<T>(effectHandler: () => T, state?: Computed<T>): Unsubscri
  * @param state - The state to be updated with the result of the handler.
  * @returns An unsubscribe function to stop the effect.
  */
-function handleFixed<T, U>(states: State<T>[], effectHandler: (...args: T[]) => U, state?: Computed<U>): Unsubscribe {
+function handleFixed<T, U>(states: State<T>[], effectHandler: (...args: T[]) => U, state?: State<U>): () => void {
     const executeEffect = () => effectHandler(...states.map((s) => s()));
     if (states.some((st) => __DYNAMICS.has(st))) {
         return handleEffect(executeEffect, state);
     }
-    const rootDepsMap = new Map<State, Unsubscribe | undefined>();
+    const rootDepsMap = new Map<State, (() => void) | undefined>();
     const rootDeps = filterDeps(new Set(states));
     for (const dep of rootDeps) {
         rootDepsMap.set(dep, undefined);
@@ -306,7 +300,7 @@ type Dependencies<T extends any[]> = { [K in keyof T]: State<T[K]> };
  * @param states - The states to be used as dependencies.
  * @returns An unsubscribe function to stop the effect.
  */
-export function setEffect<T extends any[]>(effect: (...args: T) => any, states?: Dependencies<T>): Unsubscribe {
+export function setEffect<T extends any[]>(effect: (...args: T) => any, states?: Dependencies<T>): () => void {
     return states instanceof Array ? handleFixed(states, effect) : handleEffect(effect);
 }
 
@@ -317,8 +311,8 @@ export function setEffect<T extends any[]>(effect: (...args: T) => any, states?:
  * @param states - The states to be used as dependencies.
  * @returns A computed state that will be updated with the result of the effect.
  */
-export function computed<T extends any[], U>(effect: (...args: T) => U, states?: Dependencies<T>): Computed<U> {
-    const computed = state() as Computed<U>;
+export function computed<T extends any[], U>(effect: (...args: T) => U, states?: Dependencies<T>): State<U> {
+    const computed = state();
     states instanceof Array ? handleFixed(states, effect, computed) : handleEffect(effect, computed);
     return computed;
 }

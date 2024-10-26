@@ -4,15 +4,9 @@
  */
 
 /**
- * A function that is returned from a function that is responsible for subscribing
- * to certain event, and is supposed to be used to unsubscribe from the event.
- */
-export type Unsubscribe = () => void;
-
-/**
  * Insert listener into set and return a callback that remove the item from array.
  */
-export function subscribe<L>(set: Set<L>, listener: L): Unsubscribe {
+export function subscribe<L>(set: Set<L>, listener: L): () => void {
     set.add(listener);
     return () => set.delete(listener);
 }
