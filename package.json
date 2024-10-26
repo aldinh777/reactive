@@ -14,7 +14,7 @@
     "./watchable": "./common/watchable.js"
   },
   "devDependencies": {
-    "@types/bun": "^1.1.1",
-    "typescript": "^5.4.5"
+    "@types/bun": "^1.1.12",
+    "typescript": "^5.6.3"
   }
 }
