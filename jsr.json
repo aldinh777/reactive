@@ -6,7 +6,6 @@
     ".": "./state/index.ts",
     "./list": "./list/index.ts",
     "./list/utils": "./list/utils.ts",
-    "./list/reduce": "./list/reduce.ts",
     "./common": "./state/common.ts",
     "./subscription": "./common/subscription.ts",
     "./watchable": "./common/watchable.ts"
