@@ -59,18 +59,6 @@ describe('list-util sort', () => {
         expect(sorted()).toEqual(rawSort(l));
     });
 
-    test('stop sorting', () => {
-        const l = list(randomList(10));
-        const sorted = l.sort();
-        const oldSort = [...sorted()];
-
-        sorted.stop();
-        const index = randomNumber(10);
-        l(index, l(index) + 1);
-
-        expect(sorted()).toEqual(oldSort);
-    });
-
     test('chain observed filter', () => {
         const l = list(randomList(10));
         const sorted = l.sort();

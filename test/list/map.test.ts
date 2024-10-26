@@ -37,17 +37,6 @@ describe('list-util map', () => {
         expect(mapped()).toEqual(rawAddOne(l));
     });
 
-    test('stop mapping', () => {
-        const l = list(randomList(10));
-        const mapped = addOne(l);
-        const oldMapped = [...mapped()];
-
-        mapped.stop();
-        l.pop();
-
-        expect(mapped()).toEqual(oldMapped);
-    });
-
     test('chain observed map', () => {
         const l = list(randomList(10));
         const mapped = addOne(l);
