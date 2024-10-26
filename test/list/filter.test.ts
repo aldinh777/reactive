@@ -62,18 +62,6 @@ describe('list-util filter', () => {
         expect(filtered()).toEqual(rawEvens(l));
     });
 
-    test('stop filtering', () => {
-        const l = list(randomList(10));
-        const filtered = evens(l);
-        const oldFilter = [...filtered()];
-
-        filtered.stop();
-        const index = randomNumber(10);
-        l(index, l(index) + 1);
-
-        expect(filtered()).toEqual(oldFilter);
-    });
-
     test('chain observed filter', () => {
         const l = list(randomList(10));
         const filtered = evens(l);

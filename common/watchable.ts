@@ -3,7 +3,7 @@
  * Shared module for types and function related to watchability
  */
 
-import type { Stoppable, Unsubscribe } from './subscription.ts';
+import type { Unsubscribe } from './subscription.ts';
 import { subscribe } from './subscription.ts';
 
 /**
@@ -49,10 +49,9 @@ interface BulkWatcher<K, V> {
 }
 
 /**
- * Represents a reactive list that is derived from another reactive list,
- * making it also be stoppable from observing the other reactive list
+ * Represents a reactive list that is derived from another reactive list
  */
-export interface ObservedList<T> extends WatchableList<T>, Stoppable {}
+export interface ObservedList<T> extends WatchableList<T> {}
 
 /**
  * Represents a watchable object with operations to observe changes.
@@ -140,12 +139,3 @@ export function watchify<K, V>(list: any, unique: boolean = true): (op: Operatio
     };
     return trigger;
 }
-
-/**
- * Creates a function that stops multiple subscriptions when called.
- */
-export const stopify = (stoppers: Unsubscribe[]) => (): void => {
-    for (const stop of stoppers) {
-        stop();
-    }
-};
