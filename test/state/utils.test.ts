@@ -55,6 +55,8 @@ describe('utils', () => {
 
         const unsub = setEffect((_) => effectCounter++, [a]);
 
+        expect(effectCounter).toBe(1);
+
         add(a);
         expect(effectCounter).toBe(2);
 
@@ -77,17 +79,6 @@ describe('utils', () => {
         let updateCounter = 0;
         let staticUpdateCounter = 0;
 
-        // call onChange to make them push based, so they all internally depend on x
-        // if they were not, they would be treated as no dependency and become pull based
-        a.onChange(() => {});
-        b.onChange(() => {});
-        staticA.onChange(() => {});
-        staticB.onChange(() => {});
-        // it shouldn't have to be this way, i will try to make it automatically watch its dependencies
-        // the logic should be when c.onChanges is called, it first takes the dependencies, which is a and b
-        // it takes the root dependency, which is x, then call a.onChange and b.onChange to make them push based state
-        // then when the unsub is called from c.onChange, it will also unsub from a.onChange and b.onChange
-
         c.onChange(() => updateCounter++);
         staticC.onChange(() => staticUpdateCounter++);
         add(x);
@@ -109,17 +100,20 @@ describe('utils', () => {
         });
 
         // make them push based so it actually depends on x or y dynamically
-        a.onChange(() => {});
+        a.onChange(() => {}); // calculation here +1 = 1
 
         expect(calculationCalls).toBe(1);
 
         add(x); // won't count since a currently not depends on x
-        add(y);
+        add(y); // calculation here +1 = 2
 
         expect(calculationCalls).toBe(2);
 
-        isUsingX(true);
-        add(x); // will count because a now depends on x
+        isUsingX(true); // calculation here +1 = 3
+
+        expect(calculationCalls).toBe(3);
+
+        add(x); // calculation here +1 = 4
         add(y); // won't count since now a didn't depends on y
 
         expect(calculationCalls).toBe(4);

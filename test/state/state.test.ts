@@ -131,6 +131,6 @@ describe('core state functionality', () => {
     test('properly stringified', () => {
         const num = randomNumber(10);
         const x = state(num);
-        expect(x.toString()).toBe(`State { value: ${num} }`);
+        expect(x.toString()).toBe(`State { ${num} }`);
     });
 });
