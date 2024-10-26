@@ -9,18 +9,18 @@ import { state } from './index.ts';
 /**
  * A tuple containing the state, open, close, and toggle function.
  */
-type ToggleOutput<T> = [State<T>, () => void, () => void, () => void];
+type ToggleOutput = [State<boolean>, () => void, () => void, () => void];
 
 /**
  * Creates a toggleable state with initial value and functions to open, close, and toggle the state.
  * @param initial The initial value of the state.
  * @returns A tuple containing the state, open, close, and toggle function.
  */
-export const stateToggle = <T>(initial: T): ToggleOutput<T> => {
+export const stateToggle = (initial: boolean): ToggleOutput => {
     const st = state(initial);
-    const open = () => st(true as T);
-    const close = () => st(false as T);
-    const toggle = () => st(!st() as T);
+    const open = () => st(true);
+    const close = () => st(false);
+    const toggle = () => st(!st());
     return [st, open, close, toggle];
 };
 
