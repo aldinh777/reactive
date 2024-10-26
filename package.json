@@ -9,7 +9,6 @@
     ".": "./state/index.js",
     "./list": "./list/index.js",
     "./list/utils": "./list/utils.js",
-    "./list/reduce": "./list/reduce.js",
     "./common": "./state/common.js",
     "./subscription": "./common/subscription.js",
     "./watchable": "./common/watchable.js"
