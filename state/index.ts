@@ -10,21 +10,26 @@
  */
 
 /**
+ * Placeholder symbol for default value of state. used to differentiate states with value `undefined`.
+ */
+const EMPTY = Symbol('empty');
+
+/**
  * A WeakMap that maps each state to its root dependencies. This is used
  * to prevent any state from having duplicate dependencies or parent
  * dependencies.
  */
-const __ROOT_SET: WeakMap<State, Map<State, (() => void) | undefined>> = new WeakMap();
+const ROOT_SET: WeakMap<State, Map<State, (() => void) | undefined>> = new WeakMap();
 
 /**
  * A WeakSet that stores all states created using the `computed` function.
  */
-const __DYNAMICS: WeakSet<State> = new WeakSet();
+const DYNAMICS: WeakSet<State> = new WeakSet();
 
 /**
  * An array of Sets that stores the dependencies of each stack of effects.
  */
-const __EFFECTS_STACK: Set<State>[] = [];
+const EFFECTS_STACK: Set<State>[] = [];
 
 /**
  * ====================================================================================================
@@ -83,14 +88,14 @@ export function state<T = any>(initial?: T): State<T> {
      *                  and act as marker
      */
     let hlock = false;
-    const State = (...arg: [T?]) => {
-        if (!arg.length) {
-            if (__EFFECTS_STACK.length) {
-                __EFFECTS_STACK[__EFFECTS_STACK.length - 1].add(State);
+    const State = (next: T | typeof EMPTY = EMPTY) => {
+        if (next === EMPTY) {
+            if (EFFECTS_STACK.length) {
+                EFFECTS_STACK[EFFECTS_STACK.length - 1].add(State);
             }
             return State.getValue();
         }
-        val = arg[0]!;
+        val = next;
         hlock = ulock;
         while (!ulock) {
             ulock = true;
@@ -132,8 +137,8 @@ export function state<T = any>(initial?: T): State<T> {
 function filterDeps(states: Set<State>): Set<State> {
     const deps = new Set<State>();
     for (const dep of states) {
-        if (__ROOT_SET.has(dep)) {
-            const rootSet = __ROOT_SET.get(dep)!;
+        if (ROOT_SET.has(dep)) {
+            const rootSet = ROOT_SET.get(dep)!;
             for (const [root] of rootSet) {
                 deps.add(root);
             }
@@ -167,13 +172,13 @@ function handleEffect<T>(effectHandler: () => T, state?: State<T>): () => void {
         }
         rootDepsMap.clear();
         if (state) {
-            __ROOT_SET.delete(state);
+            ROOT_SET.delete(state);
         }
     };
     const updateDependencies = () => {
-        __EFFECTS_STACK.push(new Set());
+        EFFECTS_STACK.push(new Set());
         const result = effectHandler();
-        const deps = __EFFECTS_STACK.pop()!;
+        const deps = EFFECTS_STACK.pop()!;
         for (const newDep of deps) {
             if (rootDepsMap.has(newDep)) {
                 const unsub = rootDepsMap.get(newDep);
@@ -196,14 +201,14 @@ function handleEffect<T>(effectHandler: () => T, state?: State<T>): () => void {
         return result;
     };
     if (state) {
-        __DYNAMICS.add(state);
+        DYNAMICS.add(state);
         const nativeGetValue = state.getValue;
         const nativeOnChange = state.onChange;
         state.getValue = () => (totalObservers > 0 ? nativeGetValue() : effectHandler());
         state.onChange = (handler: (next: T, previous: T) => any, isLast?: boolean) => {
             totalObservers++;
             if (totalObservers === 1) {
-                __ROOT_SET.set(state, rootDepsMap);
+                ROOT_SET.set(state, rootDepsMap);
                 exec();
             }
             const unsub = nativeOnChange(handler, isLast);
@@ -234,7 +239,7 @@ function handleEffect<T>(effectHandler: () => T, state?: State<T>): () => void {
  */
 function handleFixed<T, U>(states: State<T>[], effectHandler: (...args: T[]) => U, state?: State<U>): () => void {
     const executeEffect = () => effectHandler(...states.map((s) => s()));
-    if (states.some((st) => __DYNAMICS.has(st))) {
+    if (states.some((st) => DYNAMICS.has(st))) {
         return handleEffect(executeEffect, state);
     }
     const rootDepsMap = new Map<State, (() => void) | undefined>();
@@ -261,7 +266,7 @@ function handleFixed<T, U>(states: State<T>[], effectHandler: (...args: T[]) => 
         }
     };
     if (state) {
-        __ROOT_SET.set(state, rootDepsMap);
+        ROOT_SET.set(state, rootDepsMap);
         const nativeGetValue = state.getValue;
         const nativeOnChange = state.onChange;
         state.getValue = () => (totalObservers > 0 ? nativeGetValue() : effectHandler(...states.map((s) => s())));
