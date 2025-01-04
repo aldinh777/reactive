@@ -3,8 +3,6 @@
  * Base module that exposes definition and function to create State
  */
 
-import { subscribe } from '../common/subscription.ts';
-
 /**
  * ====================================================================================================
  *    Internal module containing shared variables and functions to manage dependencies and effects.
@@ -54,6 +52,11 @@ export interface State<T = any> {
      * @returns An unsubscribe function to remove the handler from the list of active handlers.
      */
     onChange(handler: (next: T, previous: T) => any, isLast?: boolean): () => void;
+}
+
+function subscribe<L>(set: Set<L>, listener: L): () => void {
+    set.add(listener);
+    return () => set.delete(listener);
 }
 
 /**

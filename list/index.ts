@@ -3,8 +3,8 @@
  * Base module that expose definition and function to create Reactive List
  */
 
-import type { WatchableList } from '../common/watchable.ts';
-import { watchify } from '../common/watchable.ts';
+import type { WatchableList } from './common.ts';
+import { watchify } from './common.ts';
 import { filter, map, sort } from './utils.ts';
 
 /**
