@@ -2,8 +2,8 @@
  * @module
  * List utilities to manipulate reactive list
  */
-import type { WatchableList } from '../common/watchable.ts';
-import { watchify } from '../common/watchable.ts';
+import type { WatchableList } from './common.ts';
+import { watchify } from './common.ts';
 
 function observy<T>(list: WatchableList<T>, subscribe: () => () => void) {
     let unsubscribe: () => void | undefined;

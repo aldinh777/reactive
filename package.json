@@ -9,9 +9,7 @@
     ".": "./state/index.js",
     "./list": "./list/index.js",
     "./list/utils": "./list/utils.js",
-    "./common": "./state/common.js",
-    "./subscription": "./common/subscription.js",
-    "./watchable": "./common/watchable.js"
+    "./common": "./state/common.js"
   },
   "devDependencies": {
     "@types/bun": "^1.1.12",

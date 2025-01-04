@@ -3,8 +3,6 @@
  * Shared module for types and function related to watchability
  */
 
-import { subscribe } from './subscription.ts';
-
 /**
  * Represents the operation type of a watchable list.
  */
@@ -101,6 +99,12 @@ export interface WatchableList<T> extends Watchable<number, T> {
      */
     sort(fn?: (item: T, elem: T) => boolean): WatchableList<T>;
 }
+
+function subscribe<L>(set: Set<L>, listener: L): () => void {
+    set.add(listener);
+    return () => set.delete(listener);
+}
+
 
 /**
  * Converts an object into Watchable and return a trigger function to trigger the updates.

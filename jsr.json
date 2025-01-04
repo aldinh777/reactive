@@ -6,9 +6,7 @@
     ".": "./state/index.ts",
     "./list": "./list/index.ts",
     "./list/utils": "./list/utils.ts",
-    "./common": "./state/common.ts",
-    "./subscription": "./common/subscription.ts",
-    "./watchable": "./common/watchable.ts"
+    "./common": "./state/common.ts"
   },
   "publish": {
     "exclude": [
