@@ -170,10 +170,4 @@ describe('reactive list', () => {
             expect(watchCounter).toBe(0);
         });
     });
-
-    test('properly stringified', () => {
-        const items = randomList(3);
-        const l = list(items);
-        expect(l.toString()).toBe(`ReactiveList [ ${items.join(', ')} ]`);
-    });
 });

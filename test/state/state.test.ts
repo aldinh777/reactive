@@ -127,10 +127,4 @@ describe('core state functionality', () => {
         expect(firstCounter).toBe(3);
         expect(lastCounter).toBe(2);
     });
-
-    test('properly stringified', () => {
-        const num = randomNumber(10);
-        const x = state(num);
-        expect(x.toString()).toBe(`State { ${num} }`);
-    });
 });

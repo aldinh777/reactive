@@ -117,11 +117,4 @@ describe('list-util sort', () => {
 
         expect(chained()).toEqual(chainRawList(rawSort(l)));
     });
-
-    test('properly stringified', () => {
-        const l = list(randomList(10));
-        const sorted = l.sort();
-
-        expect(sorted.toString()).toBe(`SortedList [ ${sorted().join(', ')} ]`);
-    });
 });

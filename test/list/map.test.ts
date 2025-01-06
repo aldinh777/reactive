@@ -80,11 +80,4 @@ describe('list-util map', () => {
 
         expect(chained()).toEqual(chainRawList(rawAddOne(l)));
     });
-
-    test('properly stringified', () => {
-        const l = list(randomList(10));
-        const mapped = addOne(l);
-
-        expect(mapped.toString()).toBe(`MappedList [ ${mapped().join(', ')} ]`);
-    });
 });

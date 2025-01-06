@@ -75,6 +75,5 @@ export function list<T>(initial: T[] = [], unique: boolean = true): ReactiveList
     ReactiveList.filter = (fn: (item: T) => boolean) => filter(ReactiveList as any as WatchableList<T>, fn);
     ReactiveList.map = (fn: (item: T) => boolean) => map(ReactiveList as any as WatchableList<T>, fn);
     ReactiveList.sort = (fn?: (item: T, elem: T) => boolean) => sort(ReactiveList as any as WatchableList<T>, fn);
-    ReactiveList.toString = () => `ReactiveList [ ${raw.join(', ')} ]`;
     return ReactiveList as ReactiveList<T>;
 }
