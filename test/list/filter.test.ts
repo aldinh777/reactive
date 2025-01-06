@@ -111,11 +111,4 @@ describe('list-util filter', () => {
 
         expect(chained()).toEqual(chainRawList(rawEvens(l)));
     });
-
-    test('properly stringified', () => {
-        const l = list(randomList(10));
-        const filtered = evens(l);
-
-        expect(filtered.toString()).toBe(`FilteredList [ ${filtered().join(', ')} ]`);
-    });
 });

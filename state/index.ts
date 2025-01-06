@@ -120,7 +120,6 @@ export function state<T = any>(initial?: T): State<T> {
             }
         });
     };
-    State.toString = () => `State { ${val} }`;
     return State as State<T>;
 }
 

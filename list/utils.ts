@@ -5,7 +5,7 @@
 import type { WatchableList } from './common.ts';
 import { watchify } from './common.ts';
 
-function observy<T>(list: WatchableList<T>, subscribe: () => () => void) {
+function observy<T>(list: WatchableList<T>, subscribe: () => () => void): () => number {
     let unsubscribe: () => void | undefined;
     let totalObservers = 0;
     const nativeOnUpdate = list.onUpdate;
@@ -29,9 +29,15 @@ function observy<T>(list: WatchableList<T>, subscribe: () => () => void) {
             unsub?.();
         };
     };
+
     list.onUpdate = customListener(nativeOnUpdate);
     list.onInsert = customListener(nativeOnInsert);
     list.onDelete = customListener(nativeOnDelete);
+
+    list.filter = (fn: (item: T) => boolean) => filter(list, fn);
+    list.map = <U>(fn: (item: T) => U) => map(list, fn);
+    list.sort = (fn?: (item: T, elem: T) => boolean) => sort(list, fn);
+
     return () => totalObservers;
 }
 
@@ -122,10 +128,6 @@ export function filter<T>(list: WatchableList<T>, fn: (item: T) => boolean): Wat
             }
         });
     });
-    FilteredList.filter = (fn: (item: T) => boolean) => filter(FilteredList as WatchableList<T>, fn);
-    FilteredList.map = <U>(fn: (item: T) => U) => map(FilteredList as WatchableList<T>, fn);
-    FilteredList.sort = (fn?: (item: T, elem: T) => boolean) => sort(FilteredList as WatchableList<T>, fn);
-    FilteredList.toString = () => `FilteredList [ ${(FilteredList() as T[]).join(', ')} ]`;
     return FilteredList as WatchableList<T>;
 }
 
@@ -182,10 +184,6 @@ export function map<S, T>(list: WatchableList<S>, fn: (item: S) => T): Watchable
             }
         });
     });
-    MappedList.filter = (fn: (item: T) => boolean) => filter(MappedList as WatchableList<T>, fn);
-    MappedList.map = <U>(fn: (item: T) => U) => map(MappedList as WatchableList<T>, fn);
-    MappedList.sort = (fn?: (item: T, elem: T) => boolean) => sort(MappedList as WatchableList<T>, fn);
-    MappedList.toString = () => `MappedList [ ${(MappedList() as T[]).join(', ')} ]`;
     return MappedList as WatchableList<T>;
 }
 
@@ -268,9 +266,5 @@ export function sort<T>(list: WatchableList<T>, fn: (item: T, elem: T) => boolea
             }
         });
     });
-    SortedList.filter = (fn: (item: T) => boolean) => filter(SortedList as any as WatchableList<T>, fn);
-    SortedList.map = <U>(fn: (item: T) => U) => map(SortedList as any as WatchableList<T>, fn);
-    SortedList.sort = (fn?: (item: T, elem: T) => boolean) => sort(SortedList as any as WatchableList<T>, fn);
-    SortedList.toString = () => `SortedList [ ${(SortedList() as T[]).join(', ')} ]`;
     return SortedList as WatchableList<T>;
 }
