@@ -15,6 +15,11 @@
 const EMPTY = Symbol('empty');
 
 /**
+ * Placeholder State to mark effect to recall, in case a circular dependency is updating itself
+ */
+const RECALL_STATE = state(EMPTY);
+
+/**
  * A WeakMap that maps each state to its root dependencies. This is used
  * to prevent any state from having duplicate dependencies or parent
  * dependencies.
@@ -89,14 +94,16 @@ export function state<T = any>(initial?: T): State<T> {
      */
     let hlock = false;
     const State = (next: T | typeof EMPTY = EMPTY) => {
+        const effectStack = EFFECTS_STACK.length ? EFFECTS_STACK[EFFECTS_STACK.length - 1] : null;
         if (next === EMPTY) {
-            if (EFFECTS_STACK.length) {
-                EFFECTS_STACK[EFFECTS_STACK.length - 1].add(State);
-            }
+            effectStack?.add(State);
             return State.getValue();
         }
         val = next;
         hlock = ulock;
+        if (effectStack?.has(State)) {
+            effectStack.add(RECALL_STATE);
+        }
         while (!ulock) {
             ulock = true;
             for (const listener of [...upd, ...updl]) {
@@ -158,11 +165,20 @@ function filterDeps(states: Set<State>): Set<State> {
 function handleEffect<T>(effectHandler: () => T, state?: State<T>): () => void {
     const rootDepsMap = new Map<State, () => void>();
     let totalObservers = 0;
+    let recall = false;
     const exec = () => {
-        if (!state) {
-            updateDependencies();
-        } else if (totalObservers > 0) {
-            state(updateDependencies());
+        while (true) {
+            if (!state) {
+                updateDependencies();
+            } else if (totalObservers > 0) {
+                state(updateDependencies());
+            }
+            if (recall) {
+                recall = false;
+                continue;
+            } else {
+                break;
+            }
         }
     };
     const unsubscribe = () => {
@@ -178,6 +194,10 @@ function handleEffect<T>(effectHandler: () => T, state?: State<T>): () => void {
         EFFECTS_STACK.push(new Set());
         const result = effectHandler();
         const deps = EFFECTS_STACK.pop()!;
+        if (deps.has(RECALL_STATE)) {
+            recall = true;
+            return result;
+        }
         for (const newDep of deps) {
             if (rootDepsMap.has(newDep)) {
                 const unsub = rootDepsMap.get(newDep);
