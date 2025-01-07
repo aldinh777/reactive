@@ -77,6 +77,35 @@ describe('utils', () => {
         expect(effectCounter).toBe(2);
     });
 
+    test('circular effect', () => {
+        const x = state(randomNumber(100));
+
+        setEffect(() => {
+            if (x() < 120) {
+                x(x() + 1);
+            }
+        });
+
+        expect(x()).toBe(120);
+    });
+
+    test('circular dependency', () => {
+        let iter = 100;
+
+        const x = computed(() => (iter <= 0 ? 'overflow' : iter-- && x()));
+
+        const a = computed(() => (iter <= 0 ? 'flip overflow' : iter-- && b()));
+        const b = computed(() => (iter <= 0 ? 'flip overflow' : iter-- && a()));
+
+        expect(x()).toBe('overflow');
+
+        iter = 0;
+        expect(a()).toBe('flip overflow');
+
+        iter = 0;
+        expect(b()).toBe('flip overflow');
+    });
+
     test('diamond structure dependency', () => {
         const x = state(randomNumber(100));
 
