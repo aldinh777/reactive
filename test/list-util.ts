@@ -1,6 +1,6 @@
-import type { ObservedList } from '../common/watchable.ts';
+import type { WatchableList } from '../list/common.ts';
 
-export function chainList(list: ObservedList<number>): ObservedList<number> {
+export function chainList(list: WatchableList<number>): WatchableList<number> {
     return list
         .filter((item) => item > 10)
         .map((item) => item * 2)

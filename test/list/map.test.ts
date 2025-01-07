@@ -1,4 +1,4 @@
-import type { WatchableList } from '../../common/watchable.ts';
+import type { WatchableList } from '../../list/common.ts';
 import { describe, test, expect } from 'bun:test';
 import { list } from '../../list/index.ts';
 import { randomList, randomNumber } from '../test-util.ts';
