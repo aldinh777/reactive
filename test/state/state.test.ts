@@ -56,7 +56,16 @@ describe('core state functionality', () => {
         });
         x.onChange(() => thirdCounter++);
         x(1);
+        expect(x()).toBe(1);
+
         x(2);
+        /**
+         * last updated value is 2 but it would be updated in the process
+         *
+         * - the first listener would add 1 and turn 2 into 3
+         */
+        expect(x()).toBe(3);
+
         x(4);
         /**
          * last updated value is 4 but it would be updated in the process
@@ -66,6 +75,7 @@ describe('core state functionality', () => {
          * - it get reexecuted and the first listener would turn it into 7
          */
         expect(x()).toBe(7);
+
         /**
          * - first update, current x is 1
          * - second update, current x is 2, since 2 is odd, it updates into 3
@@ -76,6 +86,7 @@ describe('core state functionality', () => {
          * - update from first listener, current x is 7
          */
         expect(firstCounter).toBe(7);
+
         /**
          * - first update, current x is 1
          * - second update, current x is 3, updated from first listener
@@ -83,6 +94,7 @@ describe('core state functionality', () => {
          * - update from second listener, current x is 7, updated from first listener
          */
         expect(secondCounter).toBe(4);
+
         /**
          * - first update, current x is 1
          * - second update, current x is 3, updated from first listener
@@ -126,5 +138,38 @@ describe('core state functionality', () => {
         // it should execute in the same order
         expect(firstCounter).toBe(3);
         expect(lastCounter).toBe(2);
+    });
+
+    test('correctly handle previous value', () => {
+        const increasingNumber = state(0);
+        let firstCounter = 0;
+        let secondCounter = 0;
+
+        increasingNumber.onChange((next, prev) => {
+            firstCounter++;
+            if (next < prev) {
+                increasingNumber(prev);
+            }
+        });
+
+        increasingNumber.onChange(() => secondCounter++);
+
+        increasingNumber(2);
+        /**
+         * from 0 to 2
+         * first listener calls, second listener calls too
+         */
+        expect(increasingNumber()).toBe(2);
+        expect(firstCounter).toBe(1);
+        expect(secondCounter).toBe(1);
+
+        increasingNumber(0);
+        /**
+         * from 2 to 1
+         * first listener calls, revert back to 0, then its gonna be 0 to 0 which is a no-op
+         */
+        expect(increasingNumber()).toBe(2);
+        expect(firstCounter).toBe(2);
+        expect(secondCounter).toBe(1);
     });
 });

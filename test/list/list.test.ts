@@ -149,25 +149,30 @@ describe('reactive list', () => {
 
         test('stop watch', () => {
             const l = list(randomList(100));
-            const watchSize = randomNumber(100);
             let watchCounter = 0;
             const increaseWatchCounter = () => watchCounter++;
 
-            const unsub = l.watch({
+            const unsubAll = l.watch({
                 update: increaseWatchCounter,
                 insert: increaseWatchCounter,
                 delete: increaseWatchCounter
             });
-            unsub();
 
-            for (let i = 0; i < watchSize; i++) {
-                const index = randomNumber(100);
-                let value = l(index) + 1;
-                l(index, value);
-                l.push(randomNumber(100));
-                l.shift();
-            }
-            expect(watchCounter).toBe(0);
+            let index = randomNumber(100);
+            let value = l(index) + 1;
+            l(index, value);
+            l.push(randomNumber(100));
+            l.shift();
+            expect(watchCounter).toBe(3);
+
+            unsubAll();
+
+            index = randomNumber(100);
+            value = l(index) + 1;
+            l(index, value);
+            l.push(randomNumber(100));
+            l.shift();
+            expect(watchCounter).toBe(3);
         });
     });
 });

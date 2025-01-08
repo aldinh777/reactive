@@ -37,15 +37,10 @@ export interface State<T = any> {
      * Registers a handler that will be called whenever the state changes.
      *
      * @param handler Function to be called when the state changes.
-     * @param isLast If true, the handler will be called last after all other handlers have been called.
+     * @param last If true, the handler will be called last after all other handlers have been called.
      * @returns Unsubscribe function to remove handler from the list of listeners.
      */
-    onChange(handler: (next: T, previous: T) => any, isLast?: boolean): () => void;
-}
-
-function subscribe<L>(set: Set<L>, listener: L): () => void {
-    set.add(listener);
-    return () => set.delete(listener);
+    onChange(handler: (next: T, prev: T) => any, last?: boolean): () => void;
 }
 
 /**
@@ -55,8 +50,8 @@ function subscribe<L>(set: Set<L>, listener: L): () => void {
  * @returns The reactive state.
  */
 export function state<T = any>(initial?: T): State<T> {
-    const listeners: Set<(value: T) => any> = new Set();
-    const lastListeners: Set<(value: T) => any> = new Set();
+    const listeners: Set<(next: T, prev: T) => any> = new Set();
+    const lastListeners: Set<(next: T, prev: T) => any> = new Set();
     let value: T = initial as T;
     let isChanging = false;
     let willChange = false;
@@ -68,6 +63,7 @@ export function state<T = any>(initial?: T): State<T> {
             return State.getValue();
         }
 
+        let oldValue = value;
         value = nextValue;
         willChange = isChanging; /* ref 1 */
 
@@ -78,12 +74,14 @@ export function state<T = any>(initial?: T): State<T> {
         // execute listeners only when the current state are not being used, this is to prevent recursion
         while (!isChanging) {
             isChanging = true;
-            for (const listener of [...listeners, ...lastListeners]) {
-                listener(value); /* ref 2 */
+            for (const handler of [...listeners, ...lastListeners]) {
+                if (value !== oldValue) {
+                    handler(value, oldValue); /* ref 2 */
 
-                // see ref 1, there is a chance ref 2 are invoking update of this state, thus setting the flag to true
-                if (willChange) {
-                    break;
+                    // see ref 1, there is a chance ref 2 are invoking update of this state, thus setting the flag to true
+                    if (willChange) {
+                        break;
+                    }
                 }
             }
 
@@ -98,16 +96,11 @@ export function state<T = any>(initial?: T): State<T> {
     };
 
     State.getValue = () => value;
-    State.onChange = (handler: (next: T, prev: T) => any, isLast = false) => {
-        let oldValue = value;
-        return subscribe(isLast ? lastListeners : listeners, (value: T) => {
-            if (value !== oldValue) {
-                handler(value, oldValue);
-                oldValue = value;
-            }
-        });
+    State.onChange = (handler: (next: T, prev: T) => any, last = false) => {
+        const set = last ? lastListeners : listeners;
+        set.add(handler);
+        return () => set.delete(handler);
     };
-
     return State as State<T>;
 }
 
