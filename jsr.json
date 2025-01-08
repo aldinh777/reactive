@@ -10,7 +10,8 @@
   },
   "publish": {
     "exclude": [
-      "test"
+      "test",
+      "coverage"
     ]
   }
 }
