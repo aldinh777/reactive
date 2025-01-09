@@ -1,6 +1,6 @@
 {
   "name": "@aldinh777/reactive",
-  "version": "0.39.0",
+  "version": "0.40.0",
   "license": "MIT",
   "exports": {
     ".": "./state/index.ts",
@@ -10,8 +10,8 @@
   },
   "publish": {
     "exclude": [
-      "test",
-      "coverage"
+      "coverage",
+      "test"
     ]
   }
 }
