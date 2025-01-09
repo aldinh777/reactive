@@ -2,8 +2,32 @@
  * @module
  * List utilities to manipulate reactive list
  */
-import type { WatchableList } from './common.ts';
+import type { BulkWatcher, OperationHandler, OperationUpdateHandler } from './common.ts';
 import { watchify } from './common.ts';
+
+/**
+ * Represents a watchable list with operations to observe changes.
+ */
+export interface WatchableList<T> {
+    /**
+     * Retrieves the current elements as array.
+     */
+    (): T[];
+
+    /**
+     * Retrieves the element at the specified index of the list.
+     */
+    (key: number): T;
+
+    onUpdate(listener: OperationUpdateHandler<T>): () => void;
+    onInsert(listener: OperationHandler<T>): () => void;
+    onDelete(listener: OperationHandler<T>): () => void;
+    watch(operations: BulkWatcher<T>): () => void;
+
+    filter(fn: (item: T) => boolean): WatchableList<T>;
+    map<U>(fn: (item: T) => U): WatchableList<U>;
+    sort(fn?: (item: T, elem: T) => boolean): WatchableList<T>;
+}
 
 function observy<T>(list: WatchableList<T>, subscribe: () => () => void): () => number {
     let unsubscribe: () => void | undefined;
