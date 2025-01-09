@@ -7,12 +7,12 @@
   "type": "module",
   "exports": {
     ".": "./state/index.js",
+    "./common": "./state/utils.js",
     "./list": "./list/index.js",
-    "./list/utils": "./list/utils.js",
-    "./common": "./state/common.js"
+    "./list/utils": "./list/utils.js"
   },
   "devDependencies": {
-    "@types/bun": "^1.1.12",
-    "typescript": "^5.6.3"
+    "@types/bun": "^1.1.16",
+    "typescript": "^5.7.3"
   }
 }

@@ -22,6 +22,6 @@
         "noUnusedParameters": true,
         "noPropertyAccessFromIndexSignature": true
     },
-    "include": ["state", "list", "common"],
-    "exclude": ["test"]
+    "include": ["state", "list"],
+    "exclude": ["coverage", "test"]
 }
