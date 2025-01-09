@@ -19,13 +19,15 @@ export interface ReactiveList<T> extends WatchableList<T> {
     splice(start: number, deleteCount?: number, ...items: T[]): T[];
 }
 
+const EMPTY = Symbol('empty');
+
 /**
  * Create a Reactive List that mimic the basic functionality of an array
  * and is capable of watching any updates from it.
  *
  * operation includes:
- * - insertion
- * - deletion
+ * - insertion : push, unshift, splice
+ * - deletion : pop, shift, splice
  * - updates
  *
  * @param initial - The initial list of elements to be used
@@ -34,12 +36,11 @@ export interface ReactiveList<T> extends WatchableList<T> {
  */
 export function list<T>(initial: T[] = [], unique: boolean = true): ReactiveList<T> {
     const raw = [...initial];
-    const ReactiveList = (...arg: [number?, T?]) => {
-        if (!arg.length) {
+    const ReactiveList = (key: number | typeof EMPTY = EMPTY, value: T | typeof EMPTY = EMPTY) => {
+        if (key === EMPTY) {
             return [...raw];
         }
-        const [key, value] = arg;
-        if (arg.length === 1) {
+        if (value === EMPTY) {
             return raw[key!];
         }
         const prev = raw[key!];
