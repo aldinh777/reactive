@@ -6,17 +6,17 @@
 import type { State } from './index.ts';
 import { state } from './index.ts';
 
-/**
- * A tuple containing the state, open, close, and toggle function.
- */
-type ToggleOutput = [State<boolean>, () => void, () => void, () => void];
+// for easier readings on function return type
+type Open = () => void;
+type Close = () => void;
+type Toggle = () => void;
 
 /**
  * Creates a toggleable state with initial value and functions to open, close, and toggle the state.
  * @param initial The initial value of the state.
  * @returns A tuple containing the state, open, close, and toggle function.
  */
-export const stateToggle = (initial: boolean): ToggleOutput => {
+export const stateToggle = (initial: boolean): [State<boolean>, Open, Close, Toggle] => {
     const s = state(initial);
     const open = () => s(true);
     const close = () => s(false);
@@ -39,6 +39,6 @@ export const stateLocalStorage = (key: string, initial: string): State<string> =
     } else {
         localStorage.setItem(key, s());
     }
-    s.onChange((value) => localStorage.setItem(key, value));
+    s.onChange((value) => localStorage.setItem(key, value), true);
     return s;
 };
