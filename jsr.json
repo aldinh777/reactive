@@ -4,9 +4,9 @@
   "license": "MIT",
   "exports": {
     ".": "./state/index.ts",
+    "./utils": "./state/utils.ts",
     "./list": "./list/index.ts",
-    "./list/utils": "./list/utils.ts",
-    "./common": "./state/common.ts"
+    "./list/utils": "./list/utils.ts"
   },
   "publish": {
     "exclude": [
