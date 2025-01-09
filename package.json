@@ -1,13 +1,13 @@
 {
   "name": "@aldinh777/reactive",
   "description": "another attempt to achieve the ultimate reactivity",
-  "version": "0.40.0",
+  "version": "0.40.1",
   "author": "aldinh777",
   "license": "MIT",
   "type": "module",
   "exports": {
     ".": "./state/index.js",
-    "./common": "./state/utils.js",
+    "./utils": "./state/utils.js",
     "./list": "./list/index.js",
     "./list/utils": "./list/utils.js"
   },
