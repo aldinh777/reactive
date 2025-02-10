@@ -1,6 +1,6 @@
-import type { State } from '../../state/index.ts';
+import type { State } from '@aldinh777/reactive';
 import { describe, test, expect } from 'bun:test';
-import { state, computed, setEffect } from '../../state/index.ts';
+import { state, computed, setEffect } from '@aldinh777/reactive';
 import { randomNumber } from '../test-util.ts';
 
 const add = (x: State, n = 1) => x(x() + n);

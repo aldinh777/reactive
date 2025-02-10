@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { list } from '../../list/index.ts';
+import { list } from '@aldinh777/reactive/list';
 import { randomList, randomNumber } from '../test-util.ts';
 
 describe('reactive list', () => {
