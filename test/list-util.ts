@@ -1,4 +1,4 @@
-import type { WatchableList } from '../list/common.ts';
+import type { WatchableList } from '@aldinh777/reactive/list-utils';
 
 export function chainList(list: WatchableList<number>): WatchableList<number> {
     return list

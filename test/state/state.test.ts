@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { state } from '../../state/index.ts';
+import { state } from '@aldinh777/reactive';
 import { randomNumber } from '../test-util.ts';
 
 describe('core state functionality', () => {

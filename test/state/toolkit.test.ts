@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { stateLocalStorage, stateToggle } from '../../state/utils.ts';
+import { stateLocalStorage, stateToggle } from '@aldinh777/reactive/toolkit';
 import { randomString } from '../test-util.ts';
 
 class LocalStorageMock {
