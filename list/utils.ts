@@ -8,7 +8,7 @@ import { watchify } from './common.ts';
 /**
  * Represents a watchable list with operations to observe changes.
  */
-export interface WatchableList<T> {
+export interface WatchableList<T = any> {
     /**
      * Retrieves the current elements as array.
      */
