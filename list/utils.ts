@@ -2,7 +2,7 @@
  * @module
  * List utilities to manipulate reactive list
  */
-import type { BulkWatcher, OperationHandler, OperationUpdateHandler } from './common.ts';
+import type { BulkWatcher, DeleteHandler, InsertHandler, UpdateHandler } from './common.ts';
 import { watchify } from './common.ts';
 
 /**
@@ -19,9 +19,9 @@ export interface WatchableList<T = any> {
      */
     (key: number): T;
 
-    onUpdate(listener: OperationUpdateHandler<T>): () => void;
-    onInsert(listener: OperationHandler<T>): () => void;
-    onDelete(listener: OperationHandler<T>): () => void;
+    onUpdate(listener: UpdateHandler<T>): () => void;
+    onInsert(listener: InsertHandler<T>): () => void;
+    onDelete(listener: DeleteHandler<T>): () => void;
     watch(operations: BulkWatcher<T>): () => void;
 
     filter(fn: (item: T) => boolean): WatchableList<T>;
@@ -29,13 +29,15 @@ export interface WatchableList<T = any> {
     sort(fn?: (item: T, elem: T) => boolean): WatchableList<T>;
 }
 
+type Handler<T> = WatchableList<T>['onUpdate'] | WatchableList<T>['onInsert'] | WatchableList<T>['onDelete'];
+
 function observy<T>(list: WatchableList<T>, subscribe: () => () => void): () => number {
     let unsubscribe: () => void | undefined;
     let totalObservers = 0;
     const nativeOnUpdate = list.onUpdate;
     const nativeOnInsert = list.onInsert;
     const nativeOnDelete = list.onDelete;
-    const customListener = (handler: typeof nativeOnUpdate | typeof nativeOnInsert) => (listener: any) => {
+    const customListener = (handler: Handler<T>) => (listener: any) => {
         totalObservers++;
         if (totalObservers === 1) {
             unsubscribe = subscribe();

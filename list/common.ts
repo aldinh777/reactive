@@ -3,18 +3,18 @@
  * Shared module for types and function related to watchability
  */
 
-export type OperationHandler<T> = (index: number, value: T, prev?: T) => any;
-export type OperationUpdateHandler<T> = (index: number, value: T, prev: T) => any;
+export type UpdateHandler<T> = (index: number, value: T, prev: T) => any;
+export type InsertHandler<T> = (index: number, value: T, last: boolean) => any;
+export type DeleteHandler<T> = (index: number, value: T) => any;
+export type OperationHandler<T> = (index: number, value: T, prev?: T | boolean) => any;
+
 export interface BulkWatcher<T> {
-    update?: OperationUpdateHandler<T>;
-    insert?: OperationHandler<T>;
-    delete?: OperationHandler<T>;
+    insert?: InsertHandler<T>;
+    delete?: DeleteHandler<T>;
+    update?: UpdateHandler<T>;
 }
 
 type Operation = '+' | '-' | '=';
-type OperationListeners<T> = {
-    [op in Operation]: Set<OperationHandler<T>>;
-};
 
 function subscribe<L>(set: Set<L>) {
     return (listener: L) => {
@@ -23,17 +23,22 @@ function subscribe<L>(set: Set<L>) {
     };
 }
 
+type Trigger<T> = (op: Operation, index: number, value: T, prev?: T | boolean) => void;
+
 /**
  * Converts an object into Watchable and return a trigger function to trigger the updates.
  */
-export function watchify<T>(
-    list: any,
-    unique: boolean = true
-): (op: Operation, index: number, value: T, prev?: T) => void {
-    const listeners: OperationListeners<T> = { '+': new Set(), '-': new Set(), '=': new Set() };
-    const trigger = (op: Operation, key: number, value: T, updated?: T) => {
+export function watchify<T>(list: any, unique: boolean = true): Trigger<T> {
+    const listeners = {
+        '=': new Set<OperationHandler<T>>(),
+        '+': new Set<OperationHandler<T>>(),
+        '-': new Set<OperationHandler<T>>()
+    };
+    const trigger = (op: Operation, key: number, value: T, updated?: T | boolean) => {
         const handlers = listeners[op];
         for (const handle of handlers || []) {
+            // skip trigger if the updated value are the same with current value,
+            // unless unique flag are set to false
             if (op !== '=' || !unique || value !== updated) {
                 handle(key, value, updated);
             }
