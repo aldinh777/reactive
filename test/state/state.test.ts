@@ -6,23 +6,23 @@ describe('core state functionality', () => {
     test('initialize correctly', () => {
         const value = randomNumber(10);
         const x = state(value);
-        expect(x()).toBe(value);
+        expect(x.getValue()).toBe(value);
     });
 
     test('update value', () => {
         const newValue = randomNumber(10);
         const x = state(randomNumber(10));
-        x(newValue);
-        expect(x()).toBe(newValue);
+        x.setValue(newValue);
+        expect(x.getValue()).toBe(newValue);
     });
 
     test('listen to change', () => {
         let counter = 0;
         const x = state(0);
         x.onChange(() => counter++);
-        x(1);
-        x(2);
-        x(2); // supposedly wont trigger because no change
+        x.setValue(1);
+        x.setValue(2);
+        x.setValue(2); // supposedly wont trigger because no change
         expect(counter).toBe(2);
     });
 
@@ -30,10 +30,10 @@ describe('core state functionality', () => {
         let counter = 0;
         const x = state(0);
         const unsub = x.onChange(() => counter++);
-        x(1); // ensure it was triggered at least once
+        x.setValue(1); // ensure it was triggered at least once
         unsub();
-        x(2);
-        x(3);
+        x.setValue(2);
+        x.setValue(3);
         expect(counter).toBe(1);
     });
 
@@ -44,29 +44,29 @@ describe('core state functionality', () => {
         const x = state(0);
         x.onChange((current) => {
             if (current % 2 === 0) {
-                x(current + 1);
+                x.setValue(current + 1);
             }
             firstCounter++;
         });
         x.onChange((current) => {
             if (current === 5) {
-                x(6);
+                x.setValue(6);
             }
             secondCounter++;
         });
         x.onChange(() => thirdCounter++);
-        x(1);
-        expect(x()).toBe(1);
+        x.setValue(1);
+        expect(x.getValue()).toBe(1);
 
-        x(2);
+        x.setValue(2);
         /**
          * last updated value is 2 but it would be updated in the process
          *
          * - the first listener would add 1 and turn 2 into 3
          */
-        expect(x()).toBe(3);
+        expect(x.getValue()).toBe(3);
 
-        x(4);
+        x.setValue(4);
         /**
          * last updated value is 4 but it would be updated in the process
          *
@@ -74,7 +74,7 @@ describe('core state functionality', () => {
          * - the second listener would turn 5 into 6
          * - it get reexecuted and the first listener would turn it into 7
          */
-        expect(x()).toBe(7);
+        expect(x.getValue()).toBe(7);
 
         /**
          * - first update, current x is 1
@@ -109,7 +109,7 @@ describe('core state functionality', () => {
         const x = state(0);
         const disallowEvenNumber = (current: number) => {
             if (current % 2 === 0) {
-                x(current + 1);
+                x.setValue(current + 1);
             }
             firstCounter++;
         };
@@ -118,10 +118,10 @@ describe('core state functionality', () => {
         x.onChange(() => lastCounter++, true);
 
         // 1st change, increase firstCounter to 1 and lastCounter to 1
-        x(1);
+        x.setValue(1);
         // 2nd change, updating x to 3, firstCounter increased to 2
         // 3rd change, increase firstCounter to 3 and lastCounter to 2
-        x(2);
+        x.setValue(2);
 
         expect(firstCounter).toBe(3);
         expect(lastCounter).toBe(2);
@@ -132,8 +132,8 @@ describe('core state functionality', () => {
         unsubFirst();
         x.onChange(disallowEvenNumber);
 
-        x(1);
-        x(2);
+        x.setValue(1);
+        x.setValue(2);
 
         // it should execute in the same order
         expect(firstCounter).toBe(3);
@@ -148,27 +148,27 @@ describe('core state functionality', () => {
         increasingNumber.onChange((next, prev) => {
             firstCounter++;
             if (next < prev) {
-                increasingNumber(prev);
+                increasingNumber.setValue(prev);
             }
         });
 
         increasingNumber.onChange(() => secondCounter++);
 
-        increasingNumber(2);
+        increasingNumber.setValue(2);
         /**
          * from 0 to 2
          * first listener calls, second listener calls too
          */
-        expect(increasingNumber()).toBe(2);
+        expect(increasingNumber.getValue()).toBe(2);
         expect(firstCounter).toBe(1);
         expect(secondCounter).toBe(1);
 
-        increasingNumber(0);
+        increasingNumber.setValue(0);
         /**
          * from 2 to 1
          * first listener calls, revert back to 0, then its gonna be 0 to 0 which is a no-op
          */
-        expect(increasingNumber()).toBe(2);
+        expect(increasingNumber.getValue()).toBe(2);
         expect(firstCounter).toBe(2);
         expect(secondCounter).toBe(1);
     });

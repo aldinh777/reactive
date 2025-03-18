@@ -3,20 +3,46 @@ import { describe, test, expect } from 'bun:test';
 import { state, computed, setEffect } from '@aldinh777/reactive';
 import { randomNumber } from '../test-util.ts';
 
-const add = (x: State, n = 1) => x(x() + n);
+const add = (x: State, n = 1) => x.setValue(x.getValue() + n);
 
 describe('utils', () => {
-    test('basic computed', () => {
+    test.only('basic computed', () => {
         const a = state(randomNumber(100));
         const b = state(randomNumber(100));
-        const x = computed(() => a() + b());
+        const x = computed(() => a.getValue() + b.getValue());
 
-        expect(x()).toBe(a() + b());
+        expect(x.getValue()).toBe(a.getValue() + b.getValue());
 
         add(a);
         add(b);
 
-        expect(x()).toBe(a() + b());
+        expect(x.getValue()).toBe(a.getValue() + b.getValue());
+    });
+
+    test.only('observe computed', () => {
+        const a = state(randomNumber(100));
+        const x = computed(() => a.getValue() + 1);
+        let observedUpdate = 0;
+
+        const unsub = x.onChange(() => observedUpdate++);
+
+        // nothing has been updated yet
+        expect(observedUpdate).toBe(0);
+
+        // update x value
+        add(a);
+
+        // ensure update are watched
+        expect(x.getValue()).toBe(a.getValue() + 1);
+        expect(observedUpdate).toBe(1);
+
+        // stop watching update, computed no longer has any observer and then unsubscribed automatically
+        unsub();
+
+        add(a);
+
+        expect(x.getValue()).toBe(a.getValue() + 1);
+        expect(observedUpdate).toBe(1);
     });
 
     test('basic effect', () => {
