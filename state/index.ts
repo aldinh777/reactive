@@ -59,6 +59,10 @@ export class State<T = any> {
         return () => set.delete(handler);
     }
 
+    toString(): string {
+        return `State { ${this.getValue()} }`;
+    }
+
     static peekEffectStack(): Set<State> | undefined {
         if (this.#effectStack.length <= 0) {
             return;
@@ -75,44 +79,45 @@ export class State<T = any> {
 }
 
 export class Computed<T = any> extends State<T> {
-    static #dynamics = new Set<Computed>();
-    static #rootDependencies = new WeakMap<State, Map<State, (() => void) | undefined>>();
+    static dynamics = new WeakSet<State>();
+    static rootDependencies = new WeakMap<State, Map<State, (() => void) | undefined>>();
 
-    #unsubMapping = new Map<State, () => void>();
-    #totalObservers = 0;
     #recall = false;
-    #effect: () => T;
+
+    protected totalObservers = 0;
+    protected unsubMapping = new Map<State, () => void>();
+    protected effect: () => T;
 
     constructor(effect: () => T) {
         super(undefined as any);
-        this.#effect = effect;
-        Computed.#dynamics.add(this);
+        this.effect = effect;
+        Computed.dynamics.add(this);
     }
 
     getValue(): T {
-        if (this.#totalObservers === 0) {
-            return this.#effect();
+        if (this.totalObservers === 0) {
+            return this.effect();
         }
         return super.getValue();
     }
 
     setValue(nextValue: T): void {
-        if (this.#totalObservers === 0) {
+        if (this.totalObservers === 0) {
             return;
         }
         super.setValue(nextValue);
     }
 
     onChange(handler: ChangeHandler<T>, last?: boolean): () => void {
-        this.#totalObservers++;
-        if (this.#totalObservers === 1) {
-            Computed.#rootDependencies.set(this, this.#unsubMapping);
+        this.totalObservers++;
+        if (this.totalObservers === 1) {
+            Computed.rootDependencies.set(this, this.unsubMapping);
             this.resubscribe();
         }
         const unsub = super.onChange(handler, last);
         return () => {
-            this.#totalObservers--;
-            if (this.#totalObservers === 0) {
+            this.totalObservers--;
+            if (this.totalObservers === 0) {
                 this.unsubscribe();
             }
             unsub();
@@ -120,11 +125,11 @@ export class Computed<T = any> extends State<T> {
     }
 
     unsubscribe(): void {
-        for (const unsub of this.#unsubMapping.values()) {
+        for (const unsub of this.unsubMapping.values()) {
             unsub();
         }
-        this.#unsubMapping.clear();
-        Computed.#rootDependencies.delete(this);
+        this.unsubMapping.clear();
+        Computed.rootDependencies.delete(this);
     }
 
     resubscribe(): void {
@@ -141,21 +146,21 @@ export class Computed<T = any> extends State<T> {
     }
 
     #updateDependencies(): T {
-        const [result, deps] = State.trackDependencies(this.#effect);
+        const [result, deps] = State.trackDependencies(this.effect);
         if (deps.has(State.circularDetector)) {
             this.#recall = true;
             return result;
         }
         const rootDeps = Computed.filterDependencies(deps);
-        for (const [oldDep, unsub] of this.#unsubMapping) {
+        for (const [oldDep, unsub] of this.unsubMapping) {
             if (!rootDeps.has(oldDep)) {
                 unsub();
-                this.#unsubMapping.delete(oldDep);
+                this.unsubMapping.delete(oldDep);
             }
         }
         for (const newDep of rootDeps) {
-            if (!this.#unsubMapping.has(newDep)) {
-                this.#unsubMapping.set(
+            if (!this.unsubMapping.has(newDep)) {
+                this.unsubMapping.set(
                     newDep,
                     newDep.onChange(() => this.resubscribe())
                 );
@@ -167,8 +172,8 @@ export class Computed<T = any> extends State<T> {
     static filterDependencies(states: Iterable<State>): Set<State> {
         const deps = new Set<State>();
         for (const dep of states) {
-            if (this.#rootDependencies.has(dep)) {
-                const rootSet = this.#rootDependencies.get(dep)!;
+            if (this.rootDependencies.has(dep)) {
+                const rootSet = this.rootDependencies.get(dep)!;
                 for (const [root] of rootSet) {
                     deps.add(root);
                 }
@@ -180,12 +185,68 @@ export class Computed<T = any> extends State<T> {
     }
 }
 
+export class ComputedStatic<T, U> extends Computed<U> {
+    #roots: Set<State>;
+
+    constructor(effect: (...args: T[]) => U, args: State<T>[]) {
+        super(() => {
+            const result = effect(...args.map((s) => s.getValue()));
+            this.setValue(result);
+            return result;
+        });
+        this.#roots = Computed.filterDependencies(args);
+        for (const dep of this.#roots) {
+            this.unsubMapping.set(dep, undefined as any);
+        }
+        Computed.dynamics.delete(this);
+        Computed.rootDependencies.set(this, this.unsubMapping);
+    }
+
+    onChange(handler: ChangeHandler<U>, last?: boolean): () => void {
+        this.totalObservers++;
+        if (this.totalObservers === 1) {
+            this.resubscribe();
+        }
+        const unsub = super.onChange(handler, last);
+        return () => {
+            this.totalObservers--;
+            if (this.totalObservers === 0) {
+                this.unsubscribe();
+            }
+            unsub();
+        };
+    }
+
+    unsubscribe(): void {
+        for (const unsub of this.unsubMapping.values()) {
+            unsub();
+        }
+    }
+
+    resubscribe(): void {
+        for (const dep of this.#roots) {
+            this.unsubMapping.set(dep, dep.onChange(this.effect));
+        }
+    }
+}
+
 export function state<T>(initial: T): State<T> {
     return new State(initial);
 }
 
-export function computed<T>(effect: () => T): Computed<T> {
-    return new Computed(effect);
+/**
+ * Magic type that allows effect arguments to be sync with the value of input dependencies
+ */
+type Dependencies<T extends any[]> = { [K in keyof T]: State<T[K]> };
+
+export function computed<T extends any[], U>(effect: (...args: T) => U, args?: Dependencies<T>): Computed<U> {
+    if (!args) {
+        return new Computed(effect);
+    }
+    if (args.every((s) => !Computed.dynamics.has(s))) {
+        return new ComputedStatic(effect, args);
+    }
+    return new Computed(() => effect(...(args.map((s) => s.getValue()) as any)));
 }
 
 export function setEffect() {}
