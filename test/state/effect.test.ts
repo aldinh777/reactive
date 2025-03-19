@@ -62,17 +62,17 @@ describe('utils', () => {
         expect(effectCounter).toBe(2);
     });
 
-    test('static computed', () => {
+    test.only('static computed', () => {
         const a = state(randomNumber(100));
         const b = state(randomNumber(100));
         const x = computed((a, b) => a + b, [a, b]);
 
-        expect(x()).toBe(a() + b());
+        expect(x.getValue()).toBe(a.getValue() + b.getValue());
 
         add(a);
         add(b);
 
-        expect(x()).toBe(a() + b());
+        expect(x.getValue()).toBe(a.getValue() + b.getValue());
 
         let computedCounter = 0;
         const unsub = x.onChange(() => computedCounter++);
@@ -115,29 +115,29 @@ describe('utils', () => {
         expect(x()).toBe(120);
     });
 
-    test('circular dependency', () => {
+    test.only('circular dependency', () => {
         let iter = 100;
 
-        const x = computed(() => (iter <= 0 ? 'overflow' : iter-- && x()));
+        const x = computed(() => (iter <= 0 ? 'overflow' : iter-- && x.getValue()));
 
-        const a = computed(() => (iter <= 0 ? 'flip overflow' : iter-- && b()));
-        const b = computed(() => (iter <= 0 ? 'flip overflow' : iter-- && a()));
+        const a = computed(() => (iter <= 0 ? 'flip overflow' : iter-- && b.getValue()));
+        const b = computed(() => (iter <= 0 ? 'flip overflow' : iter-- && a.getValue()));
 
-        expect(x()).toBe('overflow');
-
-        iter = 0;
-        expect(a()).toBe('flip overflow');
+        expect(x.getValue()).toBe('overflow');
 
         iter = 0;
-        expect(b()).toBe('flip overflow');
+        expect(a.getValue()).toBe('flip overflow');
+
+        iter = 0;
+        expect(b.getValue()).toBe('flip overflow');
     });
 
-    test('diamond structure dependency', () => {
+    test.only('diamond structure dependency', () => {
         const x = state(randomNumber(100));
 
-        const a = computed(() => x());
-        const b = computed(() => x());
-        const c = computed(() => a() + b());
+        const a = computed(() => x.getValue());
+        const b = computed(() => x.getValue());
+        const c = computed(() => a.getValue() + b.getValue());
 
         const staticA = computed((x) => x, [x]);
         const staticB = computed((x) => x, [x]);
@@ -154,7 +154,7 @@ describe('utils', () => {
         expect(staticUpdateCounter).toBe(1);
     });
 
-    test('dynamic dependency', () => {
+    test.only('dynamic dependency', () => {
         const x = state(randomNumber(100));
         const y = state(randomNumber(100));
         const isUsingX = state(false);
@@ -163,7 +163,7 @@ describe('utils', () => {
 
         const a = computed(() => {
             calculationCalls++;
-            return isUsingX() ? x() : y();
+            return isUsingX.getValue() ? x.getValue() : y.getValue();
         });
 
         // make them push based so it actually depends on x or y dynamically
@@ -176,7 +176,7 @@ describe('utils', () => {
 
         expect(calculationCalls).toBe(2);
 
-        isUsingX(true); // calculation here +1 = 3
+        isUsingX.setValue(true); // calculation here +1 = 3
 
         expect(calculationCalls).toBe(3);
 
@@ -215,10 +215,10 @@ describe('utils', () => {
         // if you're confused, then you probably shouldn't create any nested effect
     });
 
-    test('using dynamic dependency to create static effect', () => {
+    test.only('using dynamic dependency to create static effect', () => {
         const a = state(randomNumber(100));
         const b = state(randomNumber(100));
-        const c = computed(() => a() + 1); // c are dynamically dependent on a
+        const c = computed(() => a.getValue() + 1); // c are dynamically dependent on a
 
         // make it push based, so it actually depends on a
         c.onChange(() => {});
@@ -227,7 +227,7 @@ describe('utils', () => {
          * no dynamic dependency detected from dependency list,
          * making x depends only on b even when c is also being called inside computed
          */
-        const x = computed((b) => b + c(), [b]);
+        const x = computed((b) => b + c.getValue(), [b]);
         let counterX = 0;
         x.onChange(() => counterX++);
         add(a); // counterX = 0, x did not depends on a
@@ -238,7 +238,7 @@ describe('utils', () => {
          * in this case, c has dynamic dependency which is a,
          * making y depends on whatever being used inside computed, including b
          */
-        const y = computed((c) => b() + c, [c]);
+        const y = computed((c) => b.getValue() + c, [c]);
         let counterY = 0;
         y.onChange(() => counterY++);
         add(a); // counterY = 1, y dynamically depends on c which also dynamically depends on a
