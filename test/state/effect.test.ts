@@ -6,7 +6,7 @@ import { randomNumber } from '../test-util.ts';
 const add = (x: State, n = 1) => x.setValue(x.getValue() + n);
 
 describe('utils', () => {
-    test.only('basic computed', () => {
+    test('basic computed', () => {
         const a = state(randomNumber(100));
         const b = state(randomNumber(100));
         const x = computed(() => a.getValue() + b.getValue());
@@ -19,7 +19,7 @@ describe('utils', () => {
         expect(x.getValue()).toBe(a.getValue() + b.getValue());
     });
 
-    test.only('observe computed', () => {
+    test('observe computed', () => {
         const a = state(randomNumber(100));
         const x = computed(() => a.getValue() + 1);
         let observedUpdate = 0;
@@ -50,7 +50,7 @@ describe('utils', () => {
         let effectCounter = 0;
 
         const unsub = setEffect(() => {
-            a();
+            a.getValue();
             effectCounter++;
         });
 
@@ -62,7 +62,7 @@ describe('utils', () => {
         expect(effectCounter).toBe(2);
     });
 
-    test.only('static computed', () => {
+    test('static computed', () => {
         const a = state(randomNumber(100));
         const b = state(randomNumber(100));
         const x = computed((a, b) => a + b, [a, b]);
@@ -107,15 +107,15 @@ describe('utils', () => {
         const x = state(randomNumber(100));
 
         setEffect(() => {
-            if (x() < 120) {
-                x(x() + 1);
+            if (x.getValue() < 120) {
+                add(x);
             }
         });
 
-        expect(x()).toBe(120);
+        expect(x.getValue()).toBe(120);
     });
 
-    test.only('circular dependency', () => {
+    test('circular dependency', () => {
         let iter = 100;
 
         const x = computed(() => (iter <= 0 ? 'overflow' : iter-- && x.getValue()));
@@ -132,7 +132,7 @@ describe('utils', () => {
         expect(b.getValue()).toBe('flip overflow');
     });
 
-    test.only('diamond structure dependency', () => {
+    test('diamond structure dependency', () => {
         const x = state(randomNumber(100));
 
         const a = computed(() => x.getValue());
@@ -154,7 +154,7 @@ describe('utils', () => {
         expect(staticUpdateCounter).toBe(1);
     });
 
-    test.only('dynamic dependency', () => {
+    test('dynamic dependency', () => {
         const x = state(randomNumber(100));
         const y = state(randomNumber(100));
         const isUsingX = state(false);
@@ -192,10 +192,10 @@ describe('utils', () => {
         let counterX = 0;
         let counterY = 0;
         setEffect(() => {
-            x(); // used as dependency
+            x.getValue(); // used as dependency
             counterX++;
             setEffect(() => {
-                y(); // used as dependency
+                y.getValue(); // used as dependency
                 counterY++;
             });
         });
@@ -215,7 +215,7 @@ describe('utils', () => {
         // if you're confused, then you probably shouldn't create any nested effect
     });
 
-    test.only('using dynamic dependency to create static effect', () => {
+    test('using dynamic dependency to create static effect', () => {
         const a = state(randomNumber(100));
         const b = state(randomNumber(100));
         const c = computed(() => a.getValue() + 1); // c are dynamically dependent on a
@@ -251,18 +251,18 @@ describe('utils', () => {
         const x = computed(() => null);
         const y = computed(() => null, []);
         setEffect(() => null);
-        setEffect(() => null, []);
+        setEffect((_) => null, []);
 
         // what else to expect...
-        expect(x()).toBeNull();
-        expect(y()).toBeNull();
+        expect(x.getValue()).toBeNull();
+        expect(y.getValue()).toBeNull();
     });
 
     test('when effect has suddenly lost it all dependencies', () => {
         const x = state(randomNumber(100));
         let counter = 0;
         let usingX = true;
-        setEffect(() => ++counter && usingX && x()); // counter = 1
+        setEffect(() => ++counter && usingX && x.getValue()); // counter = 1
         usingX = false;
         add(x); // counter = 2, after running, effect lost its dependencies
         add(x); // counter = 2, effect no longer running
