@@ -1,8 +1,3 @@
-/**
- * @module
- * Common function to create frequently used state
- */
-
 import type { State } from './index.ts';
 import { state } from './index.ts';
 
@@ -18,9 +13,9 @@ type Toggle = () => void;
  */
 export const stateToggle = (initial: boolean): [State<boolean>, Open, Close, Toggle] => {
     const s = state(initial);
-    const open = () => s(true);
-    const close = () => s(false);
-    const toggle = () => s(!s());
+    const open = () => s.setValue(true);
+    const close = () => s.setValue(false);
+    const toggle = () => s.setValue(!s.getValue());
     return [s, open, close, toggle];
 };
 
@@ -35,9 +30,9 @@ export const stateLocalStorage = (key: string, initial: string): State<string> =
     const s = state(initial);
     const local = localStorage.getItem(key);
     if (local) {
-        s(local);
+        s.setValue(local);
     } else {
-        localStorage.setItem(key, s());
+        localStorage.setItem(key, s.getValue());
     }
     s.onChange((value) => localStorage.setItem(key, value), true);
     return s;
