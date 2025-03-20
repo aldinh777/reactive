@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 import { state } from '@aldinh777/reactive';
-import { randomNumber } from '../test-util.ts';
+import { randomNumber } from '../test-util';
 
 describe('core state functionality', () => {
     test('initialize correctly', () => {

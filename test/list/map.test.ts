@@ -1,8 +1,8 @@
 import type { WatchableList } from '@aldinh777/reactive/list';
 import { describe, test, expect } from 'bun:test';
 import { list } from '@aldinh777/reactive/list';
-import { randomList, randomNumber } from '../test-util.ts';
-import { chainList, chainRawList } from '../list-util.ts';
+import { randomList, randomNumber } from '../test-util';
+import { chainList, chainRawList } from '../list-util';
 
 const addOne = (list: WatchableList<number>) => list.map((item) => item + 1);
 const rawAddOne = (list: WatchableList<number>) => list.toArray().map((item) => item + 1);

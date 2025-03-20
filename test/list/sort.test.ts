@@ -1,8 +1,8 @@
 import type { WatchableList } from '@aldinh777/reactive/list';
 import { describe, test, expect } from 'bun:test';
 import { list } from '@aldinh777/reactive/list';
-import { randomList } from '../test-util.ts';
-import { chainList, chainRawList } from '../list-util.ts';
+import { randomList } from '../test-util';
+import { chainList, chainRawList } from '../list-util';
 
 const rawSort = (list: WatchableList<number>) => list.toArray().toSorted((a, b) => a - b);
 

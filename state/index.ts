@@ -1,4 +1,8 @@
-type ChangeHandler<T> = (next: T, prev: T) => any;
+type ChangeHandler<T> = (next: T, prev: T) => void;
+
+export function add(a: number, b: number) {
+    return a + b;
+}
 
 export class State<T = any> {
     static circularDetector = new State(null);
@@ -24,7 +28,7 @@ export class State<T = any> {
         return this.#value;
     }
 
-    setValue(nextValue: T) {
+    setValue(nextValue: T): void {
         const effectStack = State.peekEffectStack();
         let oldValue = this.#value;
         this.#value = nextValue;
