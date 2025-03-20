@@ -1,7 +1,7 @@
-export type UpdateHandler<T> = (index: number, value: T, prev: T) => any;
-export type InsertHandler<T> = (index: number, value: T, last: boolean) => any;
-export type DeleteHandler<T> = (index: number, value: T) => any;
-export type OperationHandler<T> = (index: number, value: T, updated?: T | boolean) => any;
+export type UpdateHandler<T> = (index: number, value: T, prev: T) => void;
+export type InsertHandler<T> = (index: number, value: T, last: boolean) => void;
+export type DeleteHandler<T> = (index: number, value: T) => void;
+export type OperationHandler<T> = (index: number, value: T, updated?: T | boolean) => void;
 
 export interface BulkWatcher<T> {
     insert?: InsertHandler<T>;
@@ -31,7 +31,7 @@ export class WatchableList<T = any> {
         return `WatchableList { ${this.toArray()} }`;
     }
 
-    toArray() {
+    toArray(): T[] {
         // ensure returned array wont be updated externally
         return [...this.array];
     }
@@ -40,7 +40,7 @@ export class WatchableList<T = any> {
         return this.array[index];
     }
 
-    trigger(op: Operation, index: number, value: T, updated?: T | boolean) {
+    trigger(op: Operation, index: number, value: T, updated?: T | boolean): void {
         const handlers = this.#listeners[op];
         for (const handle of handlers || []) {
             // skip trigger if the updated value are the same with current value,
@@ -68,7 +68,7 @@ export class WatchableList<T = any> {
         return () => listeners.delete(handler);
     }
 
-    watch(operations: BulkWatcher<T>) {
+    watch(operations: BulkWatcher<T>): () => void {
         const unsubUpdate = operations.update && this.onUpdate(operations.update as OperationHandler<T>);
         const unsubInsert = operations.insert && this.onInsert(operations.insert as OperationHandler<T>);
         const unsubDelete = operations.delete && this.onDelete(operations.delete);
@@ -93,7 +93,7 @@ export class WatchableList<T = any> {
 }
 
 export class ReactiveList<T = any> extends WatchableList<T> {
-    set(index: number, value: T) {
+    set(index: number, value: T): void {
         const prev = this.array[index];
         this.array[index] = value;
         this.trigger('=', index, value, prev);
