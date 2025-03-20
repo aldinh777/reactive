@@ -11,7 +11,7 @@
     "./list": "./list/index.ts"
   },
   "devDependencies": {
-    "@types/bun": "^1.1.16",
-    "typescript": "^5.7.3"
+    "@types/bun": "^1.2.5",
+    "typescript": "^5.8.2"
   }
 }

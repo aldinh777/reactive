@@ -27,6 +27,10 @@ export class WatchableList<T = any> {
         this.#unique = unique;
     }
 
+    toString(): string {
+        return `WatchableList { ${this.toArray()} }`;
+    }
+
     toArray() {
         // ensure returned array wont be updated externally
         return [...this.array];
