@@ -1,7 +1,7 @@
 {
   "name": "@aldinh777/reactive",
   "description": "another attempt to achieve the ultimate reactivity",
-  "version": "0.41.0",
+  "version": "0.42.0",
   "author": "aldinh777",
   "license": "MIT",
   "type": "module",
