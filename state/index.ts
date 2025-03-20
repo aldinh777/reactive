@@ -14,6 +14,10 @@ export class State<T = any> {
         this.#value = initial;
     }
 
+    toString(): string {
+        return `State { ${this.getValue()} }`;
+    }
+
     getValue(): T {
         const effectStack = State.peekEffectStack();
         effectStack?.add(this);
@@ -57,10 +61,6 @@ export class State<T = any> {
         const set = last ? this.#lastListeners : this.#listeners;
         set.add(handler);
         return () => set.delete(handler);
-    }
-
-    toString(): string {
-        return `State { ${this.getValue()} }`;
     }
 
     static peekEffectStack(): Set<State> | undefined {
