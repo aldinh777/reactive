@@ -1,9 +1,5 @@
 type ChangeHandler<T> = (next: T, prev: T) => void;
 
-export function add(a: number, b: number) {
-    return a + b;
-}
-
 export class State<T = any> {
     static circularDetector = new State(null);
     static #effectStack: Set<State>[] = [];
