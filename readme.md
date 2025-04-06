@@ -17,7 +17,7 @@ a `State` always have a value, and its value can and will changes overtime to be
 Lets start simple, this is how to create a `State`
 
 ```js
-import { state } from '@aldinh777/reactive';
+import { state } from "@aldinh777/reactive";
 
 const x = state(0);
 ```
@@ -26,7 +26,7 @@ now the variable `x` is a state with its current value is 0. to update its value
 it without an argument
 
 ```js
-import { state } from '@aldinh777/reactive';
+import { state } from "@aldinh777/reactive";
 
 const x = state(0);
 
@@ -68,17 +68,17 @@ print(b)    # 12
 This is how we acquire the same effect using this library
 
 ```js
-import { state, computed } from '@aldinh777/reactive';
+import { state, computed } from "@aldinh777/reactive";
 
 const a = state(5);
 const b = computed((a) => a * 2, [a]); // mark `a` as dependency
 
-console.log('current value = ', b.getValue());
+console.log("current value = ", b.getValue());
 // output: current value = 10
 
 a.setValue(6);
 
-console.log('current value = ', b.getValue());
+console.log("current value = ", b.getValue());
 // output: current value = 12
 ```
 
@@ -124,13 +124,13 @@ Now, any changes to `a` will trigger check and only run the command only when th
 This is how we obtain the same effect using this library
 
 ```js
-import { state } from '@aldinh777/reactive';
+import { state } from "@aldinh777/reactive";
 
 const a = state(5);
 a.onChange((nextValue) => {
-    if (nextValue > 10) {
-        console.log('A is currently GREATER THAN 10');
-    }
+  if (nextValue > 10) {
+    console.log("A is currently GREATER THAN 10");
+  }
 });
 
 a.setValue(11); // A is currently GREATER THAN 10
@@ -141,18 +141,18 @@ a.setValue(15); // A is currently GREATER THAN 10
 if there is multiple state to be observed, use the `setEffect` method
 
 ```js
-import { state, setEffect } from '@aldinh777/reactive';
+import { state, setEffect } from "@aldinh777/reactive";
 
 const a = state(2);
 const b = state(3);
 
 setEffect(
-    (a, b) => {
-        if (a + b > 10) {
-            console.log(`A and B combined which is ${a + b} is GREATER THAN 10`);
-        }
-    },
-    [a, b]
+  (a, b) => {
+    if (a + b > 10) {
+      console.log(`A and B combined which is ${a + b} is GREATER THAN 10`);
+    }
+  },
+  [a, b],
 ); // mark `a` and `b` as dependencies
 
 a.setValue(8); // A and B combined which is 11 is GREATER THAN 10
@@ -167,9 +167,9 @@ const a = state(2);
 const b = state(3);
 
 setEffect(() => {
-    if (a.getValue() + b.getValue() > 10) {
-        console.log(`A and B combined which is ${a() + b()} is GREATER THAN 10`);
-    }
+  if (a.getValue() + b.getValue() > 10) {
+    console.log(`A and B combined which is ${a() + b()} is GREATER THAN 10`);
+  }
 }); // automatically infer `a` and `b` as dependencies
 ```
 
@@ -183,23 +183,23 @@ When it comes to data structure, State itself can also be used to wrap an object
 
 ```ts
 const list = state([1, 2, 3]);
-const obj = state({ name: 'albert', mom: 'pauline' });
+const obj = state({ name: "albert", mom: "pauline" });
 
-list.onChange(() => console.log('list updated'));
-obj.onChange(() => console.log('object updated'));
+list.onChange(() => console.log("list updated"));
+obj.onChange(() => console.log("object updated"));
 
 list.getValue().push(4); // wont be tracked
-obj.getValue().name = 'alberto'; // also wont be tracked
+obj.getValue().name = "alberto"; // also wont be tracked
 ```
 
 For the object however, there is a workaround by using state as its property value
 
 ```ts
-const obj = { name: state('albert'), mom: state('pauline') };
+const obj = { name: state("albert"), mom: state("pauline") };
 
-obj.name.onChange(() => console.log('name changed'));
+obj.name.onChange(() => console.log("name changed"));
 
-obj.name.setValue('alberto'); // name changed
+obj.name.setValue("alberto"); // name changed
 ```
 
 However, an array is a different data structure and have different set of operations. Even if we uses state as its value, what we can track are only the value `update`. Beside updates, array can also do `insert` and `delete` through `push`, `pop`, `shift`, `unshift` and `splice` methods.
@@ -209,7 +209,7 @@ However, an array is a different data structure and have different set of operat
 `ReactiveList` are made to handle reactivity within an array
 
 ```ts
-import { list } from '@aldinh777/reactive/list';
+import { list } from "@aldinh777/reactive/list";
 
 const numbers = list([1, 2, 3, 4]);
 
@@ -223,7 +223,7 @@ numbers.push(6); // insert tracked with; index = 4, inserted = 6, last = true
 
 // track content delete
 numbers.onDelete((index, deleted) => {
-    console.log(`deleted at ${index} with value ${deleted}`);
+  console.log(`deleted at ${index} with value ${deleted}`);
 });
 numbers.pop(); // delete tracked with; index = 4, deleted = 6
 ```
@@ -260,9 +260,9 @@ this also works with `filter` and `sort` and can also be chained
 ```ts
 const numbers = list([4, 3, 6, 2, 5, 7]);
 const sortedOdd = numbers
-    // sort ascending
-    .sort((a, b) => a > b)
-    .filter((n) => n % 2 !== 0);
+  // sort ascending
+  .sort((a, b) => a > b)
+  .filter((n) => n % 2 !== 0);
 
 console.log(numbers.toArray()); // [4, 3, 6, 2, 5, 7]
 console.log(sortedOdd.toArray()); // [3, 5, 7]
