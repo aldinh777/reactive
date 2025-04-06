@@ -1,7 +1,7 @@
 import type { WatchableList } from '@aldinh777/reactive/list';
 import { describe, test, expect } from 'bun:test';
 import { list } from '@aldinh777/reactive/list';
-import { randomList, randomNumber } from '../test-util';
+import { randomList } from '../test-util';
 import { chainList, chainRawList } from '../list-util';
 
 const evens = (list: WatchableList<number>) => list.filter((item) => item % 2 === 0);

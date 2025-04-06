@@ -118,9 +118,12 @@ describe('utils', () => {
     test('circular dependency', () => {
         let iter = 100;
 
+        // @ts-ignore
         const x = computed(() => (iter <= 0 ? 'overflow' : iter-- && x.getValue()));
 
+        // @ts-ignore
         const a = computed(() => (iter <= 0 ? 'flip overflow' : iter-- && b.getValue()));
+        // @ts-ignore
         const b = computed(() => (iter <= 0 ? 'flip overflow' : iter-- && a.getValue()));
 
         expect(x.getValue()).toBe('overflow');
@@ -167,7 +170,7 @@ describe('utils', () => {
         });
 
         // make them push based so it actually depends on x or y dynamically
-        a.onChange(() => {}); // calculation here +1 = 1
+        a.onChange(() => { }); // calculation here +1 = 1
 
         expect(calculationCalls).toBe(1);
 
@@ -221,7 +224,7 @@ describe('utils', () => {
         const c = computed(() => a.getValue() + 1); // c are dynamically dependent on a
 
         // make it push based, so it actually depends on a
-        c.onChange(() => {});
+        c.onChange(() => { });
 
         /**
          * no dynamic dependency detected from dependency list,

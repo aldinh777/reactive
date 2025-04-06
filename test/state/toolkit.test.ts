@@ -7,6 +7,7 @@ class LocalStorageMock {
     length: number;
     constructor() {
         this.store = {};
+        this.length = 0;
     }
     getItem(key: string) {
         return this.store[key] || null;
