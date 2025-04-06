@@ -25,15 +25,7 @@
     // Some stricter flags
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noPropertyAccessFromIndexSignature": true,
-
-    "baseUrl": ".",
-    "paths": {
-      "@aldinh777/reactive": ["./state/index.ts"],
-      "@aldinh777/reactive/toolkit": ["./state/toolkit.ts"],
-      "@aldinh777/reactive/list": ["./list/index.ts"]
-    }
+    "noPropertyAccessFromIndexSignature": true
   },
-
   "include": ["state", "list"]
 }
