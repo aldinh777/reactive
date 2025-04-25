@@ -12,6 +12,9 @@ describe('list-util map', () => {
     const l = list(randomList(10));
     const mapped = addOne(l);
 
+    // make it observed
+    mapped.onUpdate(() => { });
+
     expect(mapped.toArray()).toEqual(rawAddOne(l));
   });
 
@@ -55,6 +58,9 @@ describe('list-util map', () => {
     const l = list(randomList(100));
     const mapped = addOne(l);
 
+    // make it observed
+    mapped.onUpdate(() => { })
+
     const index = randomNumber(10);
     l.set(index, l.at(index) + 1);
     l.push(randomNumber(100));
@@ -68,6 +74,9 @@ describe('list-util map', () => {
     const l = list(randomList(10));
     const mapped = addOne(l);
     const chained = chainList(mapped);
+
+    // make it observed
+    chained.onUpdate(() => { });
 
     expect(chained.toArray()).toEqual(chainRawList(rawAddOne(l)));
   });

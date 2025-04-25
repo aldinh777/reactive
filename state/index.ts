@@ -81,6 +81,9 @@ export class State<T = any> {
 export class Computed<T = any> extends State<T> {
   static rootDependencies = new WeakMap<State, Map<State, (() => void) | undefined>>();
 
+  /**
+   * flag that basically said `"is this derived state has no static dependencies?"`
+   */
   protected stateless: boolean;
   protected totalObservers = 0;
   protected unsubMapping = new Map<State, () => void>();
@@ -93,10 +96,10 @@ export class Computed<T = any> extends State<T> {
   }
 
   getValue(): T {
-    if (this.totalObservers === 0) {
-      return this.effect();
+    if (this.totalObservers > 0) {
+      return super.getValue();
     }
-    return super.getValue();
+    return this.effect();
   }
 
   setValue(nextValue: T): void {

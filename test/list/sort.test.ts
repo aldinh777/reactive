@@ -12,6 +12,10 @@ describe('list-util sort', () => {
     const sorted = l.sort();
     const reversed = l.sort((a, b) => a > b);
 
+    // make it observed
+    sorted.onUpdate(() => { });
+    reversed.onUpdate(() => { });
+
     expect(sorted.toArray()).toEqual(rawSort(l));
     expect(reversed.toArray()).toEqual(rawSort(l).reverse());
   });
@@ -72,6 +76,10 @@ describe('list-util sort', () => {
     const sorted = l.sort();
     const reversed = l.sort((a, b) => a > b);
 
+    // make it observed
+    sorted.onUpdate(() => { });
+    reversed.onUpdate(() => { });
+
     /**
      * inplace update
      * from [1, 2, 3, 4, 5, 6, 8, 9]
@@ -105,6 +113,9 @@ describe('list-util sort', () => {
     const l = list(randomList(10));
     const sorted = l.sort();
     const chained = chainList(sorted);
+
+    // make it observed
+    chained.onUpdate(() => { });
 
     expect(chained.toArray()).toEqual(chainRawList(rawSort(l)));
   });

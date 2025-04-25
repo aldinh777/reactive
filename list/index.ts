@@ -139,11 +139,22 @@ export class ObservedList<S, T> extends WatchableList<T> {
     this.source = source;
   }
 
+  toString(): string {
+    return `ObservedList { ${this.totalObservers <= 0 ? 'unobserved' : this.toArray()} }`;
+  }
+
   at(index: number): T {
     if (this.totalObservers > 0) {
       return super.at(index);
     }
-    return this.toArray()[index];
+    throw new Error('trying to access an unobserved derived reactive list');
+  }
+
+  toArray(): T[] {
+    if (this.totalObservers > 0) {
+      return super.toArray();
+    }
+    throw new Error('trying to access an unobserved derived reactive list');
   }
 
   // here just to be overriden by its children
@@ -159,7 +170,7 @@ export class ObservedList<S, T> extends WatchableList<T> {
     const unsub = super.attachListener(listeners, handler);
     return () => {
       this.totalObservers--;
-      if (this.totalObservers === 0) {
+      if (this.totalObservers <= 0) {
         this.unsubscribe?.();
       }
       unsub();
@@ -176,22 +187,9 @@ export class FilteredList<T> extends ObservedList<T, T> {
     this.#filterFn = filterFn;
   }
 
-  toArray(): T[] {
-    if (this.totalObservers > 0) {
-      return super.toArray();
-    }
-    return this.source.toArray().filter(this.#filterFn);
-  }
-
   subscribe(): () => void {
     this.array = [];
-    this.#filterOut = this.source.toArray().map(this.#filterFn);
-    for (let i = 0; i < this.#filterOut.length; i++) {
-      if (this.#filterOut[i]) {
-        this.array.push(this.source.at(i));
-      }
-    }
-    return this.source.watch({
+    const unsub = this.source.watch({
       update: (index, value, prev) => {
         const allowAfter = this.#filterFn(value);
         if (this.#filterOut[index] !== allowAfter) {
@@ -219,6 +217,13 @@ export class FilteredList<T> extends ObservedList<T, T> {
         this.#filterOut.splice(index, 1);
       }
     });
+    this.#filterOut = this.source.toArray().map(this.#filterFn);
+    for (let i = 0; i < this.#filterOut.length; i++) {
+      if (this.#filterOut[i]) {
+        this.array.push(this.source.at(i));
+      }
+    }
+    return unsub;
   }
 
   #updateFiltered(index: number, value: T, prev: T): void {
@@ -259,19 +264,9 @@ export class MappedList<S, T> extends ObservedList<S, T> {
     this.#mapFn = mapFn;
   }
 
-  toArray(): T[] {
-    if (this.totalObservers > 0) {
-      return super.toArray();
-    }
-    return this.source.toArray().map(this.#mapFn);
-  }
-
   subscribe(): () => void {
     this.array = [];
-    for (const item of this.source.toArray()) {
-      this.array.push(this.#mapFn(item));
-    }
-    return this.source.watch({
+    const unsub = this.source.watch({
       update: (index, value) => {
         const mapped = this.#mapFn(value);
         const before = this.array[index];
@@ -291,6 +286,10 @@ export class MappedList<S, T> extends ObservedList<S, T> {
         this.trigger('-', index, value);
       }
     });
+    for (const item of this.source.toArray()) {
+      this.array.push(this.#mapFn(item));
+    }
+    return unsub;
   }
 }
 
@@ -305,23 +304,9 @@ export class SortedList<T> extends ObservedList<T, T> {
     this.#sortFn = sortFn;
   }
 
-  toArray(): T[] {
-    if (this.totalObservers > 0) {
-      return super.toArray();
-    }
-    const arr: T[] = [];
-    for (const item of this.source.toArray()) {
-      this.#insertItem(arr, item);
-    }
-    return arr;
-  }
-
   subscribe(): () => void {
     this.array = [];
-    for (const item of this.source.toArray()) {
-      this.#insertItem(this.array, item);
-    }
-    return this.source.watch({
+    const unsub = this.source.watch({
       update: (_, value, prev) => {
         const prevIndex = this.array.indexOf(prev);
         if (prevIndex !== -1) {
@@ -347,6 +332,10 @@ export class SortedList<T> extends ObservedList<T, T> {
         }
       }
     });
+    for (const item of this.source.toArray()) {
+      this.#insertItem(this.array, item);
+    }
+    return unsub;
   }
 
   #insertItem(array: T[], item: T): number {

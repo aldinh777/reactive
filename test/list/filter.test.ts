@@ -12,6 +12,9 @@ describe('list-util filter', () => {
     const l = list(randomList(10));
     const filtered = evens(l);
 
+    // make it observed
+    filtered.onUpdate(() => { });
+
     expect(filtered.toArray()).toEqual(rawEvens(l));
   });
 
@@ -61,6 +64,9 @@ describe('list-util filter', () => {
     const l = list([2, 3, 4, 6, 7, 9]);
     const filtered = evens(l);
 
+    // make it observed
+    filtered.onUpdate(() => { });
+
     /**
      * inplace update
      * from [2, 4, 6]
@@ -99,6 +105,9 @@ describe('list-util filter', () => {
     const l = list(randomList(10));
     const filtered = evens(l);
     const chained = chainList(filtered);
+
+    // make it observed
+    chained.onUpdate(() => { });
 
     expect(chained.toArray()).toEqual(chainRawList(rawEvens(l)));
   });
