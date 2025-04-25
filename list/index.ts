@@ -140,7 +140,7 @@ export class ObservedList<S, T> extends WatchableList<T> {
   }
 
   toString(): string {
-    return `ObservedList { ${this.totalObservers <= 0 ? "unobserved" : this.toArray()} }`;
+    return `ObservedList { ${this.totalObservers > 0 ? this.toArray() : "unobserved"} }`;
   }
 
   at(index: number): T {
@@ -170,7 +170,7 @@ export class ObservedList<S, T> extends WatchableList<T> {
     const unsub = super.attachListener(listeners, handler);
     return () => {
       this.totalObservers--;
-      if (this.totalObservers <= 0) {
+      if (this.totalObservers < 1) {
         this.unsubscribe?.();
       }
       unsub();

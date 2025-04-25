@@ -7,7 +7,7 @@ import { chainList, chainRawList } from "../list-util";
 const addOne = (list: WatchableList<number>) => list.map((item) => item + 1);
 const rawAddOne = (list: WatchableList<number>) => list.toArray().map((item) => item + 1);
 
-describe("list-util map", () => {
+describe("list/map", () => {
   test("initialize properly", () => {
     const l = list(randomList(10));
     const mapped = addOne(l);

@@ -6,7 +6,7 @@ import { chainList, chainRawList } from "../list-util";
 
 const rawSort = (list: WatchableList<number>) => list.toArray().toSorted((a, b) => a - b);
 
-describe("list-util sort", () => {
+describe("list/sort", () => {
   test("initialize properly", () => {
     const l = list(randomList(10));
     const sorted = l.sort();

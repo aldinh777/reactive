@@ -5,7 +5,7 @@ import { randomNumber } from "../test-util";
 
 const add = (x: State, n = 1) => x.setValue(x.getValue() + n);
 
-describe("utils", () => {
+describe("state/effect", () => {
   test("basic computed", () => {
     const a = state(randomNumber(100));
     const b = state(randomNumber(100));

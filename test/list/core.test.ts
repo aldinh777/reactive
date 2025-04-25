@@ -2,7 +2,7 @@ import { describe, test, expect } from "bun:test";
 import { list } from "@aldinh777/reactive/list";
 import { randomList, randomNumber } from "../test-util";
 
-describe("reactive list", () => {
+describe("list/core", () => {
   describe("core", () => {
     test("list initialization", () => {
       const items = randomList(3);

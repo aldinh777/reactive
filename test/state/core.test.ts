@@ -2,7 +2,7 @@ import { describe, test, expect } from "bun:test";
 import { state } from "@aldinh777/reactive";
 import { randomNumber } from "../test-util";
 
-describe("core state functionality", () => {
+describe("state/core", () => {
   test("initialize correctly", () => {
     const value = randomNumber(10);
     const x = state(value);

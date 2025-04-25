@@ -7,7 +7,7 @@ import { chainList, chainRawList } from "../list-util";
 const evens = (list: WatchableList<number>) => list.filter((item) => item % 2 === 0);
 const rawEvens = (list: WatchableList<number>) => list.toArray().filter((item) => item % 2 === 0);
 
-describe("list-util filter", () => {
+describe("list/filter", () => {
   test("initialize properly", () => {
     const l = list(randomList(10));
     const filtered = evens(l);

@@ -20,7 +20,7 @@ class LocalStorageMock {
 // @ts-ignore
 global.localStorage = new LocalStorageMock();
 
-describe("common state", () => {
+describe("state-toolkit", () => {
   test("state toggle", () => {
     const [flag, open, close, toggle] = stateToggle(false);
 
