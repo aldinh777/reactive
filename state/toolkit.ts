@@ -12,11 +12,11 @@ type Toggle = () => void;
  * @returns A tuple containing the state, open, close, and toggle function.
  */
 export const stateToggle = (initial: boolean): [State<boolean>, Open, Close, Toggle] => {
-    const s = state(initial);
-    const open = () => s.setValue(true);
-    const close = () => s.setValue(false);
-    const toggle = () => s.setValue(!s.getValue());
-    return [s, open, close, toggle];
+  const s = state(initial);
+  const open = () => s.setValue(true);
+  const close = () => s.setValue(false);
+  const toggle = () => s.setValue(!s.getValue());
+  return [s, open, close, toggle];
 };
 
 /**
@@ -27,13 +27,13 @@ export const stateToggle = (initial: boolean): [State<boolean>, Open, Close, Tog
  * @returns The reactive state.
  */
 export const stateLocalStorage = (key: string, initial: string): State<string> => {
-    const s = state(initial);
-    const local = localStorage.getItem(key);
-    if (local) {
-        s.setValue(local);
-    } else {
-        localStorage.setItem(key, s.getValue());
-    }
-    s.onChange((value) => localStorage.setItem(key, value), true);
-    return s;
+  const s = state(initial);
+  const local = localStorage.getItem(key);
+  if (local) {
+    s.setValue(local);
+  } else {
+    localStorage.setItem(key, s.getValue());
+  }
+  s.onChange((value) => localStorage.setItem(key, value), true);
+  return s;
 };
