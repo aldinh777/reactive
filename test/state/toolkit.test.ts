@@ -1,6 +1,6 @@
-import { describe, test, expect } from 'bun:test';
-import { stateLocalStorage, stateToggle } from '@aldinh777/reactive/toolkit';
-import { randomString } from '../test-util';
+import { describe, test, expect } from "bun:test";
+import { stateLocalStorage, stateToggle } from "@aldinh777/reactive/toolkit";
+import { randomString } from "../test-util";
 
 class LocalStorageMock {
   store: any;
@@ -20,8 +20,8 @@ class LocalStorageMock {
 // @ts-ignore
 global.localStorage = new LocalStorageMock();
 
-describe('common state', () => {
-  test('state toggle', () => {
+describe("common state", () => {
+  test("state toggle", () => {
     const [flag, open, close, toggle] = stateToggle(false);
 
     open();
@@ -35,14 +35,14 @@ describe('common state', () => {
     expect(flag.getValue()).toBe(!currentFlag);
   });
 
-  test('state local storage', () => {
+  test("state local storage", () => {
     const initialValue = randomString(8);
-    const newItem = stateLocalStorage('item', initialValue);
+    const newItem = stateLocalStorage("item", initialValue);
     expect(newItem.getValue()).toBe(initialValue);
     const newValue = initialValue + randomString(4);
     newItem.setValue(newValue);
 
-    const existingItem = stateLocalStorage('item', initialValue);
+    const existingItem = stateLocalStorage("item", initialValue);
     expect(existingItem.getValue()).toBe(newValue);
   });
 });

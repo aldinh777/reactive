@@ -1,6 +1,7 @@
 # Reactive
 
 <!--toc:start-->
+
 - [Reactive](#reactive)
   - [State](#state)
     - [Introduction](#introduction)
@@ -10,6 +11,7 @@
     - [Array and Object](#array-and-object)
     - [ReactiveList](#reactivelist)
     - [List Transformation](#list-transformation)
+
 <!--toc:end-->
 
 Another attempt to implement Reactive Programming with Javascript to achieve

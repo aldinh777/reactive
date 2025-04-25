@@ -1,22 +1,22 @@
-import { describe, test, expect } from 'bun:test';
-import { state } from '@aldinh777/reactive';
-import { randomNumber } from '../test-util';
+import { describe, test, expect } from "bun:test";
+import { state } from "@aldinh777/reactive";
+import { randomNumber } from "../test-util";
 
-describe('core state functionality', () => {
-  test('initialize correctly', () => {
+describe("core state functionality", () => {
+  test("initialize correctly", () => {
     const value = randomNumber(10);
     const x = state(value);
     expect(x.getValue()).toBe(value);
   });
 
-  test('update value', () => {
+  test("update value", () => {
     const newValue = randomNumber(10);
     const x = state(randomNumber(10));
     x.setValue(newValue);
     expect(x.getValue()).toBe(newValue);
   });
 
-  test('listen to change', () => {
+  test("listen to change", () => {
     let counter = 0;
     const x = state(0);
     x.onChange(() => counter++);
@@ -26,7 +26,7 @@ describe('core state functionality', () => {
     expect(counter).toBe(2);
   });
 
-  test('stop listening to change', () => {
+  test("stop listening to change", () => {
     let counter = 0;
     const x = state(0);
     const unsub = x.onChange(() => counter++);
@@ -37,7 +37,7 @@ describe('core state functionality', () => {
     expect(counter).toBe(1);
   });
 
-  test('orderly execute listener', () => {
+  test("orderly execute listener", () => {
     let firstCounter = 0;
     let secondCounter = 0;
     let thirdCounter = 0;
@@ -103,7 +103,7 @@ describe('core state functionality', () => {
     expect(thirdCounter).toBe(3);
   });
 
-  test('last called listener', () => {
+  test("last called listener", () => {
     let firstCounter = 0;
     let lastCounter = 0;
     const x = state(0);
@@ -140,7 +140,7 @@ describe('core state functionality', () => {
     expect(lastCounter).toBe(2);
   });
 
-  test('correctly handle previous value', () => {
+  test("correctly handle previous value", () => {
     const increasingNumber = state(0);
     let firstCounter = 0;
     let secondCounter = 0;

@@ -1,24 +1,24 @@
-import type { WatchableList } from '@aldinh777/reactive/list';
-import { describe, test, expect } from 'bun:test';
-import { list } from '@aldinh777/reactive/list';
-import { randomList, randomNumber } from '../test-util';
-import { chainList, chainRawList } from '../list-util';
+import type { WatchableList } from "@aldinh777/reactive/list";
+import { describe, test, expect } from "bun:test";
+import { list } from "@aldinh777/reactive/list";
+import { randomList, randomNumber } from "../test-util";
+import { chainList, chainRawList } from "../list-util";
 
 const addOne = (list: WatchableList<number>) => list.map((item) => item + 1);
 const rawAddOne = (list: WatchableList<number>) => list.toArray().map((item) => item + 1);
 
-describe('list-util map', () => {
-  test('initialize properly', () => {
+describe("list-util map", () => {
+  test("initialize properly", () => {
     const l = list(randomList(10));
     const mapped = addOne(l);
 
     // make it observed
-    mapped.onUpdate(() => { });
+    mapped.onUpdate(() => {});
 
     expect(mapped.toArray()).toEqual(rawAddOne(l));
   });
 
-  test('watch update', () => {
+  test("watch update", () => {
     const l = list([2, 3, 4, 5]);
     const mapped = addOne(l);
 
@@ -54,12 +54,12 @@ describe('list-util map', () => {
     expect(deleteCounter).toBe(1);
   });
 
-  test('map properly after mutation', () => {
+  test("map properly after mutation", () => {
     const l = list(randomList(100));
     const mapped = addOne(l);
 
     // make it observed
-    mapped.onUpdate(() => { })
+    mapped.onUpdate(() => {});
 
     const index = randomNumber(10);
     l.set(index, l.at(index) + 1);
@@ -70,13 +70,13 @@ describe('list-util map', () => {
     expect(mapped.toArray()).toEqual(rawAddOne(l));
   });
 
-  test('chain observed map', () => {
+  test("chain observed map", () => {
     const l = list(randomList(10));
     const mapped = addOne(l);
     const chained = chainList(mapped);
 
     // make it observed
-    chained.onUpdate(() => { });
+    chained.onUpdate(() => {});
 
     expect(chained.toArray()).toEqual(chainRawList(rawAddOne(l)));
   });

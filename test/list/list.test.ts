@@ -1,16 +1,16 @@
-import { describe, test, expect } from 'bun:test';
-import { list } from '@aldinh777/reactive/list';
-import { randomList, randomNumber } from '../test-util';
+import { describe, test, expect } from "bun:test";
+import { list } from "@aldinh777/reactive/list";
+import { randomList, randomNumber } from "../test-util";
 
-describe('reactive list', () => {
-  describe('core', () => {
-    test('list initialization', () => {
+describe("reactive list", () => {
+  describe("core", () => {
+    test("list initialization", () => {
       const items = randomList(3);
       const l = list(items);
       expect(l.toArray()).toEqual(items);
     });
 
-    test('have no side effect towards list argument', () => {
+    test("have no side effect towards list argument", () => {
       const items = randomList(5);
       const oldItems = [...items];
       const l = list(items);
@@ -19,7 +19,7 @@ describe('reactive list', () => {
       expect(l.toArray()).toEqual(oldItems);
     });
 
-    test('outputed array have no side effect towards list', () => {
+    test("outputed array have no side effect towards list", () => {
       const l = list(randomList(5));
       const array = l.toArray();
       const index = randomNumber(5);
@@ -28,7 +28,7 @@ describe('reactive list', () => {
       expect(l.toArray()).not.toEqual(array);
     });
 
-    test('update data', () => {
+    test("update data", () => {
       const items = randomList(3);
       const l = list(items);
       const index = randomNumber(3);
@@ -39,7 +39,7 @@ describe('reactive list', () => {
       expect(l.toArray()).toEqual(items);
     });
 
-    test('insert data through push, unshift & splice', () => {
+    test("insert data through push, unshift & splice", () => {
       const items = randomList(3);
       const startItems = randomList(2);
       const endItems = randomList(2);
@@ -56,7 +56,7 @@ describe('reactive list', () => {
       expect(l.toArray()).toEqual([...startItems, ...items, ...midItems, ...endItems]);
     });
 
-    test('delete data through pop, shift & splice', () => {
+    test("delete data through pop, shift & splice", () => {
       const items = randomList(7);
       const l = list(items);
       const end = l.pop();
@@ -76,8 +76,8 @@ describe('reactive list', () => {
     });
   });
 
-  describe('watchability', () => {
-    test('watch list update', () => {
+  describe("watchability", () => {
+    test("watch list update", () => {
       const l = list(randomList(100));
       let updateCounter = 0;
 
@@ -90,7 +90,7 @@ describe('reactive list', () => {
       expect(updateCounter).toBe(100);
     });
 
-    test('watch non unique update', () => {
+    test("watch non unique update", () => {
       const l = list(randomList(100), false);
       let updateCounter = 0;
 
@@ -103,7 +103,7 @@ describe('reactive list', () => {
       expect(updateCounter).toBe(100);
     });
 
-    test('watch list insert', () => {
+    test("watch list insert", () => {
       const l = list(randomList(5));
       const insertSize = randomNumber(100);
       let insertCounter = 0;
@@ -114,7 +114,7 @@ describe('reactive list', () => {
       expect(insertCounter).toBe(insertSize);
     });
 
-    test('watch list delete', () => {
+    test("watch list delete", () => {
       const l = list(randomList(100));
       const deleteSize = randomNumber(100);
       let deleteCounter = 0;
@@ -125,7 +125,7 @@ describe('reactive list', () => {
       expect(deleteCounter).toBe(deleteSize);
     });
 
-    test('bulk watch', () => {
+    test("bulk watch", () => {
       const l = list(randomList(100));
       const watchSize = randomNumber(100);
       let watchCounter = 0;
@@ -134,7 +134,7 @@ describe('reactive list', () => {
       l.watch({
         update: increaseWatchCounter,
         insert: increaseWatchCounter,
-        delete: increaseWatchCounter
+        delete: increaseWatchCounter,
       });
 
       for (let i = 0; i < watchSize; i++) {
@@ -147,7 +147,7 @@ describe('reactive list', () => {
       expect(watchCounter).toBe(watchSize * 3);
     });
 
-    test('stop watch', () => {
+    test("stop watch", () => {
       const l = list(randomList(100));
       let watchCounter = 0;
       const increaseWatchCounter = () => watchCounter++;
@@ -155,7 +155,7 @@ describe('reactive list', () => {
       const unsubAll = l.watch({
         update: increaseWatchCounter,
         insert: increaseWatchCounter,
-        delete: increaseWatchCounter
+        delete: increaseWatchCounter,
       });
 
       let index = randomNumber(100);

@@ -1,26 +1,26 @@
-import type { WatchableList } from '@aldinh777/reactive/list';
-import { describe, test, expect } from 'bun:test';
-import { list } from '@aldinh777/reactive/list';
-import { randomList } from '../test-util';
-import { chainList, chainRawList } from '../list-util';
+import type { WatchableList } from "@aldinh777/reactive/list";
+import { describe, test, expect } from "bun:test";
+import { list } from "@aldinh777/reactive/list";
+import { randomList } from "../test-util";
+import { chainList, chainRawList } from "../list-util";
 
 const rawSort = (list: WatchableList<number>) => list.toArray().toSorted((a, b) => a - b);
 
-describe('list-util sort', () => {
-  test('initialize properly', () => {
+describe("list-util sort", () => {
+  test("initialize properly", () => {
     const l = list(randomList(10));
     const sorted = l.sort();
     const reversed = l.sort((a, b) => a > b);
 
     // make it observed
-    sorted.onUpdate(() => { });
-    reversed.onUpdate(() => { });
+    sorted.onUpdate(() => {});
+    reversed.onUpdate(() => {});
 
     expect(sorted.toArray()).toEqual(rawSort(l));
     expect(reversed.toArray()).toEqual(rawSort(l).reverse());
   });
 
-  test('watch update', () => {
+  test("watch update", () => {
     const l = list([5, 1, 4, 3, 2]);
     const sorted = l.sort();
 
@@ -71,14 +71,14 @@ describe('list-util sort', () => {
     expect(deleteCounter).toBe(2);
   });
 
-  test('sort properly after mutation', () => {
+  test("sort properly after mutation", () => {
     const l = list([1, 9, 2, 8, 3, 4, 6, 5]);
     const sorted = l.sort();
     const reversed = l.sort((a, b) => a > b);
 
     // make it observed
-    sorted.onUpdate(() => { });
-    reversed.onUpdate(() => { });
+    sorted.onUpdate(() => {});
+    reversed.onUpdate(() => {});
 
     /**
      * inplace update
@@ -109,13 +109,13 @@ describe('list-util sort', () => {
     expect(reversed.toArray()).toEqual(rawSort(l).reverse());
   });
 
-  test('chain observed filter', () => {
+  test("chain observed filter", () => {
     const l = list(randomList(10));
     const sorted = l.sort();
     const chained = chainList(sorted);
 
     // make it observed
-    chained.onUpdate(() => { });
+    chained.onUpdate(() => {});
 
     expect(chained.toArray()).toEqual(chainRawList(rawSort(l)));
   });

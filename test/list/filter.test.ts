@@ -1,24 +1,24 @@
-import type { WatchableList } from '@aldinh777/reactive/list';
-import { describe, test, expect } from 'bun:test';
-import { list } from '@aldinh777/reactive/list';
-import { randomList } from '../test-util';
-import { chainList, chainRawList } from '../list-util';
+import type { WatchableList } from "@aldinh777/reactive/list";
+import { describe, test, expect } from "bun:test";
+import { list } from "@aldinh777/reactive/list";
+import { randomList } from "../test-util";
+import { chainList, chainRawList } from "../list-util";
 
 const evens = (list: WatchableList<number>) => list.filter((item) => item % 2 === 0);
 const rawEvens = (list: WatchableList<number>) => list.toArray().filter((item) => item % 2 === 0);
 
-describe('list-util filter', () => {
-  test('initialize properly', () => {
+describe("list-util filter", () => {
+  test("initialize properly", () => {
     const l = list(randomList(10));
     const filtered = evens(l);
 
     // make it observed
-    filtered.onUpdate(() => { });
+    filtered.onUpdate(() => {});
 
     expect(filtered.toArray()).toEqual(rawEvens(l));
   });
 
-  test('watch update', () => {
+  test("watch update", () => {
     const l = list([2, 3, 4, 5]);
     const filtered = evens(l);
 
@@ -60,12 +60,12 @@ describe('list-util filter', () => {
     expect(deleteCounter).toBe(2);
   });
 
-  test('filter properly after mutation', () => {
+  test("filter properly after mutation", () => {
     const l = list([2, 3, 4, 6, 7, 9]);
     const filtered = evens(l);
 
     // make it observed
-    filtered.onUpdate(() => { });
+    filtered.onUpdate(() => {});
 
     /**
      * inplace update
@@ -101,13 +101,13 @@ describe('list-util filter', () => {
     expect(filtered.toArray()).toEqual(rawEvens(l));
   });
 
-  test('chain observed filter', () => {
+  test("chain observed filter", () => {
     const l = list(randomList(10));
     const filtered = evens(l);
     const chained = chainList(filtered);
 
     // make it observed
-    chained.onUpdate(() => { });
+    chained.onUpdate(() => {});
 
     expect(chained.toArray()).toEqual(chainRawList(rawEvens(l)));
   });

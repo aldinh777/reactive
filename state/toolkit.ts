@@ -1,5 +1,5 @@
-import type { State } from './index';
-import { state } from './index';
+import type { State } from "./index";
+import { state } from "./index";
 
 // for easier readings on function return type
 type Open = () => void;

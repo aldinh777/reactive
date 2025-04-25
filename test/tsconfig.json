@@ -1,26 +1,27 @@
 {
   "compilerOptions": {
     // Enable latest features
-    "lib": [
-      "ESNext",
-      "DOM"
-    ],
+    "lib": ["ESNext", "DOM"],
     "target": "ESNext",
     "module": "ESNext",
     "moduleDetection": "force",
+
     // Bundler mode
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": false,
     "verbatimModuleSyntax": true,
     "noEmit": false,
+
     // Best practices
     "strict": true,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
+
     // Emit settings
     "declaration": true,
     "declarationMap": false,
     "emitDeclarationOnly": false,
+
     // Some stricter flags
     "noUnusedLocals": true,
     "noUnusedParameters": true,

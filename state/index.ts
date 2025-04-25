@@ -197,7 +197,7 @@ export class ComputedDynamic<T = any> extends Computed<T> {
       if (!this.unsubMapping.has(newDep)) {
         this.unsubMapping.set(
           newDep,
-          newDep.onChange(() => this.#subscribe())
+          newDep.onChange(() => this.#subscribe()),
         );
       }
     }

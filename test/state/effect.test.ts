@@ -1,12 +1,12 @@
-import type { State } from '@aldinh777/reactive';
-import { describe, test, expect } from 'bun:test';
-import { state, computed, setEffect } from '@aldinh777/reactive';
-import { randomNumber } from '../test-util';
+import type { State } from "@aldinh777/reactive";
+import { describe, test, expect } from "bun:test";
+import { state, computed, setEffect } from "@aldinh777/reactive";
+import { randomNumber } from "../test-util";
 
 const add = (x: State, n = 1) => x.setValue(x.getValue() + n);
 
-describe('utils', () => {
-  test('basic computed', () => {
+describe("utils", () => {
+  test("basic computed", () => {
     const a = state(randomNumber(100));
     const b = state(randomNumber(100));
     const x = computed(() => a.getValue() + b.getValue());
@@ -19,7 +19,7 @@ describe('utils', () => {
     expect(x.getValue()).toBe(a.getValue() + b.getValue());
   });
 
-  test('observe computed', () => {
+  test("observe computed", () => {
     const a = state(randomNumber(100));
     const x = computed(() => a.getValue() + 1);
     let observedUpdate = 0;
@@ -45,7 +45,7 @@ describe('utils', () => {
     expect(observedUpdate).toBe(1);
   });
 
-  test('basic effect', () => {
+  test("basic effect", () => {
     const a = state(randomNumber(100));
     let effectCounter = 0;
 
@@ -62,7 +62,7 @@ describe('utils', () => {
     expect(effectCounter).toBe(2);
   });
 
-  test('static computed', () => {
+  test("static computed", () => {
     const a = state(randomNumber(100));
     const b = state(randomNumber(100));
     const x = computed((a, b) => a + b, [a, b]);
@@ -87,7 +87,7 @@ describe('utils', () => {
     expect(computedCounter).toBe(1);
   });
 
-  test('static effect', () => {
+  test("static effect", () => {
     const a = state(randomNumber(100));
     let effectCounter = 0;
 
@@ -103,7 +103,7 @@ describe('utils', () => {
     expect(effectCounter).toBe(2);
   });
 
-  test('circular effect', () => {
+  test("circular effect", () => {
     const x = state(randomNumber(100));
 
     setEffect(() => {
@@ -115,27 +115,27 @@ describe('utils', () => {
     expect(x.getValue()).toBe(120);
   });
 
-  test('circular dependency', () => {
+  test("circular dependency", () => {
     let iter = 100;
 
     // @ts-ignore
-    const x = computed(() => (iter <= 0 ? 'overflow' : iter-- && x.getValue()));
+    const x = computed(() => (iter <= 0 ? "overflow" : iter-- && x.getValue()));
 
     // @ts-ignore
-    const a = computed(() => (iter <= 0 ? 'flip overflow' : iter-- && b.getValue()));
+    const a = computed(() => (iter <= 0 ? "flip overflow" : iter-- && b.getValue()));
     // @ts-ignore
-    const b = computed(() => (iter <= 0 ? 'flip overflow' : iter-- && a.getValue()));
+    const b = computed(() => (iter <= 0 ? "flip overflow" : iter-- && a.getValue()));
 
-    expect(x.getValue()).toBe('overflow');
-
-    iter = 0;
-    expect(a.getValue()).toBe('flip overflow');
+    expect(x.getValue()).toBe("overflow");
 
     iter = 0;
-    expect(b.getValue()).toBe('flip overflow');
+    expect(a.getValue()).toBe("flip overflow");
+
+    iter = 0;
+    expect(b.getValue()).toBe("flip overflow");
   });
 
-  test('diamond structure dependency', () => {
+  test("diamond structure dependency", () => {
     const x = state(randomNumber(100));
 
     const a = computed(() => x.getValue());
@@ -157,7 +157,7 @@ describe('utils', () => {
     expect(staticUpdateCounter).toBe(1);
   });
 
-  test('dynamic dependency', () => {
+  test("dynamic dependency", () => {
     const x = state(randomNumber(100));
     const y = state(randomNumber(100));
     const isUsingX = state(false);
@@ -170,7 +170,7 @@ describe('utils', () => {
     });
 
     // make them push based so it actually depends on x or y dynamically
-    a.onChange(() => { }); // calculation here +1 = 1
+    a.onChange(() => {}); // calculation here +1 = 1
 
     expect(calculationCalls).toBe(1);
 
@@ -189,7 +189,7 @@ describe('utils', () => {
     expect(calculationCalls).toBe(4);
   });
 
-  test('when nested effect', () => {
+  test("when nested effect", () => {
     const x = state(randomNumber(100));
     const y = state(randomNumber(100));
     let counterX = 0;
@@ -218,13 +218,13 @@ describe('utils', () => {
     // if you're confused, then you probably shouldn't create any nested effect
   });
 
-  test('using dynamic dependency to create static effect', () => {
+  test("using dynamic dependency to create static effect", () => {
     const a = state(randomNumber(100));
     const b = state(randomNumber(100));
     const c = computed(() => a.getValue() + 1); // c are dynamically dependent on a
 
     // make it push based, so it actually depends on a
-    c.onChange(() => { });
+    c.onChange(() => {});
 
     /**
      * no dynamic dependency detected from dependency list,
@@ -249,7 +249,7 @@ describe('utils', () => {
     expect(counterY).toBe(2);
   });
 
-  test('when effect have no dependency', () => {
+  test("when effect have no dependency", () => {
     // literally nothing to watch
     const x = computed(() => null);
     const y = computed(() => null, []);
@@ -261,7 +261,7 @@ describe('utils', () => {
     expect(y.getValue()).toBeNull();
   });
 
-  test('when effect has suddenly lost it all dependencies', () => {
+  test("when effect has suddenly lost it all dependencies", () => {
     const x = state(randomNumber(100));
     let counter = 0;
     let usingX = true;

@@ -9,13 +9,13 @@ export interface BulkWatcher<T> {
   update?: UpdateHandler<T>;
 }
 
-type Operation = '+' | '-' | '=';
+type Operation = "+" | "-" | "=";
 
 export class WatchableList<T = any> {
   #listeners = {
-    '=': new Set<OperationHandler<T>>(),
-    '+': new Set<OperationHandler<T>>(),
-    '-': new Set<OperationHandler<T>>()
+    "=": new Set<OperationHandler<T>>(),
+    "+": new Set<OperationHandler<T>>(),
+    "-": new Set<OperationHandler<T>>(),
   };
   #unique: boolean;
 
@@ -45,22 +45,22 @@ export class WatchableList<T = any> {
     for (const handle of handlers || []) {
       // skip trigger if the updated value are the same with current value,
       // unless unique flag are set to false
-      if (op !== '=' || !this.#unique || value !== updated) {
+      if (op !== "=" || !this.#unique || value !== updated) {
         handle(index, value, updated);
       }
     }
   }
 
   onUpdate(handler: UpdateHandler<T>): () => void {
-    return this.attachListener(this.#listeners['='], handler as OperationHandler<T>);
+    return this.attachListener(this.#listeners["="], handler as OperationHandler<T>);
   }
 
   onInsert(handler: InsertHandler<T>): () => void {
-    return this.attachListener(this.#listeners['+'], handler as OperationHandler<T>);
+    return this.attachListener(this.#listeners["+"], handler as OperationHandler<T>);
   }
 
   onDelete(handler: DeleteHandler<T>): () => void {
-    return this.attachListener(this.#listeners['-'], handler);
+    return this.attachListener(this.#listeners["-"], handler);
   }
 
   attachListener(listeners: Set<OperationHandler<T>>, handler: OperationHandler<T>): () => void {
@@ -96,7 +96,7 @@ export class ReactiveList<T = any> extends WatchableList<T> {
   set(index: number, value: T): void {
     const prev = this.array[index];
     this.array[index] = value;
-    this.trigger('=', index, value, prev);
+    this.trigger("=", index, value, prev);
   }
 
   push(...items: T[]): number {
@@ -120,10 +120,10 @@ export class ReactiveList<T = any> extends WatchableList<T> {
   splice(start: number, deleteCount: number = 0, ...items: T[]): T[] {
     const deletedItems = this.array.splice(start, deleteCount, ...items);
     for (const deleted of deletedItems) {
-      this.trigger('-', start, deleted);
+      this.trigger("-", start, deleted);
     }
     for (let i = 0; i < items.length; i++) {
-      this.trigger('+', start + i, items[i]);
+      this.trigger("+", start + i, items[i]);
     }
     return deletedItems;
   }
@@ -140,26 +140,26 @@ export class ObservedList<S, T> extends WatchableList<T> {
   }
 
   toString(): string {
-    return `ObservedList { ${this.totalObservers <= 0 ? 'unobserved' : this.toArray()} }`;
+    return `ObservedList { ${this.totalObservers <= 0 ? "unobserved" : this.toArray()} }`;
   }
 
   at(index: number): T {
     if (this.totalObservers > 0) {
       return super.at(index);
     }
-    throw new Error('trying to access an unobserved derived reactive list');
+    throw new Error("trying to access an unobserved derived reactive list");
   }
 
   toArray(): T[] {
     if (this.totalObservers > 0) {
       return super.toArray();
     }
-    throw new Error('trying to access an unobserved derived reactive list');
+    throw new Error("trying to access an unobserved derived reactive list");
   }
 
   // here just to be overriden by its children
   subscribe(): () => void {
-    return () => { };
+    return () => {};
   }
 
   attachListener(listeners: Set<OperationHandler<T>>, handler: OperationHandler<T>): () => void {
@@ -215,7 +215,7 @@ export class FilteredList<T> extends ObservedList<T, T> {
           this.#deleteFiltered(index);
         }
         this.#filterOut.splice(index, 1);
-      }
+      },
     });
     this.#filterOut = this.source.toArray().map(this.#filterFn);
     for (let i = 0; i < this.#filterOut.length; i++) {
@@ -229,20 +229,20 @@ export class FilteredList<T> extends ObservedList<T, T> {
   #updateFiltered(index: number, value: T, prev: T): void {
     const fIndex = this.#findFilteredIndex(index);
     this.array[fIndex] = value;
-    this.trigger('=', fIndex, value, prev);
+    this.trigger("=", fIndex, value, prev);
   }
 
   #insertFiltered(index: number, value: T): void {
     const fIndex = this.#findFilteredIndex(index);
     this.array.splice(fIndex, 0, value);
-    this.trigger('+', fIndex, value);
+    this.trigger("+", fIndex, value);
   }
 
   #deleteFiltered(index: number): void {
     const fIndex = this.#findFilteredIndex(index);
     const prev = this.array[fIndex];
     this.array.splice(fIndex, 1);
-    this.trigger('-', fIndex, prev);
+    this.trigger("-", fIndex, prev);
   }
 
   #findFilteredIndex(sourceIndex: number): number {
@@ -272,19 +272,19 @@ export class MappedList<S, T> extends ObservedList<S, T> {
         const before = this.array[index];
         if (mapped !== before) {
           this.array[index] = mapped;
-          this.trigger('=', index, mapped, before);
+          this.trigger("=", index, mapped, before);
         }
       },
       insert: (index, value) => {
         const mapped = this.#mapFn(value);
         this.array.splice(index, 0, mapped);
-        this.trigger('+', index, mapped);
+        this.trigger("+", index, mapped);
       },
       delete: (index) => {
         const value = this.array[index];
         this.array.splice(index, 1);
-        this.trigger('-', index, value);
-      }
+        this.trigger("-", index, value);
+      },
     });
     for (const item of this.source.toArray()) {
       this.array.push(this.#mapFn(item));
@@ -313,24 +313,24 @@ export class SortedList<T> extends ObservedList<T, T> {
           this.array.splice(prevIndex, 1);
           const nextIndex = this.#insertItem(this.array, value);
           if (prevIndex === nextIndex) {
-            this.trigger('=', nextIndex, value, prev);
+            this.trigger("=", nextIndex, value, prev);
           } else {
-            this.trigger('-', prevIndex, prev);
-            this.trigger('+', nextIndex, value);
+            this.trigger("-", prevIndex, prev);
+            this.trigger("+", nextIndex, value);
           }
         }
       },
       insert: (_, value) => {
         const insertIndex = this.#insertItem(this.array, value);
-        this.trigger('+', insertIndex, value);
+        this.trigger("+", insertIndex, value);
       },
       delete: (_, value) => {
         const index = this.array.indexOf(value);
         if (index !== -1) {
           this.array.splice(index, 1);
-          this.trigger('-', index, value);
+          this.trigger("-", index, value);
         }
-      }
+      },
     });
     for (const item of this.source.toArray()) {
       this.#insertItem(this.array, item);

@@ -1,4 +1,4 @@
-import type { WatchableList } from '@aldinh777/reactive/list';
+import type { WatchableList } from "@aldinh777/reactive/list";
 
 export function chainList(list: WatchableList<number>): WatchableList<number> {
   return list
