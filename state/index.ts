@@ -268,7 +268,7 @@ export function computed<T extends any[], U>(effect: (...args: T) => U, args?: D
   return new ComputedDynamic(() => effect(...(args.map((s) => s.getValue()) as any)));
 }
 
-export function setEffect<T extends any[]>(effect: (...args: T[]) => any, args?: Dependencies<T>): () => void {
+export function effect<T extends any[]>(effect: (...args: T[]) => any, args?: Dependencies<T>): () => void {
   let computed;
   if (!args) {
     computed = new ComputedDynamic(effect, true);

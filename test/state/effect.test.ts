@@ -1,6 +1,6 @@
 import type { State } from "@aldinh777/reactive";
 import { describe, test, expect } from "bun:test";
-import { state, computed, setEffect } from "@aldinh777/reactive";
+import { state, computed, effect } from "@aldinh777/reactive";
 import { randomNumber } from "../test-util";
 
 const add = (x: State, n = 1) => x.setValue(x.getValue() + n);
@@ -49,7 +49,7 @@ describe("state/effect", () => {
     const a = state(randomNumber(100));
     let effectCounter = 0;
 
-    const unsub = setEffect(() => {
+    const unsub = effect(() => {
       a.getValue();
       effectCounter++;
     });
@@ -91,7 +91,7 @@ describe("state/effect", () => {
     const a = state(randomNumber(100));
     let effectCounter = 0;
 
-    const unsub = setEffect((_) => effectCounter++, [a]);
+    const unsub = effect((_) => effectCounter++, [a]);
 
     expect(effectCounter).toBe(1);
 
@@ -106,7 +106,7 @@ describe("state/effect", () => {
   test("circular effect", () => {
     const x = state(randomNumber(100));
 
-    setEffect(() => {
+    effect(() => {
       if (x.getValue() < 120) {
         add(x);
       }
@@ -194,10 +194,10 @@ describe("state/effect", () => {
     const y = state(randomNumber(100));
     let counterX = 0;
     let counterY = 0;
-    setEffect(() => {
+    effect(() => {
       x.getValue(); // used as dependency
       counterX++;
-      setEffect(() => {
+      effect(() => {
         y.getValue(); // used as dependency
         counterY++;
       });
@@ -253,8 +253,8 @@ describe("state/effect", () => {
     // literally nothing to watch
     const x = computed(() => null);
     const y = computed(() => null, []);
-    setEffect(() => null);
-    setEffect((_) => null, []);
+    effect(() => null);
+    effect((_) => null, []);
 
     // what else to expect...
     expect(x.getValue()).toBeNull();
@@ -265,7 +265,7 @@ describe("state/effect", () => {
     const x = state(randomNumber(100));
     let counter = 0;
     let usingX = true;
-    setEffect(() => ++counter && usingX && x.getValue()); // counter = 1
+    effect(() => ++counter && usingX && x.getValue()); // counter = 1
     usingX = false;
     add(x); // counter = 2, after running, effect lost its dependencies
     add(x); // counter = 2, effect no longer running

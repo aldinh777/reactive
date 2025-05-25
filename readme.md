@@ -171,15 +171,15 @@ a.setValue(9); // (nothing happened...)
 a.setValue(15); // A is currently GREATER THAN 10
 ```
 
-If there is multiple state to be observed, use the `setEffect` method
+If there is multiple state to be observed, use the `effect` method
 
 ```ts
-import { state, setEffect } from "@aldinh777/reactive";
+import { state, effect } from "@aldinh777/reactive";
 
 const a = state(2);
 const b = state(3);
 
-setEffect(
+effect(
   (a, b) => {
     if (a + b > 10) {
       console.log(`A and B combined which is ${a + b} is GREATER THAN 10`);
@@ -193,13 +193,13 @@ a.setValue(5); // (nothing happened...)
 b.setValue(7); // A and B combined which is 12 is GREATER THAN 10
 ```
 
-just as how `computed` works, `setEffect` could also infer its dependencies by usage
+just as how `computed` works, `effect` could also infer its dependencies by usage
 
 ```ts
 const a = state(2);
 const b = state(3);
 
-setEffect(() => {
+effect(() => {
   if (a.getValue() + b.getValue() > 10) {
     console.log(`A and B combined which is ${a() + b()} is GREATER THAN 10`);
   }
