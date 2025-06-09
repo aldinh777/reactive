@@ -8,7 +8,8 @@
   "exports": {
     ".": "./state/index.ts",
     "./toolkit": "./state/toolkit.ts",
-    "./list": "./list/index.ts"
+    "./list": "./list/index.ts",
+    "./set": "./set/index.ts"
   },
   "devDependencies": {
     "@types/bun": "^1.2.14",
