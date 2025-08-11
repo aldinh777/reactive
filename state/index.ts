@@ -15,16 +15,16 @@ export class State<T = any> {
   }
 
   toString(): string {
-    return `State { ${this.getValue()} }`;
+    return `State { ${this.get()} }`;
   }
 
-  getValue(): T {
+  get(): T {
     const effectStack = State.peekEffectStack();
     effectStack?.add(this);
     return this.#value;
   }
 
-  setValue(nextValue: T): void {
+  set(nextValue: T): void {
     const effectStack = State.peekEffectStack();
     let oldValue = this.#value;
     this.#value = nextValue;
@@ -95,18 +95,18 @@ export class Computed<T = any> extends State<T> {
     this.stateless = stateless;
   }
 
-  getValue(): T {
+  get(): T {
     if (this.totalObservers > 0) {
-      return super.getValue();
+      return super.get();
     }
     return this.effect();
   }
 
-  setValue(nextValue: T): void {
+  set(nextValue: T): void {
     if (this.stateless || this.totalObservers === 0) {
       return;
     }
-    super.setValue(nextValue);
+    super.set(nextValue);
   }
 
   unsubscribe(): void {
@@ -170,7 +170,7 @@ export class ComputedDynamic<T = any> extends Computed<T> {
   #subscribe(): void {
     while (true) {
       const nextValue = this.#updateDependencies();
-      this.setValue(nextValue);
+      this.set(nextValue);
       if (this.#recall) {
         this.#recall = false;
         continue;
@@ -210,8 +210,8 @@ export class ComputedStatic<T, U> extends Computed<U> {
 
   constructor(effect: (...args: T[]) => U, args: State<T>[], stateless = false) {
     super(() => {
-      const result = effect(...args.map((s) => s.getValue()));
-      this.setValue(result);
+      const result = effect(...args.map((s) => s.get()));
+      this.set(result);
       return result;
     }, stateless);
     this.#roots = Computed.filterDependencies(args);
@@ -265,7 +265,7 @@ export function computed<T extends any[], U>(effect: (...args: T) => U, args?: D
   if (args.every((s) => !ComputedDynamic.states.has(s))) {
     return new ComputedStatic(effect, args);
   }
-  return new ComputedDynamic(() => effect(...(args.map((s) => s.getValue()) as any)));
+  return new ComputedDynamic(() => effect(...(args.map((s) => s.get()) as any)));
 }
 
 export function effect<T extends any[]>(effect: (...args: T[]) => any, args?: Dependencies<T>): () => void {
@@ -275,7 +275,7 @@ export function effect<T extends any[]>(effect: (...args: T[]) => any, args?: De
   } else if (args.every((s) => !ComputedDynamic.states.has(s))) {
     computed = new ComputedStatic(effect, args, true);
   } else {
-    computed = new ComputedDynamic(() => effect(...(args.map((s) => s.getValue()) as any)), true);
+    computed = new ComputedDynamic(() => effect(...(args.map((s) => s.get()) as any)), true);
   }
   return () => computed.unsubscribe();
 }

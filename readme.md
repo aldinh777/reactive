@@ -2,15 +2,16 @@
 
 <!--toc:start-->
 
-- [Reactive](#reactive)
+- [Reactive]
   - [State](#state)
     - [Introduction](#introduction)
     - [Binding](#binding)
     - [Observable](#observable)
-  - [Watchable List](#watchable-list)
+  - [Watchable](#watchable)
     - [Array and Object](#array-and-object)
-    - [ReactiveList](#reactivelist)
+    - [Reactive List](#reactive-list)
     - [List Transformation](#list-transformation)
+    - [Reactive Set](#reactive-set)
 
 <!--toc:end-->
 
@@ -54,9 +55,9 @@ import { state } from "@aldinh777/reactive";
 
 const x = state(0);
 
-console.log(x.getValue()); // 0
-x.setValue(4); // set the current value to 4
-console.log(x.getValue()); // 4
+console.log(x.get()); // 0
+x.set(4); // set the current value to 4
+console.log(x.get()); // 4
 ```
 
 ### Binding
@@ -101,12 +102,12 @@ import { state, computed } from "@aldinh777/reactive";
 const a = state(5);
 const b = computed((a) => a * 2, [a]); // mark `a` as dependency
 
-console.log("current value = ", b.getValue());
+console.log("current value = ", b.get());
 // output: current value = 10
 
-a.setValue(6);
+a.set(6);
 
-console.log("current value = ", b.getValue());
+console.log("current value = ", b.get());
 // output: current value = 12
 ```
 
@@ -115,7 +116,7 @@ dependency array
 
 ```ts
 const a = state(5);
-const b = computed(() => a.getValue() * 2); // will automatically mark `a` as dependency
+const b = computed(() => a.get() * 2); // will automatically mark `a` as dependency
 ```
 
 ### Observable
@@ -166,9 +167,9 @@ a.onChange((nextValue) => {
   }
 });
 
-a.setValue(11); // A is currently GREATER THAN 10
-a.setValue(9); // (nothing happened...)
-a.setValue(15); // A is currently GREATER THAN 10
+a.set(11); // A is currently GREATER THAN 10
+a.set(9); // (nothing happened...)
+a.set(15); // A is currently GREATER THAN 10
 ```
 
 If there is multiple state to be observed, use the `effect` method
@@ -188,9 +189,9 @@ effect(
   [a, b],
 ); // mark `a` and `b` as dependencies
 
-a.setValue(8); // A and B combined which is 11 is GREATER THAN 10
-a.setValue(5); // (nothing happened...)
-b.setValue(7); // A and B combined which is 12 is GREATER THAN 10
+a.set(8); // A and B combined which is 11 is GREATER THAN 10
+a.set(5); // (nothing happened...)
+b.set(7); // A and B combined which is 12 is GREATER THAN 10
 ```
 
 just as how `computed` works, `effect` could also infer its dependencies by usage
@@ -200,15 +201,15 @@ const a = state(2);
 const b = state(3);
 
 effect(() => {
-  if (a.getValue() + b.getValue() > 10) {
+  if (a.get() + b.get() > 10) {
     console.log(`A and B combined which is ${a() + b()} is GREATER THAN 10`);
   }
 }); // automatically infer `a` and `b` as dependencies
 ```
 
-## Watchable List
+## Watchable
 
-Like state, but array
+Other observable data structure that can be used to track changes
 
 ### Array and Object
 
@@ -225,8 +226,8 @@ const obj = state({ name: "albert", mom: "pauline" });
 list.onChange(() => console.log("list updated"));
 obj.onChange(() => console.log("object updated"));
 
-list.getValue().push(4); // wont be tracked
-obj.getValue().name = "alberto"; // also wont be tracked
+list.get().push(4); // wont be tracked
+obj.get().name = "alberto"; // also wont be tracked
 ```
 
 For the object however, there is a workaround by using state as its property value
@@ -236,7 +237,7 @@ const obj = { name: state("albert"), mom: state("pauline") };
 
 obj.name.onChange(() => console.log("name changed"));
 
-obj.name.setValue("alberto"); // name changed
+obj.name.set("alberto"); // name changed
 ```
 
 However, an array is a different data structure and have different set of operations.
@@ -244,7 +245,7 @@ Even if we uses state as its value, what we can track are only the value `update
 Beside updates, array can also do `insert` and `delete` through
 `push`, `pop`, `shift`, `unshift` and `splice` methods.
 
-### ReactiveList
+### Reactive List
 
 `ReactiveList` are made to handle reactivity within an array
 
@@ -320,4 +321,25 @@ console.log(sortedOdd.toArray()); // [1, 3, 5, 7, 9]
 numbers.pop();
 console.log(numbers.toArray()); // [9, 3, 6, 2, 5, 7]
 console.log(sortedOdd.toArray()); // [3, 5, 7, 9]
+```
+
+### Reactive Set
+
+Reactivity inside a set
+
+```ts
+import { set } from "@aldinh777/reactive/set";
+
+const items = set([1, 2, 3]);
+
+items.onUpdate((inserted, deleted) => {
+  if (inserted) {
+    console.log(`inserted ${inserted}`);
+  } else {
+    console.log(`deleted ${deleted}`);
+  }
+});
+
+items.add(4); // inserted 4
+items.delete(2); // deleted 2
 ```
