@@ -1,7 +1,7 @@
 {
   "name": "@aldinh777/reactive",
   "description": "another attempt to achieve the ultimate reactivity",
-  "version": "0.44.0",
+  "version": "0.45.0",
   "author": "aldinh777",
   "license": "MIT",
   "type": "module",
@@ -12,7 +12,7 @@
     "./set": "./set/index.ts"
   },
   "devDependencies": {
-    "@types/bun": "^1.2.14",
+    "@types/bun": "^1.2.20",
     "typescript": "5.8.3"
   }
 }
