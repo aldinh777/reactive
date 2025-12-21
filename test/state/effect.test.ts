@@ -3,25 +3,25 @@ import { describe, test, expect } from "bun:test";
 import { state, computed, effect } from "@aldinh777/reactive";
 import { randomNumber } from "../test-util";
 
-const add = (x: State, n = 1) => x.set(x.get() + n);
+const add = (x: State, n = 1) => x.setValue(x.getValue() + n);
 
 describe("state/effect", () => {
   test("basic computed", () => {
     const a = state(randomNumber(100));
     const b = state(randomNumber(100));
-    const x = computed(() => a.get() + b.get());
+    const x = computed(() => a.getValue() + b.getValue());
 
-    expect(x.get()).toBe(a.get() + b.get());
+    expect(x.getValue()).toBe(a.getValue() + b.getValue());
 
     add(a);
     add(b);
 
-    expect(x.get()).toBe(a.get() + b.get());
+    expect(x.getValue()).toBe(a.getValue() + b.getValue());
   });
 
   test("observe computed", () => {
     const a = state(randomNumber(100));
-    const x = computed(() => a.get() + 1);
+    const x = computed(() => a.getValue() + 1);
     let observedUpdate = 0;
 
     const unsub = x.onChange(() => observedUpdate++);
@@ -33,7 +33,7 @@ describe("state/effect", () => {
     add(a);
 
     // ensure update are watched
-    expect(x.get()).toBe(a.get() + 1);
+    expect(x.getValue()).toBe(a.getValue() + 1);
     expect(observedUpdate).toBe(1);
 
     // stop watching update, computed no longer has any observer and then unsubscribed automatically
@@ -41,7 +41,7 @@ describe("state/effect", () => {
 
     add(a);
 
-    expect(x.get()).toBe(a.get() + 1);
+    expect(x.getValue()).toBe(a.getValue() + 1);
     expect(observedUpdate).toBe(1);
   });
 
@@ -50,7 +50,7 @@ describe("state/effect", () => {
     let effectCounter = 0;
 
     const unsub = effect(() => {
-      a.get();
+      a.getValue();
       effectCounter++;
     });
 
@@ -67,12 +67,12 @@ describe("state/effect", () => {
     const b = state(randomNumber(100));
     const x = computed((a, b) => a + b, [a, b]);
 
-    expect(x.get()).toBe(a.get() + b.get());
+    expect(x.getValue()).toBe(a.getValue() + b.getValue());
 
     add(a);
     add(b);
 
-    expect(x.get()).toBe(a.get() + b.get());
+    expect(x.getValue()).toBe(a.getValue() + b.getValue());
 
     let computedCounter = 0;
     const unsub = x.onChange(() => computedCounter++);
@@ -107,40 +107,40 @@ describe("state/effect", () => {
     const x = state(randomNumber(100));
 
     effect(() => {
-      if (x.get() < 120) {
+      if (x.getValue() < 120) {
         add(x);
       }
     });
 
-    expect(x.get()).toBe(120);
+    expect(x.getValue()).toBe(120);
   });
 
   test("circular dependency", () => {
     let iter = 100;
 
     // @ts-ignore
-    const x = computed(() => (iter <= 0 ? "overflow" : iter-- && x.get()));
+    const x = computed(() => (iter <= 0 ? "overflow" : iter-- && x.getValue()));
 
     // @ts-ignore
-    const a = computed(() => (iter <= 0 ? "flip overflow" : iter-- && b.get()));
+    const a = computed(() => (iter <= 0 ? "flip overflow" : iter-- && b.getValue()));
     // @ts-ignore
-    const b = computed(() => (iter <= 0 ? "flip overflow" : iter-- && a.get()));
+    const b = computed(() => (iter <= 0 ? "flip overflow" : iter-- && a.getValue()));
 
-    expect(x.get()).toBe("overflow");
-
-    iter = 0;
-    expect(a.get()).toBe("flip overflow");
+    expect(x.getValue()).toBe("overflow");
 
     iter = 0;
-    expect(b.get()).toBe("flip overflow");
+    expect(a.getValue()).toBe("flip overflow");
+
+    iter = 0;
+    expect(b.getValue()).toBe("flip overflow");
   });
 
   test("diamond structure dependency", () => {
     const x = state(randomNumber(100));
 
-    const a = computed(() => x.get());
-    const b = computed(() => x.get());
-    const c = computed(() => a.get() + b.get());
+    const a = computed(() => x.getValue());
+    const b = computed(() => x.getValue());
+    const c = computed(() => a.getValue() + b.getValue());
 
     const staticA = computed((x) => x, [x]);
     const staticB = computed((x) => x, [x]);
@@ -166,7 +166,7 @@ describe("state/effect", () => {
 
     const a = computed(() => {
       calculationCalls++;
-      return isUsingX.get() ? x.get() : y.get();
+      return isUsingX.getValue() ? x.getValue() : y.getValue();
     });
 
     // make them push based so it actually depends on x or y dynamically
@@ -179,7 +179,7 @@ describe("state/effect", () => {
 
     expect(calculationCalls).toBe(2);
 
-    isUsingX.set(true); // calculation here +1 = 3
+    isUsingX.setValue(true); // calculation here +1 = 3
 
     expect(calculationCalls).toBe(3);
 
@@ -195,10 +195,10 @@ describe("state/effect", () => {
     let counterX = 0;
     let counterY = 0;
     effect(() => {
-      x.get(); // used as dependency
+      x.getValue(); // used as dependency
       counterX++;
       effect(() => {
-        y.get(); // used as dependency
+        y.getValue(); // used as dependency
         counterY++;
       });
     });
@@ -221,7 +221,7 @@ describe("state/effect", () => {
   test("using dynamic dependency to create static effect", () => {
     const a = state(randomNumber(100));
     const b = state(randomNumber(100));
-    const c = computed(() => a.get() + 1); // c are dynamically dependent on a
+    const c = computed(() => a.getValue() + 1); // c are dynamically dependent on a
 
     // make it push based, so it actually depends on a
     c.onChange(() => {});
@@ -230,7 +230,7 @@ describe("state/effect", () => {
      * no dynamic dependency detected from dependency list,
      * making x depends only on b even when c is also being called inside computed
      */
-    const x = computed((b) => b + c.get(), [b]);
+    const x = computed((b) => b + c.getValue(), [b]);
     let counterX = 0;
     x.onChange(() => counterX++);
     add(a); // counterX = 0, x did not depends on a
@@ -241,7 +241,7 @@ describe("state/effect", () => {
      * in this case, c has dynamic dependency which is a,
      * making y depends on whatever being used inside computed, including b
      */
-    const y = computed((c) => b.get() + c, [c]);
+    const y = computed((c) => b.getValue() + c, [c]);
     let counterY = 0;
     y.onChange(() => counterY++);
     add(a); // counterY = 1, y dynamically depends on c which also dynamically depends on a
@@ -257,15 +257,15 @@ describe("state/effect", () => {
     effect((_) => null, []);
 
     // what else to expect...
-    expect(x.get()).toBeNull();
-    expect(y.get()).toBeNull();
+    expect(x.getValue()).toBeNull();
+    expect(y.getValue()).toBeNull();
   });
 
   test("when effect has suddenly lost it all dependencies", () => {
     const x = state(randomNumber(100));
     let counter = 0;
     let usingX = true;
-    effect(() => ++counter && usingX && x.get()); // counter = 1
+    effect(() => ++counter && usingX && x.getValue()); // counter = 1
     usingX = false;
     add(x); // counter = 2, after running, effect lost its dependencies
     add(x); // counter = 2, effect no longer running

@@ -25,24 +25,24 @@ describe("state-toolkit", () => {
     const [flag, open, close, toggle] = stateToggle(false);
 
     open();
-    expect(flag.get()).toBe(true);
+    expect(flag.getValue()).toBe(true);
 
     close();
-    expect(flag.get()).toBe(false);
+    expect(flag.getValue()).toBe(false);
 
-    const currentFlag = flag.get();
+    const currentFlag = flag.getValue();
     toggle();
-    expect(flag.get()).toBe(!currentFlag);
+    expect(flag.getValue()).toBe(!currentFlag);
   });
 
   test("state local storage", () => {
     const initialValue = randomString(8);
     const newItem = stateLocalStorage("item", initialValue);
-    expect(newItem.get()).toBe(initialValue);
+    expect(newItem.getValue()).toBe(initialValue);
     const newValue = initialValue + randomString(4);
-    newItem.set(newValue);
+    newItem.setValue(newValue);
 
     const existingItem = stateLocalStorage("item", initialValue);
-    expect(existingItem.get()).toBe(newValue);
+    expect(existingItem.getValue()).toBe(newValue);
   });
 });
