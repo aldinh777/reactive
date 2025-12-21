@@ -37,7 +37,7 @@ describe("state/core", () => {
     expect(counter).toBe(1);
   });
 
-  test("orderly execute listener", () => {
+  test("execute and hold listener in order", () => {
     let firstCounter = 0;
     let secondCounter = 0;
     let thirdCounter = 0;
