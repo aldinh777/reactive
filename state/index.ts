@@ -1,9 +1,6 @@
 type ChangeHandler<T> = (next: T, prev: T) => void;
 
 export class State<T = any> {
-  static circularDetector = new State(null);
-  static #effectStack: Set<State>[] = [];
-
   #listeners = new Set<ChangeHandler<T>>();
   #lastListeners = new Set<ChangeHandler<T>>();
   #value: T;
@@ -63,6 +60,11 @@ export class State<T = any> {
     return () => set.delete(handler);
   }
 
+  /* static functions related to State */
+
+  static circularDetector = new State(null);
+  static #effectStack: Set<State>[] = [];
+
   static peekEffectStack(): Set<State> | undefined {
     if (this.#effectStack.length <= 0) {
       return;
@@ -95,14 +97,14 @@ export class Computed<T = any> extends State<T> {
     this.stateless = stateless;
   }
 
-  get(): T {
+  getValue(): T {
     if (this.totalObservers > 0) {
       return super.getValue();
     }
     return this.effect();
   }
 
-  set(nextValue: T): void {
+  setValue(nextValue: T): void {
     if (this.stateless || this.totalObservers === 0) {
       return;
     }
@@ -170,7 +172,7 @@ export class ComputedDynamic<T = any> extends Computed<T> {
   #subscribe(): void {
     while (true) {
       const nextValue = this.#updateDependencies();
-      this.set(nextValue);
+      this.setValue(nextValue);
       if (this.#recall) {
         this.#recall = false;
         continue;
@@ -211,7 +213,7 @@ export class ComputedStatic<T, U> extends Computed<U> {
   constructor(effect: (...args: T[]) => U, args: State<T>[], stateless = false) {
     super(() => {
       const result = effect(...args.map((s) => s.getValue()));
-      this.set(result);
+      this.setValue(result);
       return result;
     }, stateless);
     this.#roots = Computed.filterDependencies(args);
